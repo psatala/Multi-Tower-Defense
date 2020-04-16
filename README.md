@@ -8,4 +8,4 @@
 
 ### Install libgdx
 
-Follow the info (here)[https://libgdx.badlogicgames.com/documentation/]
+Follow the info [here](https://libgdx.badlogicgames.com/documentation/)
