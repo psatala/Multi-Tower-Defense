@@ -7,10 +7,10 @@ import com.main.MainGameView;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
-		Config myConfig = new Config();
-		cfg.title = myConfig.windowTitle;
-		cfg.height = myConfig.windowHeight;
-		cfg.width = myConfig.windowWidth;
+		cfg.title = "Multi Tower Defense";
+		cfg.height = 720;
+		cfg.width = 1080;
+		cfg.resizable = false;
 		new LwjglApplication(new MainGameView(), cfg);
 	}
 }
