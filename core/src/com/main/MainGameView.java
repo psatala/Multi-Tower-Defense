@@ -2,13 +2,18 @@ package com.main;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector3;
 
 import java.util.Vector;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.random;
 import static java.lang.StrictMath.max;
@@ -19,8 +24,11 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 	private OrthographicCamera camera;
 	private Vector<Unit> units;
 	private PlayerInterface mainInterface;
-	private int selectionx;
-	private int selectiony;
+	private Vector3 selection;
+	private Rectangle selectRect;
+	private boolean drawSelection = false;
+
+	private ShapeRenderer renderer;
 	
 	@Override
 	public void create () {
@@ -28,9 +36,11 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		batch = new SpriteBatch();
 		units = new Vector();
-		for(int i = 0; i < 20; ++i)
+		for(int i = 0; i < 10; ++i)
 		    spawnUnit((float)random()*1000, (float)random()*650);
 		mainInterface = new PlayerInterface();
+		Gdx.input.setInputProcessor(this);
+		renderer = new ShapeRenderer();
 	}
 
 	@Override
@@ -44,7 +54,14 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		for(Unit unit : units)
 			unit.update();
 
+		if(drawSelection){
+			renderer.begin(ShapeRenderer.ShapeType.Filled);
+			renderer.rect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
+			renderer.end();
+		}
+
 		batch.begin();
+
 		for(Unit unit : units)
 			unit.draw(batch);
 		mainInterface.draw(batch);
@@ -57,23 +74,31 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		for(Unit unit : units)
 			unit.dispose();
 		mainInterface.dispose();
+		renderer.dispose();
 	}
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		System.out.println("YYY");
-		selectionx = screenX;
-		selectiony = screenY;
+		if(button != Input.Buttons.RIGHT){
+			return false;
+		}
+		selection = new Vector3(screenX, screenY, 0);
+		camera.unproject(selection);
+		selectRect = new Rectangle(selection.x, selection.y, 0, 0);
+		drawSelection = true;
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		System.out.println("XXX");
-        float tlx = min(selectionx, screenX);
-        float tly = max(selectiony, screenY);
-        float brx = max(selectionx, screenX);
-        float bry = min(selectiony, screenY);
+		if(!drawSelection)
+			return false;
+		Vector3 selection2 = new Vector3(screenX, screenY, 0);
+		camera.unproject(selection2);
+        float tlx = min(selection.x, selection2.x);
+        float tly = max(selection.y, selection2.y);
+        float brx = max(selection.x, selection2.x);
+        float bry = min(selection.y, selection2.y);
         float unitX, unitY;
 		for(Unit unit : units) {
 			unitX = unit.getX();
@@ -85,6 +110,20 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
         		unit.allowTargetChanging(false);
 			}
 		}
+		drawSelection = false;
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		if(!drawSelection)
+			return false;
+        Vector3 dragSelect = new Vector3(screenX, screenY, 0);
+        camera.unproject(dragSelect);
+        selectRect.x = min(selection.x, dragSelect.x);
+        selectRect.y = min(selection.y, dragSelect.y);
+        selectRect.width = abs(selection.x - dragSelect.x);
+        selectRect.height = abs(selection.y - dragSelect.y);
 		return false;
 	}
 
@@ -100,11 +139,6 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public boolean keyTyped(char character) {
-		return false;
-	}
-
-	@Override
-	public boolean touchDragged(int screenX, int screenY, int pointer) {
 		return false;
 	}
 

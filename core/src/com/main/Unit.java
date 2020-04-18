@@ -1,6 +1,7 @@
 package com.main;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -28,7 +29,7 @@ public class Unit {
     private float targety;
     private boolean unitMoving = false;
     private boolean targetProcessed = false;
-    private boolean changeTarget = true;
+    private boolean changeTarget = false;
 
     public Unit(float x, float y, Camera cam) {
         mCamera = cam;
@@ -60,7 +61,7 @@ public class Unit {
     }
 
     public void update() {
-        if(changeTarget && Gdx.input.isTouched()) {
+        if(changeTarget && Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
             if(!targetProcessed) {
                 Vector3 touchPos = new Vector3();
                 touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -119,14 +120,13 @@ public class Unit {
 
     public void allowTargetChanging(boolean x) {
         changeTarget = x;
-        System.out.println(x);
     }
 
     public float getX() {
-        return atlasSprite.getX();
+        return atlasSprite.getX()+32;
     }
 
     public float getY() {
-        return atlasSprite.getY();
+        return atlasSprite.getY()+32;
     }
 }
