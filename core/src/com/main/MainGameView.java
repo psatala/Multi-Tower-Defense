@@ -79,13 +79,17 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if(button != Input.Buttons.RIGHT){
-			return false;
-		}
 		selection = new Vector3(screenX, screenY, 0);
 		camera.unproject(selection);
-		selectRect = new Rectangle(selection.x, selection.y, 0, 0);
-		drawSelection = true;
+		if(button == Input.Buttons.RIGHT){
+			selectRect = new Rectangle(selection.x, selection.y, 0, 0);
+			drawSelection = true;
+		}
+		else if(button == Input.Buttons.LEFT){
+			for(Unit unit : units) {
+				unit.setTarget(selection);
+			}
+		}
 		return false;
 	}
 
@@ -154,6 +158,6 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 
 
 	private void spawnUnit(float x, float y) {
-		units.add(new Unit(x, y, camera));
+		units.add(new Unit(x, y, "firstUnit"));
 	}
 }
