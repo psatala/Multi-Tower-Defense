@@ -1,31 +1,31 @@
 
-staszic.png
+staszic1.png
 size: 1024,256
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
-staszic0
+staszic10
   rotate: false
   xy: 2, 2
   size: 128, 128
   orig: 128, 128
   offset: 0, 0
   index: -1
-staszic1
+staszic11
   rotate: false
   xy: 132, 2
   size: 128, 128
   orig: 128, 128
   offset: 0, 0
   index: -1
-staszic2
+staszic12
   rotate: false
   xy: 262, 2
   size: 128, 128
   orig: 128, 128
   offset: 0, 0
   index: -1
-staszic3
+staszic13
   rotate: false
   xy: 392, 2
   size: 128, 128

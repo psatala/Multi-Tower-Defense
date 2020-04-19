@@ -41,9 +41,9 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		units = new Vector<Unit>();
 		missiles = new Vector<Missile>();
 		for(int i = 0; i < 4; ++i)
-		    spawnUnit((float)random()*300+50, (float)random()*600+50, 0);
+		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
 		for(int i = 0; i < 4; ++i)
-			spawnUnit((float)random()*300+700, (float)random()*600+50, 1);
+			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);
 		mainInterface = new PlayerInterface();
 		Gdx.input.setInputProcessor(this);
 		renderer = new ShapeRenderer();
@@ -218,6 +218,6 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 
 
 	private void spawnUnit(float x, float y, int color) {
-		units.add(new Unit(x, y, "firstUnit", color));
+		units.add(new Unit(x, y, "staszic", color));
 	}
 }
