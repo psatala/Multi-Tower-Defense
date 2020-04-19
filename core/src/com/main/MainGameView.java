@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -56,6 +57,7 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 
 		if(drawSelection){
 			renderer.begin(ShapeRenderer.ShapeType.Filled);
+			renderer.setColor(Color.DARK_GRAY);
 			renderer.rect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
 			renderer.end();
 		}

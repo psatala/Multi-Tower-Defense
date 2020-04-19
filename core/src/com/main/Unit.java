@@ -1,11 +1,11 @@
 package com.main;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Timer;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
@@ -13,15 +13,12 @@ import static java.lang.Math.random;
 import static java.lang.Math.sqrt;
 
 public class Unit extends Object{
-    private String currentAtlasKey;
-    private float updateFreq = 8.0f;
-
     private TextureAtlas textureAtlas;
-    private int currentFrame = 0;
-    private Sprite sprite;
+    private Animation<TextureRegion> animation;
+    private float elapsedTime = 0;
     private Vector3 targetPosition;
     private boolean unitMoving = false;
-    private boolean changeTarget = false;
+    private boolean changeTarget = true;
     private String type;
 
 
@@ -29,27 +26,13 @@ public class Unit extends Object{
         super(x, y);
         type = unitType;
         textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+".atlas"));
-        TextureAtlas.AtlasRegion region = textureAtlas.findRegion(type+"0");
-        sprite = new Sprite(region);
-        width = sprite.getWidth();
-        height = sprite.getHeight();
-        sprite.setPosition(position.x-width/2, position.y - height/2);
+        animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
+        //width = textureAtlas.findRegion(type+"0").getTexture().getWidth();
+        //height = textureAtlas.findRegion(type+"0").getTexture().getHeight();
+        width = 64;
+        height = 64;
+        System.out.println(String.valueOf(width)+"  "+String.valueOf(height));
         targetPosition = new Vector3(position);
-        Timer.schedule(new Timer.Task(){
-                           @Override
-                           public void run() {
-                               if(unitMoving)
-                                   currentFrame++;
-                               else
-                                   currentFrame = 0;
-                               if(currentFrame >= 4)
-                                   currentFrame = 0;
-
-                               currentAtlasKey = type+String.format("%d", currentFrame);
-                               sprite.setRegion(textureAtlas.findRegion(currentAtlasKey));
-                           }
-                       }
-                ,0,1/updateFreq);
     }
 
     public void setTarget(Vector3 pos) {
@@ -65,7 +48,15 @@ public class Unit extends Object{
     }
 
     public void draw(SpriteBatch batch) {
-        sprite.draw(batch);
+        if(unitMoving) {
+            elapsedTime += Gdx.graphics.getDeltaTime();
+            batch.draw(animation.getKeyFrame(elapsedTime, true), position.x-width/2, position.y-height/2);
+        }
+        else {
+            elapsedTime = 0;
+            batch.draw(animation.getKeyFrame(elapsedTime, true), position.x-width/2, position.y-height/2);
+        }
+
     }
 
     public void dispose() {
@@ -100,7 +91,6 @@ public class Unit extends Object{
             unitMoving = false;
             position.set(targetPosition);
         }
-        sprite.setPosition(position.x-width/2, position.y-height/2);
     }
 
     public void allowTargetChanging(boolean x) {
