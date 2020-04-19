@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 
 import static java.lang.Math.abs;
@@ -18,20 +19,18 @@ public class Unit extends Object{
     private float elapsedTime = 0;
     private Vector3 targetPosition;
     private boolean unitMoving = false;
-    private boolean changeTarget = true;
+    private boolean changeTarget = false;
     private String type;
 
 
-    public Unit(float x, float y, String unitType) {
-        super(x, y);
+    public Unit(float x, float y, String unitType, int color) {
+        super(x, y, color);
         type = unitType;
-        textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+".atlas"));
+        textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+String.valueOf(color)+".atlas"));
         animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
-        //width = textureAtlas.findRegion(type+"0").getTexture().getWidth();
-        //height = textureAtlas.findRegion(type+"0").getTexture().getHeight();
-        width = 64;
-        height = 64;
-        System.out.println(String.valueOf(width)+"  "+String.valueOf(height));
+        width = textureAtlas.createSprite(type+String.valueOf(color)+"0").getWidth();
+        height = textureAtlas.createSprite(type+String.valueOf(color)+"0").getHeight();
+        healthbar.setWidth(width);
         targetPosition = new Vector3(position);
     }
 
@@ -44,7 +43,9 @@ public class Unit extends Object{
     }
 
     public void update() {
+        super.update();
         moveToTarget(150);
+        healthbar.setPosition(new Vector3(position.x, position.y+height/2, 0));
     }
 
     public void draw(SpriteBatch batch) {
@@ -56,7 +57,6 @@ public class Unit extends Object{
             elapsedTime = 0;
             batch.draw(animation.getKeyFrame(elapsedTime, true), position.x-width/2, position.y-height/2);
         }
-
     }
 
     public void dispose() {

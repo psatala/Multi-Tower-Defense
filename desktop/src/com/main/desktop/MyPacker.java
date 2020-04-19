@@ -5,6 +5,6 @@ import com.badlogic.gdx.tools.texturepacker.TexturePacker;
 
 public class MyPacker {
     public static void pack () {
-        TexturePacker.process("/home/piotr/Documents/staszic", "/home/piotr/Multi-Tower-Defense/core/assets/", "staszic");
+        TexturePacker.process("/home/piotr/Documents/firstUnit/firstUnit0", "/home/piotr/Multi-Tower-Defense/core/assets/", "firstUnit0");
     }
 }

@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Timer;
 
 import java.util.Vector;
 
@@ -24,6 +25,7 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
 	private Vector<Unit> units;
+	private Vector<Missile> missiles;
 	private PlayerInterface mainInterface;
 	private Vector3 selection;
 	private Rectangle selectRect;
@@ -36,12 +38,46 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		batch = new SpriteBatch();
-		units = new Vector();
-		for(int i = 0; i < 10; ++i)
-		    spawnUnit((float)random()*1000, (float)random()*650);
+		units = new Vector<Unit>();
+		missiles = new Vector<Missile>();
+		for(int i = 0; i < 4; ++i)
+		    spawnUnit((float)random()*300+50, (float)random()*600+50, 0);
+		for(int i = 0; i < 4; ++i)
+			spawnUnit((float)random()*300+700, (float)random()*600+50, 1);
 		mainInterface = new PlayerInterface();
 		Gdx.input.setInputProcessor(this);
 		renderer = new ShapeRenderer();
+
+		Timer.schedule(new Timer.Task(){
+						   @Override
+						   public void run() {
+						   	   updateFight();
+						   }
+					   }
+				,0,1/30.0f);
+	}
+
+	public void updateFight() {
+		float bestDistance;
+		Object bestTarget;
+		for(Unit shooter : units) {
+			bestDistance = 1e9f;
+			bestTarget = null;
+            for(Unit unit : units) {
+            	if(shooter.color == unit.color)
+            		continue;
+            	float distance = shooter.distance(unit.getPosition());
+            	if(distance <= shooter.range && distance < bestDistance) {
+            		bestDistance = distance;
+            		bestTarget = unit;
+				}
+			}
+            if(bestTarget != null) {
+            	if(shooter.shoot()) {
+            		missiles.add(new Missile(bestTarget, shooter));
+				}
+			}
+		}
 	}
 
 	@Override
@@ -55,17 +91,39 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		for(Unit unit : units)
 			unit.update();
 
-		if(drawSelection){
-			renderer.begin(ShapeRenderer.ShapeType.Filled);
-			renderer.setColor(Color.DARK_GRAY);
-			renderer.rect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
-			renderer.end();
+		Vector<Missile> missilesToRemove = new Vector<Missile>();
+		Vector<Unit> unitsToRemove = new Vector<Unit>();
+		for(Missile missile : missiles) {
+			if(missile.update()) {
+				missilesToRemove.add(missile);
+			}
+		}
+		for(Missile missile : missilesToRemove) {
+			missiles.remove(missile);
+		}
+		for(Unit unit : units) {
+			if(!unit.isAlive()) {
+				unitsToRemove.add(unit);
+			}
+		}
+		for(Unit unit : unitsToRemove) {
+			units.remove(unit);
 		}
 
+		renderer.begin(ShapeRenderer.ShapeType.Filled);
+		if(drawSelection){
+			renderer.setColor(Color.DARK_GRAY);
+			renderer.rect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
+		}
+		for(Unit unit : units) {
+			unit.draw(renderer);
+		}
+		renderer.end();
 		batch.begin();
-
 		for(Unit unit : units)
 			unit.draw(batch);
+		for(Missile missile : missiles)
+			missile.draw(batch);
 		mainInterface.draw(batch);
 		batch.end();
 	}
@@ -159,7 +217,7 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 	}
 
 
-	private void spawnUnit(float x, float y) {
-		units.add(new Unit(x, y, "firstUnit"));
+	private void spawnUnit(float x, float y, int color) {
+		units.add(new Unit(x, y, "firstUnit", color));
 	}
 }
