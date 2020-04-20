@@ -55,8 +55,5 @@ public class GameClient {
         }
         
     }
-
-    public static void main(String[] args) throws Exception {
-        new GameClient(54555, 54777, 5000);
-    }
+    
 }

@@ -1,6 +1,7 @@
 package app;
 
 import java.io.IOException;
+import java.util.Scanner;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
@@ -25,9 +26,6 @@ public class GameServer {
                 if(object instanceof GameRequest) {
                     GameRequest gameRequest = (GameRequest)object;
                     System.out.println(gameRequest.getMessage());
-
-                    GameResponse gameResponse = new GameResponse("Thanks!");
-                    connection.sendTCP(gameResponse);
                 }
             }
         });
@@ -36,8 +34,24 @@ public class GameServer {
         //start
         server.start();
         server.bind(tcpPortNumber, udpPortNumber);
+
+        run();
     }
-    public static void main(String[] args) throws Exception {
-        new GameServer(54555, 54777);       
+
+    public void run() {
+        Scanner gameScanner = null;
+        try {
+            gameScanner = new Scanner(System.in);
+            GameResponse gameResponse = new GameResponse();
+            while(true) {
+                gameResponse.setMessage(gameScanner.nextLine());
+                server.sendToAllTCP(gameResponse);
+            }
+        }
+        finally {
+            if(gameScanner != null)
+                gameScanner.close();
+        }
     }
+
 }
