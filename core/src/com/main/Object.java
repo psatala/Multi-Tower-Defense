@@ -1,43 +1,48 @@
 package com.main;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.utils.Align;
 
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-public class Object{
+public class Object extends Actor {
     static int idCounter = 0;
 
     final private float reloadTime = 1;
     final public float range = 300;
 
+    protected TextureRegion textureRegion;
+
     protected int id;
-    protected Vector3 position;
-    protected float width;
-    protected float height;
     protected int color;
     protected float damage = 5;
     protected float reloadTimeLeft;
     protected Healthbar healthbar;
+    protected String type;
 
 
-
-    public Object(float x, float y, int color) {
-        position = new Vector3(x, y, 0);
+    public Object(String type, int color) {
+        textureRegion = new TextureRegion(new Texture(type+String.valueOf(color)+"0.png"));
+        this.setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
         this.color = color;
         id = idCounter;
         idCounter++;
-        height = width = 0;
         reloadTimeLeft = reloadTime;
 
-        healthbar = new Healthbar(100, x, y, width);
+        healthbar = new Healthbar(100, this.getWidth());
+        healthbar.setPosition(0, this.getHeight());
     }
 
-    public void draw(ShapeRenderer renderer) {
-        healthbar.draw(renderer);
+    @Override
+    public void draw(Batch batch, float parentAlpha) {
+        batch.draw(textureRegion, this.getX(), this.getY());
     }
 
     public boolean damage(float healthPoints) {
@@ -61,19 +66,24 @@ public class Object{
         return healthbar.getHP() > 0;
     }
 
-    public Vector3 getPosition() {
-        return position;
-    }
-
-    public float getX() {
-        return position.x;
-    }
-
-    public float getY() {
-        return position.y;
-    }
 
     public float distance(Vector3 pos) {
-        return (float)sqrt(pow(position.x-pos.x, 2) + pow(position.y-pos.y, 2));
+        return (float)sqrt(pow(this.getX(Align.center)-pos.x, 2) + pow(this.getY(Align.center)-pos.y, 2));
+    }
+
+    public float distance(Object object) {
+        return (float)sqrt(pow(this.getX(Align.center)-object.getX(Align.center), 2) + pow(this.getY(Align.center)-object.getY(Align.center), 2));
+    }
+
+    @Override
+    public void setPosition(float x, float y, int align) {
+        super.setPosition(x, y, align);
+        healthbar.setPosition(x, y+this.getHeight()/2, align);
+    }
+
+    @Override
+    public boolean remove() {
+        healthbar.remove();
+        return super.remove();
     }
 }

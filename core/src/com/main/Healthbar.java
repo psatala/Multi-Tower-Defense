@@ -1,29 +1,38 @@
 package com.main;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
-public class Healthbar{
-    private Vector3 position;
-    private float width;
+public class Healthbar extends Actor {
     private final float height = 5;
+    private Pixmap greenPartPixmap;
+    private Texture greenPart;
+    private Pixmap redPartPixmap;
+    private Texture redPart;
     private float hp;
     private float maxHP;
 
-    public Healthbar(float maximumHP, float x, float y, float w) {
-        position = new Vector3(x, y, 0);
-        width = w;
+    public Healthbar(float maximumHP, float w) {
+        this.setBounds(0, 0, w, height);
         maxHP = maximumHP;
         hp = maxHP;
+        createTexture();
     }
 
-    public void setWidth(float w) {
-        width = w;
-    }
-
-    public void setPosition(Vector3 pos) {
-        position.set(pos);
+    private void createTexture() {
+        greenPartPixmap = new Pixmap((int)height, (int)height, Pixmap.Format.RGBA8888);
+        redPartPixmap = new Pixmap((int)height, (int)height, Pixmap.Format.RGBA8888);
+        greenPartPixmap.setColor(Color.GREEN);
+        greenPartPixmap.fillRectangle(0, 0, (int)height, (int)height);
+        greenPart = new Texture(greenPartPixmap);
+        redPartPixmap.setColor(Color.RED);
+        redPartPixmap.fillRectangle(0, 0, (int)height, (int)height);
+        redPart = new Texture(redPartPixmap);
+        greenPartPixmap.dispose();
+        redPartPixmap.dispose();
     }
 
     //Returns true if object is dead
@@ -36,11 +45,10 @@ public class Healthbar{
         return false;
     }
 
-    public void draw(ShapeRenderer renderer) {
-        renderer.setColor(Color.GREEN);
-        renderer.rect(position.x-width/2, position.y, width*(hp/maxHP), height);
-        renderer.setColor(Color.RED);
-        renderer.rect(position.x-width/2+width*(hp/maxHP), position.y, width*(1-hp/maxHP), height);
+    @Override
+    public void draw(Batch batch, float alpha) {
+        batch.draw(greenPart, this.getX(), this.getY(), this.getWidth()*(hp/maxHP), this.getHeight());
+        batch.draw(redPart, this.getX()+this.getWidth()*(hp/maxHP), this.getY(), this.getWidth()*(1-hp/maxHP), this.getHeight());
     }
 
     public float getHP() {

@@ -3,11 +3,12 @@ package com.main;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
-public class PlayerInterface {
+public class PlayerInterface extends Actor {
     private BitmapFont bigFont;
 
     private Pixmap pixmap;
@@ -26,7 +27,8 @@ public class PlayerInterface {
     }
 
 
-    public void draw(SpriteBatch batch) {
+    @Override
+    public void draw(Batch batch, float alpha) {
         bigFont.draw(batch, "Player 1", 530, 710);
         bigFont.draw(batch, "Coins: You're broke.", 940, 710);
         lineSprite.setPosition(0, 686);

@@ -5,13 +5,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import java.util.Vector;
 
@@ -22,7 +24,6 @@ import static java.lang.StrictMath.max;
 
 
 public class MainGameView extends ApplicationAdapter implements InputProcessor {
-	private SpriteBatch batch;
 	private OrthographicCamera camera;
 	private Vector<Unit> units;
 	private Vector<Missile> missiles;
@@ -30,14 +31,15 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 	private Vector3 selection;
 	private Rectangle selectRect;
 	private boolean drawSelection = false;
-
+	private Stage stage;
 	private ShapeRenderer renderer;
-	
+
 	@Override
 	public void create () {
+		stage = new Stage(new ScreenViewport());
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		batch = new SpriteBatch();
+		renderer = new ShapeRenderer();
 		units = new Vector<Unit>();
 		missiles = new Vector<Missile>();
 		for(int i = 0; i < 4; ++i)
@@ -45,8 +47,8 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		for(int i = 0; i < 4; ++i)
 			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);
 		mainInterface = new PlayerInterface();
+		stage.addActor(mainInterface);
 		Gdx.input.setInputProcessor(this);
-		renderer = new ShapeRenderer();
 
 		Timer.schedule(new Timer.Task(){
 						   @Override
@@ -58,6 +60,14 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 	}
 
 	public void updateFight() {
+	    for(Unit unit : units) {
+	        for(Missile missile : missiles) {
+	            if(missile.getMissileColor() != unit.color && missile.hitObject(unit)){
+	                unit.damage(missile.getDamage());
+	                missile.targetHit();
+                }
+            }
+        }
 		float bestDistance;
 		Object bestTarget;
 		for(Unit shooter : units) {
@@ -66,7 +76,7 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
             for(Unit unit : units) {
             	if(shooter.color == unit.color)
             		continue;
-            	float distance = shooter.distance(unit.getPosition());
+            	float distance = shooter.distance(unit);
             	if(distance <= shooter.range && distance < bestDistance) {
             		bestDistance = distance;
             		bestTarget = unit;
@@ -74,7 +84,9 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 			}
             if(bestTarget != null) {
             	if(shooter.shoot()) {
-            		missiles.add(new Missile(bestTarget, shooter));
+            		Missile missile = new Missile(bestTarget, shooter);
+            		missiles.add(missile);
+            		stage.addActor(missile);
 				}
 			}
 		}
@@ -85,52 +97,48 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		camera.update();
-		batch.setProjectionMatrix(camera.combined);
 
-		for(Unit unit : units)
+		for (Unit unit : units)
 			unit.update();
-
 		Vector<Missile> missilesToRemove = new Vector<Missile>();
 		Vector<Unit> unitsToRemove = new Vector<Unit>();
-		for(Missile missile : missiles) {
-			if(missile.update()) {
+		for (Missile missile : missiles) {
+			if (!missile.isAlive()) {
 				missilesToRemove.add(missile);
 			}
 		}
-		for(Missile missile : missilesToRemove) {
+		for (Missile missile : missilesToRemove) {
 			missiles.remove(missile);
+			missile.remove();
 		}
-		for(Unit unit : units) {
-			if(!unit.isAlive()) {
+		for (Unit unit : units) {
+			if (!unit.isAlive()) {
 				unitsToRemove.add(unit);
 			}
 		}
-		for(Unit unit : unitsToRemove) {
+		for (Unit unit : unitsToRemove) {
 			units.remove(unit);
+			unit.remove();
 		}
 
-		renderer.begin(ShapeRenderer.ShapeType.Filled);
-		if(drawSelection){
+		stage.act(Gdx.graphics.getDeltaTime());
+
+		if (drawSelection) {
+			renderer.begin(ShapeRenderer.ShapeType.Filled);
 			renderer.setColor(Color.DARK_GRAY);
 			renderer.rect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
+			renderer.end();
 		}
-		for(Unit unit : units) {
-			unit.draw(renderer);
-		}
-		renderer.end();
-		batch.begin();
-		for(Unit unit : units)
-			unit.draw(batch);
-		for(Missile missile : missiles)
-			missile.draw(batch);
-		mainInterface.draw(batch);
-		batch.end();
+
+		stage.draw();
+	}
+
+	public void resize (int width, int height) {
+		stage.getViewport().update(width, height, true);
 	}
 	
 	@Override
 	public void dispose () {
-		batch.dispose();
 		for(Unit unit : units)
 			unit.dispose();
 		mainInterface.dispose();
@@ -147,7 +155,7 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 		}
 		else if(button == Input.Buttons.LEFT){
 			for(Unit unit : units) {
-				unit.setTarget(selection);
+				unit.goToPosition(selection);
 			}
 		}
 		return false;
@@ -165,8 +173,8 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
         float bry = min(selection.y, selection2.y);
         float unitX, unitY;
 		for(Unit unit : units) {
-			unitX = unit.getX();
-			unitY = unit.getY();
+			unitX = unit.getX(Align.center);
+			unitY = unit.getY(Align.center);
         	if(unitX >= tlx && unitX <= brx && unitY <= tly && unitY >= bry) {
         		unit.allowTargetChanging(true);
 			}
@@ -218,6 +226,10 @@ public class MainGameView extends ApplicationAdapter implements InputProcessor {
 
 
 	private void spawnUnit(float x, float y, int color) {
-		units.add(new Unit(x, y, "staszic", color));
+		Unit unit = new Unit("firstUnit", color);
+		unit.setPosition(x, y, Align.center);
+		units.add(unit);
+		stage.addActor(unit);
+		stage.addActor(unit.healthbar);
 	}
 }

@@ -2,76 +2,75 @@ package com.main;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
+import com.badlogic.gdx.utils.Align;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 
-public class Missile {
-    private Object target;
+public class Missile extends Actor {
+    static final float velocity = 300;
+    private Vector3 target;
     private float damage;
-    private Vector3 position;
     private Texture texture;
-    private Sprite sprite;
-    private float width;
-    private float height;
+    private boolean isFlying = true;
+    private int color;
 
     public Missile(Object target, Object source) {
-        this.target = target;
-        damage = source.damage;
-        position = new Vector3(source.getPosition());
         texture = new Texture(Gdx.files.internal("missile.png"));
-        sprite = new Sprite(texture);
-        width = sprite.getWidth();
-        height = sprite.getHeight();
-        sprite.setPosition(position.x-width/2, position.y-height/2);
+        this.target = new Vector3(target.getX(Align.center), target.getY(Align.center), 0);
+        damage = source.damage;
+        this.setBounds(0, 0, texture.getWidth(), texture.getHeight());
+        this.setPosition(source.getX(Align.center), source.getY(Align.center), Align.center);
+
+        MoveToAction moveAction = new MoveToAction();
+        moveAction.setPosition(target.getX(Align.center), target.getY(Align.center));
+        float travelTime = source.distance(target) / velocity;
+        moveAction.setDuration(travelTime);
+        RunnableAction completionAction = new RunnableAction(){
+            public void run(){
+                isFlying = false;
+            }
+        };
+        this.addAction(sequence(moveAction, completionAction));
+        color = source.color;
     }
 
-    public boolean update() {
-        boolean ret = moveToTarget(300);
-        sprite.setPosition(position.x-width/2, position.y-height/2);
-        return ret;
-    }
-
-    public Object getTarget() {
+    public Vector3 getTarget() {
         return target;
     }
 
-    public void draw(SpriteBatch batch) {
-        sprite.draw(batch);
+    @Override
+    public void draw(Batch batch, float alpha) {
+        batch.draw(texture, this.getX(), this.getY());
     }
 
-    public boolean moveToTarget(int velocity) {
-        Vector3 targetPosition = target.getPosition();
-        float deltaDist = velocity* Gdx.graphics.getDeltaTime();
-        float distX = abs(targetPosition.x - position.x);
-        float distY = abs(targetPosition.y - position.y);
-        if(distX*distX + distY*distY > deltaDist*deltaDist) {
-            float dx, dy;
-            if(distY == 0){
-                dy = 0;
-                dx = deltaDist;
-            }
-            else {
-                dy = (float)(deltaDist/sqrt(1+pow(distX/distY, 2)));
-                dx = dy*distX/distY;
-            }
-            if(position.x < targetPosition.x)
-                position.x += dx;
-            else
-                position.x -= dx;
-            if(position.y < targetPosition.y)
-                position.y += dy;
-            else
-                position.y -= dy;
+    public boolean isAlive() {
+        return isFlying;
+    }
+
+    public boolean hitObject(Object object) {
+        float myX = this.getX(Align.center);
+        float myY = this.getY(Align.center);
+        if(myX < object.getX() || myX >= object.getX(Align.right))
             return false;
-        }
-        else {
-            target.damage(damage);
-            return true;
-        }
+        if(myY < object.getY() || myY >= object.getY(Align.top))
+            return false;
+        return true;
+    }
+
+    public void targetHit() {
+        isFlying = false;
+    }
+
+    public float getDamage(){
+        return damage;
+    }
+
+    public int getMissileColor() {
+        return color;
     }
 }
