@@ -33,7 +33,7 @@ public class GameServer {
 
         //start
         server.start();
-        server.bind(tcpPortNumber, udpPortNumber);
+        server.bind(tcpPortNumber);
 
         run();
     }

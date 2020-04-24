@@ -33,7 +33,7 @@ public class GameClient {
 
         //start
         client.start();
-        client.connect(maxDelay, "127.0.0.1", tcpPortNumber, udpPortNumber);
+        client.connect(maxDelay, "multitowerdefense.hopto.org", tcpPortNumber);
 
         run();
     }
