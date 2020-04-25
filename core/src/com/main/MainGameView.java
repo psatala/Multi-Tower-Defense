@@ -119,7 +119,6 @@ public class MainGameView extends ApplicationAdapter {
 	
 	@Override
 	public void dispose () {
-		mainInterface.dispose();
 		renderer.dispose();
 		stage.dispose();
 	}

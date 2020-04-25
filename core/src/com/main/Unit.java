@@ -14,7 +14,7 @@ import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 import static java.lang.Math.random;
 
 public class Unit extends Object{
-    static final float velocity = 150;
+    static final float velocity = 50;
     private TextureAtlas textureAtlas;
     private Animation<TextureRegion> animation;
     private float elapsedTime = 0;
