@@ -21,7 +21,7 @@ public class MainGameView extends ApplicationAdapter {
 	private List<Unit> units;
 	private List<Missile> missiles;
 	private PlayerInterface mainInterface;
-	private Stage stage;
+	protected Stage stage;
 	private ShapeRenderer renderer;
 
 	@Override
