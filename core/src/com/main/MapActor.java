@@ -10,6 +10,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.utils.Align;
+
+import java.util.Vector;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
@@ -29,9 +32,11 @@ public class MapActor extends Group {
     private MainGameView gameManager;
     private ShapeRenderer renderer;
     protected Mode mode;
+    private int playerId;
 
-    public MapActor(float w, float h, MainGameView gameView) {
+    public MapActor(float w, float h, MainGameView gameView, int color) {
         gameManager = gameView;
+        playerId = color;
         renderer = new ShapeRenderer();
         this.setBounds(0, 0, w, h);
         gridCellH = h/(float)gridH;
@@ -42,6 +47,34 @@ public class MapActor extends Group {
                 gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this);
                 this.addActor(gridCells[x][y]);
             }
+        }
+    }
+
+    public Vector3 getGridCoords(Vector3 mapCoords){
+        float x = mapCoords.x/gridCellW;
+        float y = mapCoords.y/gridCellH;
+        return new Vector3(x, y, 0);
+    }
+
+    public Vector3 getGridCoords(float mapX, float mapY){
+        float x = mapX/gridCellW;
+        float y = mapY/gridCellH;
+        return new Vector3(x, y, 0);
+    }
+
+    public void updateGrid(Vector<Vector3> updates) {
+        for(int x = 0; x < gridW; ++x) {
+            for(int y = 0; y < gridH; ++y) {
+                gridCells[x][y].setEmpty(true);
+            }
+        }
+        Vector3 pos;
+        for(Vector3 update : updates) {
+            pos = getGridCoords(update);
+            if(update.z == 1)
+                gridCells[(int)pos.x][(int)pos.y].setBlocked(true);
+            else
+                gridCells[(int)pos.x][(int)pos.y].setEmpty(false);
         }
     }
 
@@ -80,6 +113,17 @@ public class MapActor extends Group {
                 else if(mode == Mode.MOVE){
                     gameManager.sendUnitsTo(selection);
                     drawSelection = false;
+                }
+                else if(mode == Mode.BUILD){
+                    Vector3 gridCoords = getGridCoords(x, y);
+                    int gx = (int)gridCoords.x;
+                    int gy = (int)gridCoords.y;
+                    if(gridCells[gx][gy].isEmpty()) {
+                        gridCells[gx][gy].setBlocked(true);
+                        float tx = gridCells[gx][gy].getX(Align.center);
+                        float ty = gridCells[gx][gy].getY(Align.center);
+                        gameManager.spawnTower(tx, ty, playerId);
+                    }
                 }
                 return true;
             }

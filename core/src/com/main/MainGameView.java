@@ -18,6 +18,7 @@ import static java.lang.Math.random;
 
 
 public class MainGameView extends ApplicationAdapter {
+	private List<Object> objects;
 	private List<Unit> units;
 	private List<Missile> missiles;
 	private PlayerInterface mainInterface;
@@ -29,12 +30,13 @@ public class MainGameView extends ApplicationAdapter {
 		stage = new Stage(new ScreenViewport());
 		renderer = new ShapeRenderer();
 		units = new Vector<Unit>();
+		objects  = new Vector<Object>();
 		missiles = new Vector<Missile>();
 		for(int i = 0; i < 4; ++i)
 		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
 		for(int i = 0; i < 4; ++i)
 			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);
-		mainInterface = new PlayerInterface(this);
+		mainInterface = new PlayerInterface(this, 0);
 		stage.addActor(mainInterface);
 		Gdx.input.setInputProcessor(stage);
 
@@ -42,32 +44,33 @@ public class MainGameView extends ApplicationAdapter {
 						   @Override
 						   public void run() {
 						   	   updateFight();
+						   	   updateGrid();
 						   }
 					   }
 				,0,1/30.0f);
 	}
 
 	public void updateFight() {
-	    for(Unit unit : units) {
+	    for(Object object : objects) {
 	        for(Missile missile : missiles) {
-	            if(missile.getMissileColor() != unit.color && missile.hitObject(unit)){
-	                unit.damage(missile.getDamage());
+	            if(missile.getMissileColor() != object.color && missile.hitObject(object)){
+	                object.damage(missile.getDamage());
 	                missile.targetHit();
                 }
             }
         }
 		float bestDistance;
 		Object bestTarget;
-		for(Unit shooter : units) {
+		for(Object shooter : objects) {
 			bestDistance = 1e9f;
 			bestTarget = null;
-            for(Unit unit : units) {
-            	if(shooter.color == unit.color)
+            for(Object object : objects) {
+            	if(shooter.color == object.color)
             		continue;
-            	float distance = shooter.distance(unit);
+            	float distance = shooter.distance(object);
             	if(distance <= shooter.range && distance < bestDistance) {
             		bestDistance = distance;
-            		bestTarget = unit;
+            		bestTarget = object;
 				}
 			}
             if(bestTarget != null) {
@@ -80,16 +83,24 @@ public class MainGameView extends ApplicationAdapter {
 		}
 	}
 
+	public void updateGrid() {
+	    Vector<Vector3> updates = new Vector<Vector3>();
+	    for(Object object : objects) {
+	        updates.add(object.gridUpdate());
+        }
+	    mainInterface.updateGrid(updates);
+    }
+
 	@Override
 	public void render () {
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 
-		for (Unit unit : units)
-			unit.update();
+		for(Object object : objects)
+			object.update();
 		Vector<Missile> missilesToRemove = new Vector<Missile>();
-		Vector<Unit> unitsToRemove = new Vector<Unit>();
+		Vector<Object> unitsToRemove = new Vector<Object>();
 		for (Missile missile : missiles) {
 			if (!missile.isAlive()) {
 				missilesToRemove.add(missile);
@@ -99,14 +110,15 @@ public class MainGameView extends ApplicationAdapter {
 			missiles.remove(missile);
 			missile.remove();
 		}
-		for (Unit unit : units) {
-			if (!unit.isAlive()) {
-				unitsToRemove.add(unit);
+		for (Object object : objects) {
+			if (!object.isAlive()) {
+				unitsToRemove.add(object);
 			}
 		}
-		for (Unit unit : unitsToRemove) {
-			units.remove(unit);
-			unit.remove();
+		for (Object object : unitsToRemove) {
+			objects.remove(object);
+			units.remove(object);
+			object.remove();
 		}
 
 		stage.act(Gdx.graphics.getDeltaTime());
@@ -126,6 +138,7 @@ public class MainGameView extends ApplicationAdapter {
 	private void spawnUnit(float x, float y, int color) {
 		Unit unit = new Unit("firstUnit", color);
 		unit.setPosition(x, y, Align.center);
+		objects.add(unit);
 		units.add(unit);
 		stage.addActor(unit);
 		stage.addActor(unit.healthbar);
@@ -135,6 +148,14 @@ public class MainGameView extends ApplicationAdapter {
 		for(Unit unit : units) {
 			unit.goToPosition(pos);
 		}
+	}
+
+	public void spawnTower(float x, float y, int color) {
+		Tower tower = new Tower("firstTower", color);
+		tower.setPosition(x, y, Align.center);
+		objects.add(tower);
+		stage.addActor(tower);
+		stage.addActor(tower.healthbar);
 	}
 
 	public void selectUnits(Rectangle rect) {

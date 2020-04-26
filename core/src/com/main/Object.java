@@ -40,6 +40,10 @@ public class Object extends Actor {
         healthbar.setPosition(0, this.getHeight());
     }
 
+    public Vector3 gridUpdate() {
+        return new Vector3(0, 0, 0);
+    }
+
     @Override
     public void draw(Batch batch, float parentAlpha) {
         batch.draw(textureRegion, this.getX(), this.getY());

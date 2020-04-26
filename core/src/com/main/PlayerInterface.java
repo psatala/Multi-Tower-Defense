@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -14,17 +15,21 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
+import java.util.Vector;
+
 
 public class PlayerInterface extends Group {
     final private float topBarHeight = 34;
     private InfoActor info;
     public MapActor map;
     private Skin skin;
+    private int playerId;
 
-    public PlayerInterface(MainGameView gameView) {
+    public PlayerInterface(MainGameView gameView, int color) {
+        playerId = color;
         this.setBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         info = new InfoActor(this.getWidth(), topBarHeight, this.getHeight() - topBarHeight);
-        map = new MapActor(this.getWidth(), this.getHeight() - topBarHeight, gameView);
+        map = new MapActor(this.getWidth(), this.getHeight() - topBarHeight, gameView, color);
         this.addActor(info);
         this.addActor(map);
         skin = new Skin(Gdx.files.internal("uiskin.json"));
@@ -45,6 +50,10 @@ public class PlayerInterface extends Group {
                 map.setMode(mode);
             }
         });
+    }
+
+    public void updateGrid(Vector<Vector3> updates) {
+        map.updateGrid(updates);
     }
 }
 

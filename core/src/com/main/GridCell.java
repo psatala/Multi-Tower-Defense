@@ -59,6 +59,13 @@ public class GridCell extends Actor {
         };
     }
 
+    public boolean isEmpty() {
+        return isEmpty;
+    }
+
+    public boolean isBlocked() {
+        return isBlocked;
+    }
 
     public void setBlocked(boolean x) {
         isBlocked = x;

@@ -61,6 +61,11 @@ public class Unit extends Object{
         }
     }
 
+    @Override
+    public Vector3 gridUpdate() {
+        return new Vector3(this.getX(Align.center), this.getY(Align.center), 0);
+    }
+
     public void dispose() {
         textureAtlas.dispose();
     }
