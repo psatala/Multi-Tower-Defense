@@ -21,15 +21,18 @@ public class GameManager extends ApplicationAdapter {
 	private List<Object> objects;
 	private List<Unit> units;
 	private List<Missile> missiles;
-	private PlayerInterface mainInterface;
+	private InfoActor info;
+	private MapActor map;
 	protected Stage stage;
 	private ShapeRenderer renderer;
 
 	@Override
 	public void create () {
 		stage = new Stage(new ScreenViewport());
-		mainInterface = new PlayerInterface(this, 0);
-		stage.addActor(mainInterface);
+		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, 0);
+		stage.addActor(info.getInfoGroup());
+		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, 0);
+		stage.addActor(map.getMapGroup());
 		Gdx.input.setInputProcessor(stage);
 		renderer = new ShapeRenderer();
 		units = new Vector<Unit>();
@@ -51,17 +54,34 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	public void updateFight() {
+		Vector<Object> objectsToRemove = new Vector<Object>();
+		Vector<Missile> missilesToRemove = new Vector<Missile>();
 	    for(Object object : objects) {
 	        for(Missile missile : missiles) {
 	            if(missile.getPlayerId() != object.playerId && missile.hitObject(object)){
 	                object.damage(missile.getDamage());
 	                missile.targetHit();
-	                if(!object.isAlive() && missile.getPlayerId()==0) {
-	                	mainInterface.addCoins(object.getReward());
+	                if(!object.isAlive()) {
+	                	if(missile.getPlayerId() == 0) {
+							info.addCoins(object.getReward());
+						}
+						objectsToRemove.add(object);
 					}
                 }
+	            if(!missile.isAlive()) {
+					missilesToRemove.add(missile);
+				}
             }
         }
+	    for(Object object : objectsToRemove) {
+			objects.remove(object);
+			units.remove(object);
+			object.remove();
+		}
+	    for(Missile missile : missilesToRemove) {
+			missiles.remove(missile);
+			missile.remove();
+		}
 		float bestDistance;
 		Object bestTarget;
 		for(Object shooter : objects) {
@@ -91,39 +111,16 @@ public class GameManager extends ApplicationAdapter {
 	    for(Object object : objects) {
 	        updates.add(object.gridUpdate());
         }
-	    mainInterface.updateGrid(updates);
+	    map.updateGrid(updates);
     }
 
 	@Override
 	public void render () {
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-
-		for(Object object : objects)
+		for(Object object : objects) {
 			object.update();
-		Vector<Missile> missilesToRemove = new Vector<Missile>();
-		Vector<Object> unitsToRemove = new Vector<Object>();
-		for (Missile missile : missiles) {
-			if (!missile.isAlive()) {
-				missilesToRemove.add(missile);
-			}
 		}
-		for (Missile missile : missilesToRemove) {
-			missiles.remove(missile);
-			missile.remove();
-		}
-		for (Object object : objects) {
-			if (!object.isAlive()) {
-				unitsToRemove.add(object);
-			}
-		}
-		for (Object object : unitsToRemove) {
-			objects.remove(object);
-			units.remove(object);
-			object.remove();
-		}
-
 		stage.act(Gdx.graphics.getDeltaTime());
 		stage.draw();
 	}
@@ -140,13 +137,12 @@ public class GameManager extends ApplicationAdapter {
 
 	private void spawnUnit(float x, float y, int playerId) {
 		Unit unit = new Unit("firstUnit", playerId);
-		if(playerId == 0 && !mainInterface.spendCoins(unit.getCost()))
+		if(playerId == 0 && !info.spendCoins(unit.getCost()))
 			return;
 		unit.setPosition(x, y, Align.center);
 		objects.add(unit);
 		units.add(unit);
-		stage.addActor(unit);
-		stage.addActor(unit.healthbar);
+		stage.addActor(unit.getObjectGroup());
 	}
 
 	public void sendUnitsTo(Vector3 pos) {
@@ -157,12 +153,11 @@ public class GameManager extends ApplicationAdapter {
 
 	public void spawnTower(float x, float y, int playerId) {
 		Tower tower = new Tower("firstTower", playerId);
-		if(playerId == 0 && !mainInterface.spendCoins(tower.getCost()))
+		if(playerId == 0 && !info.spendCoins(tower.getCost()))
 			return;
 		tower.setPosition(x, y, Align.center);
 		objects.add(tower);
-		stage.addActor(tower);
-		stage.addActor(tower.healthbar);
+		stage.addActor(tower.getObjectGroup());
 	}
 
 	public void selectUnits(Rectangle rect) {
@@ -177,5 +172,9 @@ public class GameManager extends ApplicationAdapter {
 				unit.allowTargetChanging(false);
 			}
 		}
+	}
+
+	public void setMode(MapActor.Mode mode) {
+		map.setMode(mode);
 	}
 }

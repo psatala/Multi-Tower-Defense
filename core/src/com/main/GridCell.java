@@ -19,9 +19,9 @@ public class GridCell extends Actor {
 
     public GridCell(float x, float y, float w, float h, MapActor m) {
         map = m;
-        this.setBounds(x, y, w, h);
+        setBounds(x, y, w, h);
         renderer = new ShapeRenderer();
-        this.addListener(createHoverListener());
+        addListener(createHoverListener());
     }
 
     @Override
@@ -33,11 +33,11 @@ public class GridCell extends Actor {
             renderer.begin(ShapeRenderer.ShapeType.Filled);
             if(!isEmpty){
                 renderer.setColor(new Color(1.0f, 0.0f, 0.0f, 0.3f));
-                renderer.rect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+                renderer.rect(getX(), getY(), getWidth(), getHeight());
             }
             if(isHighlighted){
                 renderer.setColor(new Color(0.0f, 1.0f, 0.0f, 0.3f));
-                renderer.rect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+                renderer.rect(getX(), getY(), getWidth(), getHeight());
             }
             renderer.end();
             Gdx.gl.glDisable(GL20.GL_BLEND);

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.utils.Align;
 
 import static java.lang.Math.max;
@@ -19,6 +20,7 @@ public class Object extends Actor {
     final public float range = 300;
 
     protected TextureRegion textureRegion;
+    private Group objectGroup;
 
     protected int id;
     protected int playerId;
@@ -32,14 +34,17 @@ public class Object extends Actor {
 
     public Object(String type, int playerId) {
         textureRegion = new TextureRegion(new Texture(type+String.valueOf(playerId)+"0.png"));
-        this.setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
+        setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
         this.playerId = playerId;
         id = idCounter;
         idCounter++;
         reloadTimeLeft = reloadTime;
 
-        healthbar = new Healthbar(100, this.getWidth());
-        healthbar.setPosition(0, this.getHeight());
+        healthbar = new Healthbar(100, getWidth());
+        healthbar.setPosition(0, getHeight());
+        objectGroup = new Group();
+        objectGroup.addActor(this);
+        objectGroup.addActor(healthbar);
     }
 
     public Vector3 gridUpdate() {
@@ -56,7 +61,7 @@ public class Object extends Actor {
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        batch.draw(textureRegion, this.getX(), this.getY());
+        batch.draw(textureRegion, getX(), getY());
     }
 
     public boolean damage(float healthPoints) {
@@ -82,22 +87,25 @@ public class Object extends Actor {
 
 
     public float distance(Vector3 pos) {
-        return (float)sqrt(pow(this.getX(Align.center)-pos.x, 2) + pow(this.getY(Align.center)-pos.y, 2));
+        return (float)sqrt(pow(getX(Align.center)-pos.x, 2) + pow(getY(Align.center)-pos.y, 2));
     }
 
     public float distance(Object object) {
-        return (float)sqrt(pow(this.getX(Align.center)-object.getX(Align.center), 2) + pow(this.getY(Align.center)-object.getY(Align.center), 2));
+        return (float)sqrt(pow(getX(Align.center)-object.getX(Align.center), 2) + pow(getY(Align.center)-object.getY(Align.center), 2));
     }
 
     @Override
     public void setPosition(float x, float y, int align) {
+        healthbar.setPosition(x, y+getHeight()/2, align);
         super.setPosition(x, y, align);
-        healthbar.setPosition(x, y+this.getHeight()/2, align);
     }
 
     @Override
     public boolean remove() {
-        healthbar.remove();
-        return super.remove();
+        return objectGroup.remove();
+    }
+
+    public Group getObjectGroup() {
+        return objectGroup;
     }
 }

@@ -23,8 +23,8 @@ public class Missile extends Actor {
         texture = new Texture(Gdx.files.internal("missile.png"));
         this.target = new Vector3(target.getX(Align.center), target.getY(Align.center), 0);
         damage = source.damage;
-        this.setBounds(0, 0, texture.getWidth(), texture.getHeight());
-        this.setPosition(source.getX(Align.center), source.getY(Align.center), Align.center);
+        setBounds(0, 0, texture.getWidth(), texture.getHeight());
+        setPosition(source.getX(Align.center), source.getY(Align.center), Align.center);
 
         MoveToAction moveAction = new MoveToAction();
         moveAction.setPosition(target.getX(Align.center), target.getY(Align.center));
@@ -35,7 +35,7 @@ public class Missile extends Actor {
                 isFlying = false;
             }
         };
-        this.addAction(sequence(moveAction, completionAction));
+        addAction(sequence(moveAction, completionAction));
         playerId = source.playerId;
     }
 
@@ -45,7 +45,7 @@ public class Missile extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
-        batch.draw(texture, this.getX(), this.getY());
+        batch.draw(texture, getX(), getY());
     }
 
     public boolean isAlive() {
@@ -53,8 +53,8 @@ public class Missile extends Actor {
     }
 
     public boolean hitObject(Object object) {
-        float myX = this.getX(Align.center);
-        float myY = this.getY(Align.center);
+        float myX = getX(Align.center);
+        float myY = getY(Align.center);
         if(myX < object.getX() || myX >= object.getX(Align.right))
             return false;
         if(myY < object.getY() || myY >= object.getY(Align.top))

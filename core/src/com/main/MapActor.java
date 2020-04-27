@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -17,7 +18,7 @@ import java.util.Vector;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-public class MapActor extends Group {
+public class MapActor extends Actor {
     public enum Mode{MOVE, SELECT, BUILD};
     public static final int gridW = 20;
     public static final int gridH = 10;
@@ -30,22 +31,25 @@ public class MapActor extends Group {
     private float gridCellW;
     private float gridCellH;
     private GameManager gameManager;
+    private Group mapGroup;
     private ShapeRenderer renderer;
     protected Mode mode;
     private int playerId;
 
-    public MapActor(float w, float h, GameManager gameView, int playerId) {
-        gameManager = gameView;
+    public MapActor(float w, float h, GameManager gameManager, int playerId) {
+        this.gameManager = gameManager;
         this.playerId = playerId;
         renderer = new ShapeRenderer();
-        this.setBounds(0, 0, w, h);
+        setBounds(0, 0, w, h);
         gridCellH = h/(float)gridH;
         gridCellW = w/(float)gridW;
-        this.addListener(createInterfaceListener());
+        mapGroup = new Group();
+        mapGroup.addActor(this);
+        mapGroup.addListener(createInterfaceListener());
         for(int x = 0; x < gridW; ++x) {
             for(int y = 0; y < gridH; ++y) {
                 gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this);
-                this.addActor(gridCells[x][y]);
+                mapGroup.addActor(gridCells[x][y]);
             }
         }
     }
@@ -90,11 +94,6 @@ public class MapActor extends Group {
             renderer.end();
             Gdx.gl.glDisable(GL20.GL_BLEND);
             batch.begin();
-        }
-        for(int x = 0; x < gridW; ++x) {
-            for(int y = 0; y < gridH; ++y) {
-                gridCells[x][y].draw(batch, alpha);
-            }
         }
     }
 
@@ -146,5 +145,9 @@ public class MapActor extends Group {
                 gameManager.selectUnits(selectRect);
             }
         };
+    }
+
+    public Group getMapGroup() {
+        return mapGroup;
     }
 }

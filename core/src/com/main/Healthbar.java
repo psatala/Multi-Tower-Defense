@@ -16,7 +16,7 @@ public class Healthbar extends Actor {
     private float maxHP;
 
     public Healthbar(float maximumHP, float w) {
-        this.setBounds(0, 0, w, height);
+        setBounds(0, 0, w, height);
         maxHP = maximumHP;
         hp = maxHP;
         createTexture();
@@ -47,8 +47,8 @@ public class Healthbar extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
-        batch.draw(greenPart, this.getX(), this.getY(), this.getWidth()*(hp/maxHP), this.getHeight());
-        batch.draw(redPart, this.getX()+this.getWidth()*(hp/maxHP), this.getY(), this.getWidth()*(1-hp/maxHP), this.getHeight());
+        batch.draw(greenPart, getX(), getY(), getWidth()*(hp/maxHP), getHeight());
+        batch.draw(redPart, getX()+getWidth()*(hp/maxHP), getY(), getWidth()*(1-hp/maxHP), getHeight());
     }
 
     public float getHP() {

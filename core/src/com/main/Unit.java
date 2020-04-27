@@ -14,7 +14,7 @@ import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 import static java.lang.Math.random;
 
 public class Unit extends Object{
-    static final float velocity = 50;
+    static final float velocity = 100;
     private TextureAtlas textureAtlas;
     private Animation<TextureRegion> animation;
     private float elapsedTime = 0;
@@ -27,26 +27,26 @@ public class Unit extends Object{
         type = unitType;
         textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+String.valueOf(playerId)+".atlas"));
         animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
-        healthbar.setWidth(this.getWidth());
+        healthbar.setWidth(getWidth());
         cost = 300;
         reward = 200;
     }
 
     public void goToPosition(Vector3 pos) {
         if(changeTarget) {
-            float dx = ((float)random()-0.5f)*this.getWidth();
-            float dy = ((float)random()-0.5f)*this.getHeight();
-            this.clearActions();
+            float dx = ((float)random()-0.5f)*getWidth();
+            float dy = ((float)random()-0.5f)*getHeight();
+            clearActions();
             MoveToAction moveAction = new MoveToAction();
             moveAction.setPosition(pos.x+dx, pos.y+dy, Align.center);
-            float travelTime = this.distance(pos) / velocity;
+            float travelTime = distance(pos) / velocity;
             moveAction.setDuration(travelTime);
             RunnableAction completionAction = new RunnableAction(){
                 public void run(){
                     unitMoving = false;
                 }
             };
-            this.addAction(sequence(moveAction, completionAction));
+            addAction(sequence(moveAction, completionAction));
             unitMoving = true;
         }
     }
@@ -55,17 +55,17 @@ public class Unit extends Object{
     public void draw(Batch batch, float alpha) {
         if(unitMoving) {
             elapsedTime += Gdx.graphics.getDeltaTime();
-            batch.draw(animation.getKeyFrame(elapsedTime, true), this.getX(), this.getY());
+            batch.draw(animation.getKeyFrame(elapsedTime, true), getX(), getY());
         }
         else {
             elapsedTime = 0;
-            batch.draw(animation.getKeyFrame(elapsedTime, true), this.getX(), this.getY());
+            batch.draw(animation.getKeyFrame(elapsedTime, true), getX(), getY());
         }
     }
 
     @Override
     public Vector3 gridUpdate() {
-        return new Vector3(this.getX(Align.center), this.getY(Align.center), 0);
+        return new Vector3(getX(Align.center), getY(Align.center), 0);
     }
 
     public void dispose() {

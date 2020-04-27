@@ -13,6 +13,6 @@ public class Tower extends Object {
 
     @Override
     public Vector3 gridUpdate() {
-        return new Vector3(this.getX(Align.center), this.getY(Align.center), 1);
+        return new Vector3(getX(Align.center), getY(Align.center), 1);
     }
 }
