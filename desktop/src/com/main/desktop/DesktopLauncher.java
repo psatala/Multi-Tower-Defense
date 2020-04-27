@@ -2,7 +2,7 @@ package com.main.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.main.MainGameView;
+import com.main.GameManager;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
@@ -11,6 +11,6 @@ public class DesktopLauncher {
 		cfg.height = 720;
 		cfg.width = 1080;
 		cfg.resizable = false;
-		new LwjglApplication(new MainGameView(), cfg);
+		new LwjglApplication(new GameManager(), cfg);
 	}
 }

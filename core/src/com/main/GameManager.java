@@ -17,7 +17,7 @@ import java.util.Vector;
 import static java.lang.Math.random;
 
 
-public class MainGameView extends ApplicationAdapter {
+public class GameManager extends ApplicationAdapter {
 	private List<Object> objects;
 	private List<Unit> units;
 	private List<Missile> missiles;
@@ -53,10 +53,10 @@ public class MainGameView extends ApplicationAdapter {
 	public void updateFight() {
 	    for(Object object : objects) {
 	        for(Missile missile : missiles) {
-	            if(missile.getMissileColor() != object.color && missile.hitObject(object)){
+	            if(missile.getPlayerId() != object.playerId && missile.hitObject(object)){
 	                object.damage(missile.getDamage());
 	                missile.targetHit();
-	                if(!object.isAlive() && missile.getMissileColor()==0) {
+	                if(!object.isAlive() && missile.getPlayerId()==0) {
 	                	mainInterface.addCoins(object.getReward());
 					}
                 }
@@ -68,7 +68,7 @@ public class MainGameView extends ApplicationAdapter {
 			bestDistance = 1e9f;
 			bestTarget = null;
             for(Object object : objects) {
-            	if(shooter.color == object.color)
+            	if(shooter.playerId == object.playerId)
             		continue;
             	float distance = shooter.distance(object);
             	if(distance <= shooter.range && distance < bestDistance) {
@@ -138,9 +138,9 @@ public class MainGameView extends ApplicationAdapter {
 		stage.dispose();
 	}
 
-	private void spawnUnit(float x, float y, int color) {
-		Unit unit = new Unit("firstUnit", color);
-		if(color == 0 && !mainInterface.spendCoins(unit.getCost()))
+	private void spawnUnit(float x, float y, int playerId) {
+		Unit unit = new Unit("firstUnit", playerId);
+		if(playerId == 0 && !mainInterface.spendCoins(unit.getCost()))
 			return;
 		unit.setPosition(x, y, Align.center);
 		objects.add(unit);
@@ -155,9 +155,9 @@ public class MainGameView extends ApplicationAdapter {
 		}
 	}
 
-	public void spawnTower(float x, float y, int color) {
-		Tower tower = new Tower("firstTower", color);
-		if(color == 0 && !mainInterface.spendCoins(tower.getCost()))
+	public void spawnTower(float x, float y, int playerId) {
+		Tower tower = new Tower("firstTower", playerId);
+		if(playerId == 0 && !mainInterface.spendCoins(tower.getCost()))
 			return;
 		tower.setPosition(x, y, Align.center);
 		objects.add(tower);

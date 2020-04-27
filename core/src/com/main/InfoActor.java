@@ -14,9 +14,11 @@ public class InfoActor extends Actor {
     private Texture line;
     private Sprite lineSprite;
     private int coins = 1000;
+    private int playerId;
 
-    public InfoActor(float w, float h, float y) {
+    public InfoActor(float w, float h, float y, int playerId) {
         this.setBounds(0, y, w, h);
+        this.playerId = playerId;
         bigFont = new BitmapFont();
         bigFont.setColor(Color.WHITE);
         pixmap = new Pixmap((int)w, 2, Pixmap.Format.RGBA8888);
@@ -29,7 +31,7 @@ public class InfoActor extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
-        bigFont.draw(batch, "Player 1", 530, 710);
+        bigFont.draw(batch, "Player "+playerId, 530, 710);
         bigFont.draw(batch, "Coins: "+String.valueOf(coins), 940, 710);
         lineSprite.setPosition(0, 686);
         lineSprite.draw(batch);

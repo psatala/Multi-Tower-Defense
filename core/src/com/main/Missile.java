@@ -17,7 +17,7 @@ public class Missile extends Actor {
     private float damage;
     private Texture texture;
     private boolean isFlying = true;
-    private int color;
+    private int playerId;
 
     public Missile(Object target, Object source) {
         texture = new Texture(Gdx.files.internal("missile.png"));
@@ -36,7 +36,7 @@ public class Missile extends Actor {
             }
         };
         this.addAction(sequence(moveAction, completionAction));
-        color = source.color;
+        playerId = source.playerId;
     }
 
     public Vector3 getTarget() {
@@ -70,7 +70,7 @@ public class Missile extends Actor {
         return damage;
     }
 
-    public int getMissileColor() {
-        return color;
+    public int getPlayerId() {
+        return playerId;
     }
 }

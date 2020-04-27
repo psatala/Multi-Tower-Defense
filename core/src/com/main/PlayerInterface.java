@@ -18,11 +18,11 @@ public class PlayerInterface extends Group {
     private Skin skin;
     private int playerId;
 
-    public PlayerInterface(MainGameView gameView, int color) {
-        playerId = color;
+    public PlayerInterface(GameManager gameView, int playerId) {
+        this.playerId = playerId;
         this.setBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        info = new InfoActor(this.getWidth(), topBarHeight, this.getHeight() - topBarHeight);
-        map = new MapActor(this.getWidth(), this.getHeight() - topBarHeight, gameView, color);
+        info = new InfoActor(this.getWidth(), topBarHeight, this.getHeight() - topBarHeight, playerId);
+        map = new MapActor(this.getWidth(), this.getHeight() - topBarHeight, gameView, playerId);
         this.addActor(info);
         this.addActor(map);
         skin = new Skin(Gdx.files.internal("uiskin.json"));

@@ -21,7 +21,7 @@ public class Object extends Actor {
     protected TextureRegion textureRegion;
 
     protected int id;
-    protected int color;
+    protected int playerId;
     protected float damage = 5;
     protected float reloadTimeLeft;
     protected Healthbar healthbar;
@@ -30,10 +30,10 @@ public class Object extends Actor {
     protected int reward = 0;
 
 
-    public Object(String type, int color) {
-        textureRegion = new TextureRegion(new Texture(type+String.valueOf(color)+"0.png"));
+    public Object(String type, int playerId) {
+        textureRegion = new TextureRegion(new Texture(type+String.valueOf(playerId)+"0.png"));
         this.setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
-        this.color = color;
+        this.playerId = playerId;
         id = idCounter;
         idCounter++;
         reloadTimeLeft = reloadTime;

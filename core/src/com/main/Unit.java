@@ -22,10 +22,10 @@ public class Unit extends Object{
     private boolean changeTarget = false;
 
 
-    public Unit(String unitType, int color) {
-        super("units/"+unitType+"/"+unitType, color);
+    public Unit(String unitType, int playerId) {
+        super("units/"+unitType+"/"+unitType, playerId);
         type = unitType;
-        textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+String.valueOf(color)+".atlas"));
+        textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+String.valueOf(playerId)+".atlas"));
         animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
         healthbar.setWidth(this.getWidth());
         cost = 300;

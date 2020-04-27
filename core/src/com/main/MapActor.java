@@ -29,14 +29,14 @@ public class MapActor extends Group {
     private boolean drawSelection = false;
     private float gridCellW;
     private float gridCellH;
-    private MainGameView gameManager;
+    private GameManager gameManager;
     private ShapeRenderer renderer;
     protected Mode mode;
     private int playerId;
 
-    public MapActor(float w, float h, MainGameView gameView, int color) {
+    public MapActor(float w, float h, GameManager gameView, int playerId) {
         gameManager = gameView;
-        playerId = color;
+        this.playerId = playerId;
         renderer = new ShapeRenderer();
         this.setBounds(0, 0, w, h);
         gridCellH = h/(float)gridH;
