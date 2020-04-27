@@ -7,6 +7,8 @@ public class Tower extends Object {
 
     public Tower(String type, int color) {
         super("towers/"+type+"/"+type, color);
+        cost = 400;
+        reward = 100;
     }
 
     @Override

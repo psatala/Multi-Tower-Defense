@@ -28,6 +28,9 @@ public class MainGameView extends ApplicationAdapter {
 	@Override
 	public void create () {
 		stage = new Stage(new ScreenViewport());
+		mainInterface = new PlayerInterface(this, 0);
+		stage.addActor(mainInterface);
+		Gdx.input.setInputProcessor(stage);
 		renderer = new ShapeRenderer();
 		units = new Vector<Unit>();
 		objects  = new Vector<Object>();
@@ -36,9 +39,6 @@ public class MainGameView extends ApplicationAdapter {
 		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
 		for(int i = 0; i < 4; ++i)
 			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);
-		mainInterface = new PlayerInterface(this, 0);
-		stage.addActor(mainInterface);
-		Gdx.input.setInputProcessor(stage);
 
 		Timer.schedule(new Timer.Task(){
 						   @Override
@@ -56,6 +56,9 @@ public class MainGameView extends ApplicationAdapter {
 	            if(missile.getMissileColor() != object.color && missile.hitObject(object)){
 	                object.damage(missile.getDamage());
 	                missile.targetHit();
+	                if(!object.isAlive() && missile.getMissileColor()==0) {
+	                	mainInterface.addCoins(object.getReward());
+					}
                 }
             }
         }
@@ -137,6 +140,8 @@ public class MainGameView extends ApplicationAdapter {
 
 	private void spawnUnit(float x, float y, int color) {
 		Unit unit = new Unit("firstUnit", color);
+		if(color == 0 && !mainInterface.spendCoins(unit.getCost()))
+			return;
 		unit.setPosition(x, y, Align.center);
 		objects.add(unit);
 		units.add(unit);
@@ -152,6 +157,8 @@ public class MainGameView extends ApplicationAdapter {
 
 	public void spawnTower(float x, float y, int color) {
 		Tower tower = new Tower("firstTower", color);
+		if(color == 0 && !mainInterface.spendCoins(tower.getCost()))
+			return;
 		tower.setPosition(x, y, Align.center);
 		objects.add(tower);
 		stage.addActor(tower);

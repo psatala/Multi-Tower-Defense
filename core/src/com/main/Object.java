@@ -26,6 +26,8 @@ public class Object extends Actor {
     protected float reloadTimeLeft;
     protected Healthbar healthbar;
     protected String type;
+    protected int cost = 0;
+    protected int reward = 0;
 
 
     public Object(String type, int color) {
@@ -42,6 +44,14 @@ public class Object extends Actor {
 
     public Vector3 gridUpdate() {
         return new Vector3(0, 0, 0);
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public int getReward() {
+        return reward;
     }
 
     @Override

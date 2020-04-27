@@ -28,6 +28,8 @@ public class Unit extends Object{
         textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+String.valueOf(color)+".atlas"));
         animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
         healthbar.setWidth(this.getWidth());
+        cost = 300;
+        reward = 200;
     }
 
     public void goToPosition(Vector3 pos) {
