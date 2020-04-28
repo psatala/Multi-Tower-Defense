@@ -1,4 +1,6 @@
-package app;
+package app.requests;
+
+import app.GameRoom;
 
 public class CreateRoomRequest {
     public String hostName;

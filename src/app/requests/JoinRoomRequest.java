@@ -1,4 +1,4 @@
-package app;
+package app.requests;
 
 public class JoinRoomRequest {
     public int roomID;

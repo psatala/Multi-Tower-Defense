@@ -1,4 +1,4 @@
-package app;
+package app.requests;
 
 public class LeaveRoomRequest {
     public int roomID;

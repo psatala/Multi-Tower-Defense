@@ -9,6 +9,8 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 
+import app.requests.*;
+import app.responses.*;
 
 public class GameServer {
     private Server server;

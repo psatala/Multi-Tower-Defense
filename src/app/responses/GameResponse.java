@@ -1,4 +1,4 @@
-package app;
+package app.responses;
 
 public class GameResponse {
     private String message;
