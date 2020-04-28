@@ -38,6 +38,7 @@ public class GameClient {
         kryo.register(HashMap.class);
         kryo.register(GameRoom.class);
         kryo.register(HashSet.class);
+        kryo.register(RoomCreatedResponse.class);
 
         // add listener
         client.addListener(new Listener() {
@@ -49,6 +50,7 @@ public class GameClient {
                 } else if (object instanceof ControlResponse) {
                     ControlResponse controlResponse = (ControlResponse) object;
                     System.out.println(controlResponse.getMessage());
+
                 } else if (object instanceof RoomList) {
                     RoomList roomList = (RoomList) object;
                     roomList.print();
@@ -57,18 +59,25 @@ public class GameClient {
                     roomID = inputScanner.nextInt();
                     inputScanner.nextLine();
 
-                    if (roomID != -1){
-                        synchronized (client) {
+                    if (roomID != -1) {
+                        synchronized(client) {
                             isGoBackChosen = false;
                             client.notify();
                         }
                         client.sendTCP(new JoinRoomRequest(roomID));
                     }
                     else {
-                        synchronized (client) {
+                        synchronized(client) {
                             isGoBackChosen = true;
                             client.notify();
                         }
+                    }
+
+                } else if (object instanceof RoomCreatedResponse) {
+                    RoomCreatedResponse roomCreatedResponse = (RoomCreatedResponse) object;
+                    roomID = roomCreatedResponse.roomID;
+                    synchronized(client) {
+                        client.notify();
                     }
                 }
             }
@@ -77,12 +86,13 @@ public class GameClient {
         //start
         client.start();
         client.connect(maxDelay, "127.0.0.1", tcpPortNumber);
+        
 
         inputScanner = new Scanner (System.in);
 
         System.out.println("Enter your name");
         playerName = inputScanner.nextLine();
-
+        
         menu();
 
     }
@@ -91,15 +101,15 @@ public class GameClient {
 
     public void menu() throws InterruptedException {
 
-        System.out.println("Enter 'j' to join a room, 'c' to create room");
+        System.out.println("Enter 'j' to join a room, 'c' to create room, 'q' to quit");
         String input;
         inputScanner.reset();
         input = inputScanner.nextLine();
         isGoBackChosen = false;
     
         if(input.equals("j")) {
-            client.sendTCP(new GetRoomListRequest());
             synchronized(client) {
+                client.sendTCP(new GetRoomListRequest());
                 client.wait();
             }
             if(isGoBackChosen)
@@ -107,24 +117,37 @@ public class GameClient {
             else
                 run();
         }
-        else {
+        else if (input.equals("c")) {
             int maxPlayers;
             System.out.println("Enter how many players can enter the room");
             maxPlayers = inputScanner.nextInt();
             CreateRoomRequest createRoomRequest = new CreateRoomRequest(playerName, maxPlayers, GameRoom.GLOBAL);
-            client.sendTCP(createRoomRequest);
+            synchronized(client) {
+                client.sendTCP(createRoomRequest);
+                client.wait();
+            }
             run();
+        }
+        else {
+            client.close();
         }
     }
 
 
-    public void run() {
+    public void run() throws InterruptedException {
         
-        GameRequest gameRequest = new GameRequest(roomID);
+        System.out.println("Press 'q' to quit");
+        GameRequest gameRequest = new GameRequest(roomID); //new general request
         while(true) {
             gameRequest.setMessage(inputScanner.nextLine());
-            client.sendTCP(gameRequest);
-        }        
+            if(gameRequest.getMessage().equals("q")) { //quitting
+                LeaveRoomRequest leaveRoomRequest = new LeaveRoomRequest(roomID); //request leaving
+                client.sendTCP(leaveRoomRequest);
+                break;
+            }
+            client.sendTCP(gameRequest); //send data
+        }
+        menu(); //go back to menu
     }
     
 }

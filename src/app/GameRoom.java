@@ -15,7 +15,7 @@ public class GameRoom {
     public int currentPlayers;
     public int maxPlayers;
     public int gameType;
-    public HashSet<Integer> connectionSet = new HashSet<>();
+    public HashSet<Integer> connectionSet;
 
     public GameRoom() {
         roomID = -1;
@@ -23,9 +23,14 @@ public class GameRoom {
         currentPlayers = 0;
         maxPlayers = 1;
         gameType = GLOBAL;
+        connectionSet = new HashSet<>();
     }
 
     public GameRoom(String hostName, int maxPlayers, int gameType, int connectionID) {
+
+        //set init
+        connectionSet = new HashSet<>();
+        
         //copy
         this.hostName = hostName;
         this.maxPlayers = maxPlayers;
@@ -38,6 +43,7 @@ public class GameRoom {
         //set room id
         roomID = nextRoomID;
         ++nextRoomID;
+
     }
 
     public void addPlayer(int connectionID) throws Exception {

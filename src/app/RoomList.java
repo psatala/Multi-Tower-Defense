@@ -17,6 +17,10 @@ public class RoomList {
         return list.get(roomID);
     }
 
+    public void remove(int roomID) {
+        list.remove(roomID);
+    }
+
     public void print() {
         for(int roomID: list.keySet())
             list.get(roomID).printRoomInfo();

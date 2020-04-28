@@ -34,11 +34,12 @@ public class GameServer {
         kryo.register(HashMap.class);
         kryo.register(GameRoom.class);
         kryo.register(HashSet.class);
-
+        kryo.register(RoomCreatedResponse.class);
         
         //add listener
         server.addListener(new Listener() {
             public void received(Connection connection, Object object) { //client sends a game message
+                connection.setTimeout(0); //never timeout - TODO: find proper solution for connection timeout
                 if(object instanceof GameRequest) {
                     GameRequest gameRequest = (GameRequest)object;
                     GameResponse gameResponse = new GameResponse(gameRequest.getMessage());
@@ -54,6 +55,8 @@ public class GameServer {
                     CreateRoomRequest createRoomRequest = (CreateRoomRequest)object;
                     GameRoom newRoom = new GameRoom(createRoomRequest.hostName, createRoomRequest.maxPlayers, createRoomRequest.gameType, connection.getID());
                     roomList.add(newRoom);
+                    RoomCreatedResponse roomCreatedResponse = new RoomCreatedResponse(newRoom.roomID);
+                    server.sendToTCP(connection.getID(), roomCreatedResponse);
 
                 }
                 else if(object instanceof JoinRoomRequest) { //client wants to join a room
@@ -82,6 +85,7 @@ public class GameServer {
                     catch(Exception e) {
                         ControlResponse controlResponse = new ControlResponse(e.getMessage());
                         server.sendToTCP(connection.getID(), controlResponse);
+                        roomList.remove(currentRoom.roomID);
                     }
                 }
                 else if(object instanceof GetRoomListRequest) { //client wants to get a list of available rooms
