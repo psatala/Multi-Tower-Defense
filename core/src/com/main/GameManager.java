@@ -31,7 +31,7 @@ public class GameManager extends ApplicationAdapter {
 		stage = new Stage(new ScreenViewport());
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, 0);
 		stage.addActor(info.getInfoGroup());
-		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, 0);
+		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, 0, "map0");
 		stage.addActor(map.getMapGroup());
 		Gdx.input.setInputProcessor(stage);
 		renderer = new ShapeRenderer();

@@ -3,6 +3,7 @@ package com.main;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
@@ -35,10 +36,14 @@ public class MapActor extends Actor {
     private ShapeRenderer renderer;
     protected Mode mode;
     private int playerId;
+    private String type;
+    private Texture texture;
 
-    public MapActor(float w, float h, GameManager gameManager, int playerId) {
+    public MapActor(float w, float h, GameManager gameManager, int playerId, String type) {
         this.gameManager = gameManager;
         this.playerId = playerId;
+        this.type = type;
+        texture = new Texture("maps/"+type+".png");
         renderer = new ShapeRenderer();
         setBounds(0, 0, w, h);
         gridCellH = h/(float)gridH;
@@ -72,6 +77,15 @@ public class MapActor extends Actor {
                 gridCells[x][y].setEmpty(true);
             }
         }
+
+        //Map blockings - move it to config
+        for(int y = 0; y < gridH; ++y){
+            if(y == 4 || y==5)
+                continue;
+            gridCells[9][y].setBlocked(true);
+            gridCells[10][y].setBlocked(true);
+        }
+
         Vector3 pos;
         for(Vector3 update : updates) {
             pos = getGridCoords(update);
@@ -84,6 +98,7 @@ public class MapActor extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
+        batch.draw(texture, getX(), getY(), getWidth(), getHeight());
         if(drawSelection) {
             batch.end();
             Gdx.gl.glEnable(GL20.GL_BLEND);
