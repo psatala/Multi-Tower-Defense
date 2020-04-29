@@ -16,7 +16,7 @@ public class GameServer {
     private Server server;
     private RoomList roomList = new RoomList();
     
-    public GameServer(int tcpPortNumber) throws IOException {
+    public GameServer(int tcpPortNumber, int udpPortNumber) throws IOException {
         server = new Server();
         
         //register classes
@@ -35,7 +35,8 @@ public class GameServer {
         kryo.register(GameRoom.class);
         kryo.register(HashSet.class);
         kryo.register(RoomCreatedResponse.class);
-        
+        kryo.register(RoomJoinedResponse.class);
+
         //add listener
         server.addListener(new Listener() {
             public void received(Connection connection, Object object) { //client sends a game message
@@ -63,15 +64,13 @@ public class GameServer {
                     
                     JoinRoomRequest joinRoomRequest = (JoinRoomRequest)object;
                     GameRoom currentRoom = roomList.get(joinRoomRequest.roomID);
-                    ControlResponse controlResponse = null;
                     try {
                         currentRoom.addPlayer(connection.getID());
-                        controlResponse = new ControlResponse("Room joined");
+                        RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse();
+                        server.sendToTCP(connection.getID(), roomJoinedResponse);
                     }
                     catch(Exception e) {
-                        controlResponse = new ControlResponse(e.getMessage());
-                    }
-                    finally {
+                        ControlResponse controlResponse = new ControlResponse(e.getMessage());
                         server.sendToTCP(connection.getID(), controlResponse);
                     }
                 }
@@ -97,7 +96,7 @@ public class GameServer {
 
         //start
         server.start();
-        server.bind(tcpPortNumber);
+        server.bind(tcpPortNumber, udpPortNumber);
 
     }
 

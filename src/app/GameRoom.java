@@ -1,5 +1,6 @@
 package app;
 
+import java.net.InetAddress;
 import java.util.HashSet;
 
 public class GameRoom {
@@ -16,6 +17,7 @@ public class GameRoom {
     public int maxPlayers;
     public int gameType;
     public HashSet<Integer> connectionSet;
+    public InetAddress ipOfHost; //ip for client to determine room host
 
     public GameRoom() {
         roomID = -1;

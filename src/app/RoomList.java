@@ -1,5 +1,7 @@
 package app;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class RoomList {
@@ -13,6 +15,10 @@ public class RoomList {
         list.put(gameRoom.roomID, gameRoom);
     }
 
+    public void putALL(RoomList anotherRoomList) {
+        list.putAll(anotherRoomList.list);
+    }
+
     public GameRoom get(int roomID) {
         return list.get(roomID);
     }
@@ -22,7 +28,24 @@ public class RoomList {
     }
 
     public void print() {
-        for(int roomID: list.keySet())
+        int i = 0;
+        for(int roomID: list.keySet()) {
+            System.out.print(i + ": ");
             list.get(roomID).printRoomInfo();
+            ++i;
+        }
+            
+    }
+
+    public ArrayList<Integer> getArrayOfKeys() {
+        return new ArrayList<Integer>(list.keySet());
+    }
+
+    public boolean containsKey(Integer key) {
+        return list.containsKey(key);
+    }
+
+    public int getMaxKey() {
+        return Collections.max(list.keySet());
     }
 }
