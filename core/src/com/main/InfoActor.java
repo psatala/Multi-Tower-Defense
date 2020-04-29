@@ -23,7 +23,7 @@ public class InfoActor extends Actor {
     private Texture line;
     private Sprite lineSprite;
     private Skin skin;
-    private int coins = 5000;
+    private int coins = 50000;
     private int playerId;
 
     public InfoActor(float w, float h, GameManager gameManager, int playerId) {

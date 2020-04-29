@@ -5,9 +5,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 
 
 public class GridCell extends Actor {
@@ -77,5 +79,9 @@ public class GridCell extends Actor {
         isEmpty = x;
         if(!isEmpty)
             isBlocked = false;
+    }
+
+    public Vector3 getCenter() {
+        return new Vector3(getX(Align.center), getY(Align.center), 0);
     }
 }

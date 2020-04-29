@@ -136,7 +136,7 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	private void spawnUnit(float x, float y, int playerId) {
-		Unit unit = new Unit("firstUnit", playerId);
+		Unit unit = new Unit("firstUnit", playerId, this);
 		if(playerId == 0 && !info.spendCoins(unit.getCost()))
 			return;
 		unit.setPosition(x, y, Align.center);
@@ -176,5 +176,9 @@ public class GameManager extends ApplicationAdapter {
 
 	public void setMode(MapActor.Mode mode) {
 		map.setMode(mode);
+	}
+
+	public Vector<Vector3> findPath(Vector3 start, Vector3 finish) {
+		return map.findPath(start, finish);
 	}
 }

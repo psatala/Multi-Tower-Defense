@@ -14,6 +14,9 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Align;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Vector;
 
 import static java.lang.Math.abs;
@@ -164,5 +167,92 @@ public class MapActor extends Actor {
 
     public Group getMapGroup() {
         return mapGroup;
+    }
+
+    public Vector<Vector3> BFS(Vector3 start, Vector3 finish) {
+        start = getGridCoords(start);
+        finish = getGridCoords(finish);
+        boolean[][] visited = new boolean[gridW][gridH];
+        int[][] distance = new int[gridW][gridH];
+        for(int x = 0; x < gridW; ++x){
+            for(int y = 0; y < gridH; ++y){
+                distance[x][y] = gridW*gridH;
+                visited[x][y] = gridCells[x][y].isBlocked();
+            }
+        }
+        int sx = (int)start.x;
+        int sy = (int)start.y;
+        int fx = (int)finish.x;
+        int fy = (int)finish.y;
+        Queue<Integer> qx = new LinkedList<>();
+        Queue<Integer> qy = new LinkedList<>();
+        qx.add(sx);
+        qy.add(sy);
+        visited[sx][sy] = true;
+        distance[sx][sy] = 0;
+        while(!qx.isEmpty()) {
+            sx = qx.peek();
+            sy = qy.peek();
+            qx.remove();
+            qy.remove();
+            if(sx > 0 && !visited[sx-1][sy]){
+                qx.add(sx-1);
+                qy.add(sy);
+                distance[sx-1][sy] = distance[sx][sy]+1;
+                visited[sx-1][sy] = true;
+            }
+            if(sy > 0 && !visited[sx][sy-1]){
+                qx.add(sx);
+                qy.add(sy-1);
+                distance[sx][sy-1] = distance[sx][sy]+1;
+                visited[sx][sy-1] = true;
+            }
+            if(sx < gridW-1 && !visited[sx+1][sy]){
+                qx.add(sx+1);
+                qy.add(sy);
+                distance[sx+1][sy] = distance[sx][sy]+1;
+                visited[sx+1][sy] = true;
+            }
+            if(sy < gridH-1 && !visited[sx][sy+1]){
+                qx.add(sx);
+                qy.add(sy+1);
+                distance[sx][sy+1] = distance[sx][sy]+1;
+                visited[sx][sy+1] = true;
+            }
+            if(visited[fx][fy])
+                break;
+        }
+        Vector<Vector3> waypoints = new Vector<>();
+        if(distance[fx][fy] == gridW*gridH) {
+            waypoints.add(gridCells[sx][sy].getCenter());
+            return waypoints;
+        }
+        waypoints.add(gridCells[fx][fy].getCenter());
+        while(distance[fx][fy] > 0) {
+            if(fx > 0 && distance[fx-1][fy] == distance[fx][fy]-1){
+                fx -= 1;
+                waypoints.add(gridCells[fx][fy].getCenter());
+            }
+            if(fy > 0 && distance[fx][fy-1] == distance[fx][fy]-1){
+                fy -= 1;
+                waypoints.add(gridCells[fx][fy].getCenter());
+            }
+            if(fx < gridW-1 && distance[fx+1][fy] == distance[fx][fy]-1){
+                fx += 1;
+                waypoints.add(gridCells[fx][fy].getCenter());
+            }
+            if(fy < gridH-1 && distance[fx][fy+1] == distance[fx][fy]-1){
+                fy += 1;
+                waypoints.add(gridCells[fx][fy].getCenter());
+            }
+        }
+        Collections.reverse(waypoints);
+        return waypoints;
+    }
+
+    public Vector<Vector3> findPath(Vector3 start, Vector3 finish) {
+        Vector<Vector3> waypoints = BFS(start, finish);
+        System.out.println(waypoints);
+        return waypoints;
     }
 }
