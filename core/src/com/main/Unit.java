@@ -28,6 +28,7 @@ public class Unit extends Object{
     private boolean changeTarget = false;
     private float mapW;
     private float mapH;
+    private Vector3 currentTarget;
 
 
     public Unit(String unitType, int playerId, GameManager gameManager) {
@@ -45,12 +46,17 @@ public class Unit extends Object{
 
     public void goToPosition(Vector3 pos) {
         if(changeTarget) {
-            SequenceAction seq = new SequenceAction();
             float dx = ((float)random()-0.5f)*getWidth();
             float dy = ((float)random()-0.5f)*getHeight();
-            clearActions();
+            pos.x += dx;
+            pos.x = min(mapW-1, max(0, pos.x));
+            pos.y += dy;
+            pos.y = min(mapH-1, max(0, pos.y));
+
+            currentTarget = new Vector3(pos);
             Vector<Vector3> waypoints = gameManager.findPath(getCenter(), pos);
-            waypoints.remove(waypoints.size()-1);
+            SequenceAction seq = new SequenceAction();
+            clearActions();
             MoveToAction moveAction;
             float travelTime;
             Vector3 prev = getCenter();
@@ -62,20 +68,11 @@ public class Unit extends Object{
                 moveAction.setDuration(travelTime);
                 seq.addAction(moveAction);
             }
-            moveAction = new MoveToAction();
-            pos.x += dx;
-            pos.x = min(mapW-1, max(0, pos.x));
-            pos.y += dy;
-            pos.y = min(mapH-1, max(0, pos.y));
-            moveAction.setPosition(pos.x, pos.y, Align.center);
-            travelTime = distance(pos, prev) / velocity;
-            moveAction.setDuration(travelTime);
             RunnableAction completionAction = new RunnableAction(){
                 public void run(){
                     unitMoving = false;
                 }
             };
-            seq.addAction(moveAction);
             seq.addAction(completionAction);
             addAction(seq);
             unitMoving = true;

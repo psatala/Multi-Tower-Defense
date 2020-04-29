@@ -38,7 +38,7 @@ public class GameManager extends ApplicationAdapter {
 		units = new Vector<Unit>();
 		objects  = new Vector<Object>();
 		missiles = new Vector<Missile>();
-		for(int i = 0; i < 1; ++i)
+		for(int i = 0; i < 2; ++i)
 		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
 		for(int i = 0; i < 0; ++i)
 			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);

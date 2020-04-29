@@ -22,6 +22,7 @@ import java.util.Vector;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 
 public class MapActor extends Actor {
     public enum Mode{MOVE, SELECT, BUILD};
@@ -225,8 +226,18 @@ public class MapActor extends Actor {
         }
         Vector<Vector3> waypoints = new Vector<>();
         if(distance[fx][fy] == gridW*gridH) {
-            waypoints.add(gridCells[sx][sy].getCenter());
-            return waypoints;
+            int bestx = sx;
+            int besty = sy;
+            for(int x = 0; x < gridW; ++x) {
+                for(int y = 0; y < gridH; ++y) {
+                    if(distance[x][y] != gridW*gridH && pow(fx-x, 2)+pow(fy-y, 2) < pow(bestx-fx, 2)+pow(besty-fy, 2)) {
+                        bestx = x;
+                        besty = y;
+                    }
+                }
+            }
+            fx = bestx;
+            fy = besty;
         }
         waypoints.add(gridCells[fx][fy].getCenter());
         while(distance[fx][fy] > 0) {
@@ -256,9 +267,7 @@ public class MapActor extends Actor {
             start = getGridCoords(start);
             finish = getGridCoords(finish);
             int x = (int)start.x;
-            //System.out.println(x);
             for(int i = (int)min(start.y, finish.y); i <= max(start.y, finish.y); ++i) {
-                //System.out.println(i);
                 if(gridCells[x][i].isBlocked())
                     return true;
             }
@@ -279,8 +288,6 @@ public class MapActor extends Actor {
         float b = finish.y - a * finish.x;
         if(finish.y > start.y){
             while(x != fx || y != fy) {
-                //System.out.println(x);
-                //System.out.println(y);
                 if (gridCellH * (y + 1) > a * gridCellW * (x + 1) + b)
                     x += 1;
                 else
@@ -291,8 +298,6 @@ public class MapActor extends Actor {
         }
         else {
             while(x != fx || y != fy) {
-                //System.out.println(x);
-                //System.out.println(y);
                 if (gridCellH * y < a * gridCellW * (x + 1) + b)
                     x += 1;
                 else
@@ -322,7 +327,6 @@ public class MapActor extends Actor {
         Vector<Vector3> waypoints = BFS(start, finish);
         waypoints.setElementAt(start, 0);
         waypoints = smoothPath(waypoints);
-        System.out.println(waypoints);
         return waypoints;
     }
 }
