@@ -326,6 +326,7 @@ public class MapActor extends Actor {
     public Vector<Vector3> findPath(Vector3 start, Vector3 finish) {
         Vector<Vector3> waypoints = BFS(start, finish);
         waypoints.setElementAt(start, 0);
+        waypoints.add(finish);
         waypoints = smoothPath(waypoints);
         return waypoints;
     }

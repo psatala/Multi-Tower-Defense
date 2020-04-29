@@ -40,8 +40,8 @@ public class GameManager extends ApplicationAdapter {
 		missiles = new Vector<Missile>();
 		for(int i = 0; i < 1; ++i)
 		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
-		for(int i = 0; i < 0; ++i)
-			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);
+		for(int i = 0; i < 20; ++i)
+			spawnUnit((float)random()*300+700, (float)random()*600, 1);
 
 		Timer.schedule(new Timer.Task(){
 						   @Override

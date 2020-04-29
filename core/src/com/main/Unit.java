@@ -47,8 +47,8 @@ public class Unit extends Object{
 
     public void goToPosition(Vector3 pos) {
         if(changeTarget && !equalsTarget(pos)) {
-            float dx = ((float)random()-0.5f)*getWidth();
-            float dy = ((float)random()-0.5f)*getHeight();
+            float dx = ((float)random()-0.5f)*getWidth()/2;
+            float dy = ((float)random()-0.5f)*getHeight()/2;
             pos.x += dx;
             pos.x = min(mapW-1, max(0, pos.x));
             pos.y += dy;
