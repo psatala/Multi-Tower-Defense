@@ -38,9 +38,9 @@ public class GameManager extends ApplicationAdapter {
 		units = new Vector<Unit>();
 		objects  = new Vector<Object>();
 		missiles = new Vector<Missile>();
-		for(int i = 0; i < 4; ++i)
+		for(int i = 0; i < 1; ++i)
 		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
-		for(int i = 0; i < 4; ++i)
+		for(int i = 0; i < 0; ++i)
 			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);
 
 		Timer.schedule(new Timer.Task(){
@@ -180,5 +180,13 @@ public class GameManager extends ApplicationAdapter {
 
 	public Vector<Vector3> findPath(Vector3 start, Vector3 finish) {
 		return map.findPath(start, finish);
+	}
+
+	public float getMapWidth() {
+		return map.getWidth();
+	}
+
+	public float getMapHeight() {
+		return map.getHeight();
 	}
 }

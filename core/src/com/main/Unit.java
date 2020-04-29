@@ -14,6 +14,8 @@ import com.badlogic.gdx.utils.Align;
 import java.util.Vector;
 
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.random;
 
 public class Unit extends Object{
@@ -24,11 +26,15 @@ public class Unit extends Object{
     private float elapsedTime = 0;
     private boolean unitMoving = false;
     private boolean changeTarget = false;
+    private float mapW;
+    private float mapH;
 
 
     public Unit(String unitType, int playerId, GameManager gameManager) {
         super("units/"+unitType+"/"+unitType, playerId);
         this.gameManager = gameManager;
+        mapW = gameManager.getMapWidth();
+        mapH = gameManager.getMapHeight();
         type = unitType;
         textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+String.valueOf(playerId)+".atlas"));
         animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
@@ -58,7 +64,9 @@ public class Unit extends Object{
             }
             moveAction = new MoveToAction();
             pos.x += dx;
+            pos.x = min(mapW-1, max(0, pos.x));
             pos.y += dy;
+            pos.y = min(mapH-1, max(0, pos.y));
             moveAction.setPosition(pos.x, pos.y, Align.center);
             travelTime = distance(pos, prev) / velocity;
             moveAction.setDuration(travelTime);

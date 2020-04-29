@@ -20,6 +20,7 @@ import java.util.Queue;
 import java.util.Vector;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class MapActor extends Actor {
@@ -250,8 +251,77 @@ public class MapActor extends Actor {
         return waypoints;
     }
 
+    public boolean isLineBlocked(Vector3 start, Vector3 finish) {
+        if(start.x == finish.x) {
+            start = getGridCoords(start);
+            finish = getGridCoords(finish);
+            int x = (int)start.x;
+            //System.out.println(x);
+            for(int i = (int)min(start.y, finish.y); i <= max(start.y, finish.y); ++i) {
+                //System.out.println(i);
+                if(gridCells[x][i].isBlocked())
+                    return true;
+            }
+            return false;
+        }
+        if(start.x > finish.x){
+            Vector3 temp = new Vector3(start);
+            start = finish;
+            finish = temp;
+        }
+        Vector3 gridxy = getGridCoords(start);
+        int x = (int)gridxy.x;
+        int y = (int)gridxy.y;
+        gridxy = getGridCoords(finish);
+        int fx = (int)gridxy.x;
+        int fy = (int)gridxy.y;
+        float a = (finish.y-start.y)/(finish.x-start.x);
+        float b = finish.y - a * finish.x;
+        if(finish.y > start.y){
+            while(x != fx || y != fy) {
+                //System.out.println(x);
+                //System.out.println(y);
+                if (gridCellH * (y + 1) > a * gridCellW * (x + 1) + b)
+                    x += 1;
+                else
+                    y += 1;
+                if (gridCells[x][y].isBlocked())
+                    return true;
+            }
+        }
+        else {
+            while(x != fx || y != fy) {
+                //System.out.println(x);
+                //System.out.println(y);
+                if (gridCellH * y < a * gridCellW * (x + 1) + b)
+                    x += 1;
+                else
+                    y -= 1;
+                if (gridCells[x][y].isBlocked())
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public Vector<Vector3> smoothPath(Vector<Vector3> waypoints) {
+        Vector<Vector3> result = new Vector<>();
+        Vector3 prev = new Vector3(waypoints.elementAt(0));
+        result.add(prev);
+        for(int i = 1; i < waypoints.size(); ++i) {
+            if(isLineBlocked(prev, waypoints.elementAt(i))) {
+                result.add(waypoints.elementAt(i-1));
+                prev = waypoints.elementAt(i-1);
+            }
+        }
+        result.add(waypoints.elementAt(waypoints.size()-1));
+        return result;
+    }
+
     public Vector<Vector3> findPath(Vector3 start, Vector3 finish) {
         Vector<Vector3> waypoints = BFS(start, finish);
+        waypoints.setElementAt(start, 0);
+        waypoints = smoothPath(waypoints);
         System.out.println(waypoints);
         return waypoints;
     }
