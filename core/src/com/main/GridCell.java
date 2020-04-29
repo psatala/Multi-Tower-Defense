@@ -77,7 +77,7 @@ public class GridCell extends Actor {
 
     public void setEmpty(boolean x) {
         isEmpty = x;
-        if(!isEmpty)
+        if(isEmpty)
             isBlocked = false;
     }
 

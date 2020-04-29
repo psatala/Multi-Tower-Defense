@@ -42,19 +42,25 @@ public class Unit extends Object{
         healthbar.setWidth(getWidth());
         cost = 300;
         reward = 200;
+        currentTarget = new Vector3(getCenter());
     }
 
     public void goToPosition(Vector3 pos) {
-        if(changeTarget) {
+        if(changeTarget && !equalsTarget(pos)) {
             float dx = ((float)random()-0.5f)*getWidth();
             float dy = ((float)random()-0.5f)*getHeight();
             pos.x += dx;
             pos.x = min(mapW-1, max(0, pos.x));
             pos.y += dy;
             pos.y = min(mapH-1, max(0, pos.y));
-
             currentTarget = new Vector3(pos);
-            Vector<Vector3> waypoints = gameManager.findPath(getCenter(), pos);
+        }
+        reconsiderMovement();
+    }
+
+    public void reconsiderMovement() {
+        if(!targetAchieved()) {
+            Vector<Vector3> waypoints = gameManager.findPath(getCenter(), currentTarget);
             SequenceAction seq = new SequenceAction();
             clearActions();
             MoveToAction moveAction;
@@ -96,6 +102,14 @@ public class Unit extends Object{
         return new Vector3(getX(Align.center), getY(Align.center), 0);
     }
 
+    @Override
+    public void setPosition(float x, float y, int align) {
+        super.setPosition(x, y, align);
+        if(!unitMoving) {
+            currentTarget = getCenter();
+        }
+    }
+
     public void dispose() {
         textureAtlas.dispose();
     }
@@ -106,5 +120,14 @@ public class Unit extends Object{
 
     public Vector3 getCenter() {
         return new Vector3(getX(Align.center), getY(Align.center), 0);
+    }
+
+    public boolean targetAchieved() {
+        Vector3 pos = getCenter();
+        return pos.x == currentTarget.x && pos.y == currentTarget.y;
+    }
+
+    public boolean equalsTarget(Vector3 pos) {
+        return pos.x == currentTarget.x && pos.y == currentTarget.y;
     }
 }

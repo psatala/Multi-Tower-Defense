@@ -38,7 +38,7 @@ public class GameManager extends ApplicationAdapter {
 		units = new Vector<Unit>();
 		objects  = new Vector<Object>();
 		missiles = new Vector<Missile>();
-		for(int i = 0; i < 2; ++i)
+		for(int i = 0; i < 1; ++i)
 		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
 		for(int i = 0; i < 0; ++i)
 			spawnUnit((float)random()*300+700, (float)random()*100+i*150+50, 1);
@@ -77,6 +77,12 @@ public class GameManager extends ApplicationAdapter {
 			objects.remove(object);
 			units.remove(object);
 			object.remove();
+		}
+	    if(!objectsToRemove.isEmpty()) {
+	    	updateGrid();
+			for(Unit unit : units) {
+				unit.reconsiderMovement();
+			}
 		}
 	    for(Missile missile : missilesToRemove) {
 			missiles.remove(missile);
@@ -158,6 +164,9 @@ public class GameManager extends ApplicationAdapter {
 		tower.setPosition(x, y, Align.center);
 		objects.add(tower);
 		stage.addActor(tower.getObjectGroup());
+		for(Unit unit : units) {
+			unit.reconsiderMovement();
+		}
 	}
 
 	public void selectUnits(Rectangle rect) {
