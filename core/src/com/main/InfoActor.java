@@ -23,10 +23,11 @@ public class InfoActor extends Actor {
     private Texture line;
     private Sprite lineSprite;
     private Skin skin;
-    private int coins = 50000;
+    private int coins;
     private int playerId;
 
     public InfoActor(float w, float h, GameManager gameManager, int playerId) {
+        coins = Config.startingCoins;
         setBounds(0, h-topBarHeight, w, topBarHeight);
         this.gameManager = gameManager;
         this.playerId = playerId;
@@ -49,7 +50,7 @@ public class InfoActor extends Actor {
     @Override
     public void draw(Batch batch, float alpha) {
         bigFont.draw(batch, "Player "+playerId, 530, 710);
-        bigFont.draw(batch, "Coins: "+String.valueOf(coins), 940, 710);
+        bigFont.draw(batch, "Coins: "+coins, 940, 710);
         lineSprite.setPosition(0, 686);
         lineSprite.draw(batch);
     }

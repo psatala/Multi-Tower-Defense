@@ -16,31 +16,37 @@ import static java.lang.Math.sqrt;
 public class Object extends Actor {
     static int idCounter = 0;
 
-    final private float reloadTime = 1;
-    final public float range = 300;
+    private float reloadTime;
+    private float range;
+    private float damage;
+    private int cost;
+    private int reward;
 
     protected TextureRegion textureRegion;
     private Group objectGroup;
 
     protected int id;
     protected int playerId;
-    protected float damage = 5;
     protected float reloadTimeLeft;
     protected Healthbar healthbar;
     protected String type;
-    protected int cost = 0;
-    protected int reward = 0;
 
 
     public Object(String type, int playerId) {
-        textureRegion = new TextureRegion(new Texture(type+String.valueOf(playerId)+"0.png"));
+        textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.representativeTexture.get(type))));
         setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
         this.playerId = playerId;
         id = idCounter;
         idCounter++;
+        this.type = type;
+        reloadTime = Config.reloadTime.get(type);
         reloadTimeLeft = reloadTime;
+        range = Config.range.get(type);
+        damage = Config.damage.get(type);
+        cost = Config.objectCost.get(type);
+        reward = Config.objectReward.get(type);
 
-        healthbar = new Healthbar(100, getWidth());
+        healthbar = new Healthbar(Config.hp.get(type), getWidth());
         healthbar.setPosition(0, getHeight());
         objectGroup = new Group();
         objectGroup.addActor(this);
@@ -111,5 +117,13 @@ public class Object extends Actor {
 
     public Group getObjectGroup() {
         return objectGroup;
+    }
+
+    public float getDamage() {
+        return damage;
+    }
+
+    public float getRange() {
+        return range;
     }
 }

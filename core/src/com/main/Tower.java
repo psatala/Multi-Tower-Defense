@@ -6,9 +6,7 @@ import com.badlogic.gdx.utils.Align;
 public class Tower extends Object {
 
     public Tower(String type, int playerId) {
-        super("towers/"+type+"/"+type, playerId);
-        cost = 400;
-        reward = 100;
+        super(type, playerId);
     }
 
     @Override

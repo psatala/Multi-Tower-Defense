@@ -12,17 +12,18 @@ import com.badlogic.gdx.utils.Align;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 
 public class Missile extends Actor {
-    static final float velocity = 300;
+    private float velocity;
     private Vector3 target;
     private float damage;
     private Texture texture;
     private boolean isFlying = true;
     private int playerId;
 
-    public Missile(Object target, Object source) {
-        texture = new Texture(Gdx.files.internal("missile.png"));
+    public Missile(Object target, Object source, String type) {
+        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        velocity = Config.speed.get(type);
         this.target = new Vector3(target.getX(Align.center), target.getY(Align.center), 0);
-        damage = source.damage;
+        damage = source.getDamage();
         setBounds(0, 0, texture.getWidth(), texture.getHeight());
         setPosition(source.getX(Align.center), source.getY(Align.center), Align.center);
 

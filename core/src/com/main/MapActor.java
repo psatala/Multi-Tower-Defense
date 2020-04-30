@@ -23,13 +23,14 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
+import static java.lang.Math.random;
 
 public class MapActor extends Actor {
     public enum Mode{MOVE, SELECT, BUILD};
-    public static final int gridW = 20;
-    public static final int gridH = 10;
+    private int gridW;
+    private int gridH;
 
-    public GridCell[][] gridCells = new GridCell[gridW][gridH];
+    private GridCell[][] gridCells;
 
     private Vector3 selection;
     private Rectangle selectRect;
@@ -48,7 +49,10 @@ public class MapActor extends Actor {
         this.gameManager = gameManager;
         this.playerId = playerId;
         this.type = type;
-        texture = new Texture("maps/"+type+".png");
+        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        gridW = Config.mapGrid.get(type)[0].length;
+        gridH = Config.mapGrid.get(type).length;
+        gridCells = new GridCell[gridW][gridH];
         renderer = new ShapeRenderer();
         setBounds(0, 0, w, h);
         gridCellH = h/(float)gridH;
@@ -60,6 +64,8 @@ public class MapActor extends Actor {
             for(int y = 0; y < gridH; ++y) {
                 gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this);
                 mapGroup.addActor(gridCells[x][y]);
+                gridCells[x][y].setBlocked(Config.mapGrid.get(type)[y][x]);
+                gridCells[x][y].setEmpty(!Config.mapGrid.get(type)[y][x]);
             }
         }
     }
@@ -79,16 +85,9 @@ public class MapActor extends Actor {
     public void updateGrid(Vector<Vector3> updates) {
         for(int x = 0; x < gridW; ++x) {
             for(int y = 0; y < gridH; ++y) {
-                gridCells[x][y].setEmpty(true);
+                gridCells[x][y].setBlocked(Config.mapGrid.get(type)[y][x]);
+                gridCells[x][y].setEmpty(!Config.mapGrid.get(type)[y][x]);
             }
-        }
-
-        //Map blockings - move it to config
-        for(int y = 0; y < gridH; ++y){
-            if(y == 4 || y==5)
-                continue;
-            gridCells[9][y].setBlocked(true);
-            gridCells[10][y].setBlocked(true);
         }
 
         Vector3 pos;
@@ -173,7 +172,7 @@ public class MapActor extends Actor {
 
     public Vector<Vector3> BFS(Vector3 start, Vector3 finish) {
         start = getGridCoords(start);
-        finish = getGridCoords(finish);
+        Vector3 fv = getGridCoords(finish);
         boolean[][] visited = new boolean[gridW][gridH];
         int[][] distance = new int[gridW][gridH];
         for(int x = 0; x < gridW; ++x){
@@ -184,8 +183,8 @@ public class MapActor extends Actor {
         }
         int sx = (int)start.x;
         int sy = (int)start.y;
-        int fx = (int)finish.x;
-        int fy = (int)finish.y;
+        int fx = (int)fv.x;
+        int fy = (int)fv.y;
         Queue<Integer> qx = new LinkedList<>();
         Queue<Integer> qy = new LinkedList<>();
         qx.add(sx);
@@ -221,7 +220,7 @@ public class MapActor extends Actor {
                 distance[sx][sy+1] = distance[sx][sy]+1;
                 visited[sx][sy+1] = true;
             }
-            if(visited[fx][fy])
+            if(distance[fx][fy] < gridW*gridH)
                 break;
         }
         Vector<Vector3> waypoints = new Vector<>();
@@ -238,6 +237,14 @@ public class MapActor extends Actor {
             }
             fx = bestx;
             fy = besty;
+
+            Vector3 randomizedPosition = gridCells[fx][fy].getCenter();
+            randomizedPosition.x += ((float)random()-0.5f)*gridCellW/2;
+            randomizedPosition.y += ((float)random()-0.5f)*gridCellH/2;
+            waypoints.add(randomizedPosition);
+        }
+        else {
+            waypoints.add(finish);
         }
         waypoints.add(gridCells[fx][fy].getCenter());
         while(distance[fx][fy] > 0) {
@@ -326,7 +333,6 @@ public class MapActor extends Actor {
     public Vector<Vector3> findPath(Vector3 start, Vector3 finish) {
         Vector<Vector3> waypoints = BFS(start, finish);
         waypoints.setElementAt(start, 0);
-        waypoints.add(finish);
         waypoints = smoothPath(waypoints);
         return waypoints;
     }

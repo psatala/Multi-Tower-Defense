@@ -19,7 +19,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.random;
 
 public class Unit extends Object{
-    static final float velocity = 100;
+    private float velocity;
     private TextureAtlas textureAtlas;
     private Animation<TextureRegion> animation;
     private GameManager gameManager;
@@ -32,17 +32,15 @@ public class Unit extends Object{
 
 
     public Unit(String unitType, int playerId, GameManager gameManager) {
-        super("units/"+unitType+"/"+unitType, playerId);
+        super(unitType, playerId);
         this.gameManager = gameManager;
         mapW = gameManager.getMapWidth();
         mapH = gameManager.getMapHeight();
-        type = unitType;
-        textureAtlas = new TextureAtlas(Gdx.files.internal("units/"+type+"/"+type+String.valueOf(playerId)+".atlas"));
+        textureAtlas = new TextureAtlas(Gdx.files.internal(Config.fullTexture.get(type)+String.valueOf(playerId)+".atlas"));
         animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
         healthbar.setWidth(getWidth());
-        cost = 300;
-        reward = 200;
         currentTarget = new Vector3(getCenter());
+        velocity = Config.speed.get(type);
     }
 
     public void goToPosition(Vector3 pos) {

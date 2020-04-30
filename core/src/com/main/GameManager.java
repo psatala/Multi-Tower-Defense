@@ -38,9 +38,9 @@ public class GameManager extends ApplicationAdapter {
 		units = new Vector<Unit>();
 		objects  = new Vector<Object>();
 		missiles = new Vector<Missile>();
-		for(int i = 0; i < 1; ++i)
-		    spawnUnit((float)random()*300+50, (float)random()*100+i*150+50, 0);
-		for(int i = 0; i < 20; ++i)
+		for(int i = 0; i < 10; ++i)
+		    spawnUnit((float)random()*300+50, (float)random()*600, 0);
+		for(int i = 0; i < 0; ++i)
 			spawnUnit((float)random()*300+700, (float)random()*600, 1);
 
 		Timer.schedule(new Timer.Task(){
@@ -97,14 +97,14 @@ public class GameManager extends ApplicationAdapter {
             	if(shooter.playerId == object.playerId)
             		continue;
             	float distance = shooter.distance(object);
-            	if(distance <= shooter.range && distance < bestDistance) {
+            	if(distance <= shooter.getRange() && distance < bestDistance) {
             		bestDistance = distance;
             		bestTarget = object;
 				}
 			}
             if(bestTarget != null) {
             	if(shooter.shoot()) {
-            		Missile missile = new Missile(bestTarget, shooter);
+            		Missile missile = new Missile(bestTarget, shooter, "missile");
             		missiles.add(missile);
             		stage.addActor(missile);
 				}
