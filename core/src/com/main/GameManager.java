@@ -23,17 +23,19 @@ public class GameManager extends ApplicationAdapter {
 	private List<Missile> missiles;
 	private InfoActor info;
 	private MapActor map;
-	protected Stage stage;
+	protected Stage activeStage;
+	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
 	@Override
 	public void create () {
-		stage = new Stage(new ScreenViewport());
+		activeStage = new Stage(new ScreenViewport());
+		passiveStage = new Stage(new ScreenViewport());
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, 0);
-		stage.addActor(info.getInfoGroup());
+		activeStage.addActor(info.getInfoGroup());
 		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, 0, "map0");
-		stage.addActor(map.getMapGroup());
-		Gdx.input.setInputProcessor(stage);
+		activeStage.addActor(map.getMapGroup());
+		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
 		units = new Vector<Unit>();
 		objects  = new Vector<Object>();
@@ -106,7 +108,7 @@ public class GameManager extends ApplicationAdapter {
             	if(shooter.shoot()) {
             		Missile missile = new Missile(bestTarget, shooter, "missile");
             		missiles.add(missile);
-            		stage.addActor(missile);
+            		passiveStage.addActor(missile);
 				}
 			}
 		}
@@ -127,18 +129,22 @@ public class GameManager extends ApplicationAdapter {
 		for(Object object : objects) {
 			object.update();
 		}
-		stage.act(Gdx.graphics.getDeltaTime());
-		stage.draw();
+		activeStage.act(Gdx.graphics.getDeltaTime());
+		activeStage.draw();
+		passiveStage.act(Gdx.graphics.getDeltaTime());
+		passiveStage.draw();
 	}
 
 	public void resize (int width, int height) {
-		stage.getViewport().update(width, height, true);
+		activeStage.getViewport().update(width, height, true);
+		passiveStage.getViewport().update(width, height, true);
 	}
 	
 	@Override
 	public void dispose () {
 		renderer.dispose();
-		stage.dispose();
+		activeStage.dispose();
+		passiveStage.dispose();
 	}
 
 	private void spawnUnit(float x, float y, int playerId) {
@@ -148,7 +154,7 @@ public class GameManager extends ApplicationAdapter {
 		unit.setPosition(x, y, Align.center);
 		objects.add(unit);
 		units.add(unit);
-		stage.addActor(unit.getObjectGroup());
+		passiveStage.addActor(unit.getObjectGroup());
 	}
 
 	public void sendUnitsTo(Vector3 pos) {
@@ -163,7 +169,7 @@ public class GameManager extends ApplicationAdapter {
 			return;
 		tower.setPosition(x, y, Align.center);
 		objects.add(tower);
-		stage.addActor(tower.getObjectGroup());
+		passiveStage.addActor(tower.getObjectGroup());
 		for(Unit unit : units) {
 			unit.reconsiderMovement();
 		}
