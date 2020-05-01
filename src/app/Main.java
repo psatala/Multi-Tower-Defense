@@ -19,7 +19,7 @@ public class Main {
         if(input.equals("s"))
             new GameServer(54545, 54545);
         else
-            new GameClient(54545, 54545, 54546, 54546, 5000);
+            new GameClient(54545, 54545, 54546, 54546, 500);
 
         inputScanner.close();
     }

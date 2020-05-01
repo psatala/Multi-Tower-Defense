@@ -65,7 +65,7 @@ public class GameRoom {
     }
 
     public void printRoomInfo() {
-        System.out.print("Room id: " + roomID + " host name: " + hostName + " players: " + currentPlayers + "/" + maxPlayers + " game type: ");
+        System.out.print("Room id: " + roomID + " IP address: " + ipOfHost + " host name: " + hostName + " players: " + currentPlayers + "/" + maxPlayers + " game type: ");
         if(gameType == GLOBAL)
             System.out.println("Global");
         else

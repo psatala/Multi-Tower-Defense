@@ -1,10 +1,9 @@
 package app;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.util.HashSet;
+import java.net.BindException;
+import java.util.Scanner;
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
@@ -15,29 +14,17 @@ import app.responses.*;
 public class LocalGameServer {
     private Server localServer;
     private GameRoom gameRoom;
-    
-    public LocalGameServer(int tcpPortNumber, int udpPortNumber, String hostName, int maxPlayers) throws IOException {
+    private Scanner inputScanner;
+
+    public LocalGameServer(int tcpPortNumber, int udpPortNumber, int maxDelay, String hostName, int maxPlayers, Scanner inputScanner) 
+    throws IOException, InterruptedException {
         localServer = new Server();
         gameRoom = new GameRoom(hostName, maxPlayers, GameRoom.LOCAL, -1); //add local server to game room
-        gameRoom.ipOfHost = InetAddress.getLocalHost();
+
+        this.inputScanner = inputScanner;
 
         //register classes
-        Kryo kryo = localServer.getKryo();
-        //requests
-        kryo.register(GameRequest.class);
-        kryo.register(CreateRoomRequest.class);
-        kryo.register(JoinRoomRequest.class);
-        kryo.register(LeaveRoomRequest.class);
-        kryo.register(GetRoomListRequest.class);
-        kryo.register(GetRoomInfoRequest.class);
-        //responses
-        kryo.register(GameResponse.class);
-        kryo.register(ControlResponse.class);
-        kryo.register(RoomList.class);
-        kryo.register(GameRoom.class);
-        kryo.register(HashSet.class);
-        kryo.register(RoomCreatedResponse.class);
-        kryo.register(RoomJoinedResponse.class);
+        Network.register(localServer);
 
         //add listener
         localServer.addListener(new Listener() {
@@ -70,6 +57,7 @@ public class LocalGameServer {
                 else if(object instanceof LeaveRoomRequest) { //client wants to leave a room
                     
                     try {
+                        connection.close();
                         gameRoom.removePlayer(connection.getID());
                     }
                     catch(Exception e) {
@@ -86,8 +74,41 @@ public class LocalGameServer {
 
         //start
         localServer.start();
-        localServer.bind(tcpPortNumber, udpPortNumber);
+        try {
+            localServer.bind(tcpPortNumber, udpPortNumber);
+            run(tcpPortNumber, udpPortNumber, maxDelay);
+        }
+        catch(BindException e) {
+            System.out.println("Another server is already running on this computer");
+            //TODO: fix incorrect quitting after this exception
+        }
 
+        
     }
 
+
+
+    public void run(int tcpSecondPortNumber, int udpSecondPortNumber, int maxDelay) throws InterruptedException, IOException {
+        
+        System.out.println("Press 'q' to quit");
+
+        GameResponse gameResponse = new GameResponse();
+        while(true) {
+            gameResponse.setMessage(inputScanner.nextLine());
+            if(gameResponse.getMessage().equals("q")) { //quitting
+                for(Integer connectionID: gameRoom.connectionSet)
+                    if(connectionID != -1)
+                        localServer.sendToTCP(connectionID, new RoomClosedResponse());
+                localServer.close();
+                localServer.stop();
+                break;
+            }
+            else {
+                for(Integer connectionID: gameRoom.connectionSet) //send data to everyone
+                    if(connectionID != -1)
+                        localServer.sendToTCP(connectionID, gameResponse);
+            }
+        }
+    }
+    
 }

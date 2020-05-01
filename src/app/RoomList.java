@@ -48,4 +48,8 @@ public class RoomList {
     public int getMaxKey() {
         return Collections.max(list.keySet());
     }
+
+    public void clear() {
+        list.clear();
+    }
 }

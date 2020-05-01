@@ -1,10 +1,7 @@
 package app;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
@@ -20,22 +17,7 @@ public class GameServer {
         server = new Server();
         
         //register classes
-        Kryo kryo = server.getKryo();
-        //requests
-        kryo.register(GameRequest.class);
-        kryo.register(CreateRoomRequest.class);
-        kryo.register(JoinRoomRequest.class);
-        kryo.register(LeaveRoomRequest.class);
-        kryo.register(GetRoomListRequest.class);
-        //responses
-        kryo.register(GameResponse.class);
-        kryo.register(ControlResponse.class);
-        kryo.register(RoomList.class);
-        kryo.register(HashMap.class);
-        kryo.register(GameRoom.class);
-        kryo.register(HashSet.class);
-        kryo.register(RoomCreatedResponse.class);
-        kryo.register(RoomJoinedResponse.class);
+        Network.register(server);
 
         //add listener
         server.addListener(new Listener() {
