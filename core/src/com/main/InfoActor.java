@@ -45,6 +45,7 @@ public class InfoActor extends Actor {
         addButton(20, getY()+4, 100, topBarHeight-8, "Select Units", MapActor.Mode.SELECT);
         addButton(140, getY()+4, 100, topBarHeight-8, "Move Units", MapActor.Mode.MOVE);
         addButton(260, getY()+4, 100, topBarHeight-8, "Build tower", MapActor.Mode.BUILD);
+        addButton(380, getY()+4, 100, topBarHeight-8, "Spawn unit", MapActor.Mode.SPAWN);
     }
 
     @Override

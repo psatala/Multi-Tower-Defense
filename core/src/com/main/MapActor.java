@@ -26,7 +26,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.random;
 
 public class MapActor extends Actor {
-    public enum Mode{MOVE, SELECT, BUILD};
+    public enum Mode{MOVE, SELECT, BUILD, SPAWN};
     private int gridW;
     private int gridH;
 
@@ -141,6 +141,15 @@ public class MapActor extends Actor {
                         float tx = gridCells[gx][gy].getX(Align.center);
                         float ty = gridCells[gx][gy].getY(Align.center);
                         gameManager.spawnTower(tx, ty, playerId);
+                    }
+                }
+                else if(mode == Mode.SPAWN){
+                    Vector3 gridCoords = getGridCoords(x, y);
+                    int gx = (int)gridCoords.x;
+                    int gy = (int)gridCoords.y;
+                    if(!gridCells[gx][gy].isBlocked()) {
+                        gridCells[gx][gy].setEmpty(false);
+                        gameManager.spawnUnit(x, y, playerId);
                     }
                 }
                 return true;

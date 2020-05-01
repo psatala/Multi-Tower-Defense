@@ -19,7 +19,7 @@ public class Missile extends Actor {
     private boolean isFlying = true;
     private int playerId;
 
-    public Missile(Object target, Object source, String type) {
+    public Missile(Entity target, Entity source, String type) {
         texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
         velocity = Config.speed.get(type);
         this.target = new Vector3(target.getX(Align.center), target.getY(Align.center), 0);
@@ -53,12 +53,12 @@ public class Missile extends Actor {
         return isFlying;
     }
 
-    public boolean hitObject(Object object) {
+    public boolean hitObject(Entity entity) {
         float myX = getX(Align.center);
         float myY = getY(Align.center);
-        if(myX < object.getX() || myX >= object.getX(Align.right))
+        if(myX < entity.getX() || myX >= entity.getX(Align.right))
             return false;
-        if(myY < object.getY() || myY >= object.getY(Align.top))
+        if(myY < entity.getY() || myY >= entity.getY(Align.top))
             return false;
         return true;
     }

@@ -18,7 +18,7 @@ import static java.lang.Math.random;
 
 
 public class GameManager extends ApplicationAdapter {
-	private List<Object> objects;
+	private List<Entity> entities;
 	private List<Unit> units;
 	private List<Missile> missiles;
 	private InfoActor info;
@@ -38,7 +38,7 @@ public class GameManager extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
 		units = new Vector<Unit>();
-		objects  = new Vector<Object>();
+		entities = new Vector<Entity>();
 		missiles = new Vector<Missile>();
 		for(int i = 0; i < 10; ++i)
 		    spawnUnit((float)random()*300+50, (float)random()*600, 0);
@@ -56,18 +56,18 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	public void updateFight() {
-		Vector<Object> objectsToRemove = new Vector<Object>();
+		Vector<Entity> objectsToRemove = new Vector<Entity>();
 		Vector<Missile> missilesToRemove = new Vector<Missile>();
-	    for(Object object : objects) {
+	    for(Entity entity : entities) {
 	        for(Missile missile : missiles) {
-	            if(missile.getPlayerId() != object.playerId && missile.hitObject(object)){
-	                object.damage(missile.getDamage());
+	            if(missile.getPlayerId() != entity.playerId && missile.hitObject(entity)){
+	                entity.damage(missile.getDamage());
 	                missile.targetHit();
-	                if(!object.isAlive()) {
+	                if(!entity.isAlive()) {
 	                	if(missile.getPlayerId() == 0) {
-							info.addCoins(object.getReward());
+							info.addCoins(entity.getReward());
 						}
-						objectsToRemove.add(object);
+						objectsToRemove.add(entity);
 					}
                 }
 	            if(!missile.isAlive()) {
@@ -75,10 +75,10 @@ public class GameManager extends ApplicationAdapter {
 				}
             }
         }
-	    for(Object object : objectsToRemove) {
-			objects.remove(object);
-			units.remove(object);
-			object.remove();
+	    for(Entity entity : objectsToRemove) {
+			entities.remove(entity);
+			units.remove(entity);
+			entity.remove();
 		}
 	    if(!objectsToRemove.isEmpty()) {
 	    	updateGrid();
@@ -91,17 +91,17 @@ public class GameManager extends ApplicationAdapter {
 			missile.remove();
 		}
 		float bestDistance;
-		Object bestTarget;
-		for(Object shooter : objects) {
+		Entity bestTarget;
+		for(Entity shooter : entities) {
 			bestDistance = 1e9f;
 			bestTarget = null;
-            for(Object object : objects) {
-            	if(shooter.playerId == object.playerId)
+            for(Entity entity : entities) {
+            	if(shooter.playerId == entity.playerId)
             		continue;
-            	float distance = shooter.distance(object);
+            	float distance = shooter.distance(entity);
             	if(distance <= shooter.getRange() && distance < bestDistance) {
             		bestDistance = distance;
-            		bestTarget = object;
+            		bestTarget = entity;
 				}
 			}
             if(bestTarget != null) {
@@ -116,8 +116,8 @@ public class GameManager extends ApplicationAdapter {
 
 	public void updateGrid() {
 	    Vector<Vector3> updates = new Vector<Vector3>();
-	    for(Object object : objects) {
-	        updates.add(object.gridUpdate());
+	    for(Entity entity : entities) {
+	        updates.add(entity.gridUpdate());
         }
 	    map.updateGrid(updates);
     }
@@ -126,8 +126,8 @@ public class GameManager extends ApplicationAdapter {
 	public void render () {
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		for(Object object : objects) {
-			object.update();
+		for(Entity entity : entities) {
+			entity.update();
 		}
 		activeStage.act(Gdx.graphics.getDeltaTime());
 		activeStage.draw();
@@ -147,12 +147,12 @@ public class GameManager extends ApplicationAdapter {
 		passiveStage.dispose();
 	}
 
-	private void spawnUnit(float x, float y, int playerId) {
+	public void spawnUnit(float x, float y, int playerId) {
 		Unit unit = new Unit("firstUnit", playerId, this);
 		if(playerId == 0 && !info.spendCoins(unit.getCost()))
 			return;
 		unit.setPosition(x, y, Align.center);
-		objects.add(unit);
+		entities.add(unit);
 		units.add(unit);
 		passiveStage.addActor(unit.getObjectGroup());
 	}
@@ -168,7 +168,7 @@ public class GameManager extends ApplicationAdapter {
 		if(playerId == 0 && !info.spendCoins(tower.getCost()))
 			return;
 		tower.setPosition(x, y, Align.center);
-		objects.add(tower);
+		entities.add(tower);
 		passiveStage.addActor(tower.getObjectGroup());
 		for(Unit unit : units) {
 			unit.reconsiderMovement();

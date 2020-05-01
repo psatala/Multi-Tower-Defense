@@ -18,7 +18,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.random;
 
-public class Unit extends Object{
+public class Unit extends Entity {
     private float velocity;
     private TextureAtlas textureAtlas;
     private Animation<TextureRegion> animation;

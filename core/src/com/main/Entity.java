@@ -13,7 +13,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-public class Object extends Actor {
+public class Entity extends Actor {
     static int idCounter = 0;
 
     private float reloadTime;
@@ -32,7 +32,7 @@ public class Object extends Actor {
     protected String type;
 
 
-    public Object(String type, int playerId) {
+    public Entity(String type, int playerId) {
         textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.representativeTexture.get(type))));
         setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
         this.playerId = playerId;
@@ -100,8 +100,8 @@ public class Object extends Actor {
         return (float)sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2));
     }
 
-    public float distance(Object object) {
-        return (float)sqrt(pow(getX(Align.center)-object.getX(Align.center), 2) + pow(getY(Align.center)-object.getY(Align.center), 2));
+    public float distance(Entity entity) {
+        return (float)sqrt(pow(getX(Align.center)- entity.getX(Align.center), 2) + pow(getY(Align.center)- entity.getY(Align.center), 2));
     }
 
     @Override

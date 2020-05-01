@@ -28,12 +28,12 @@ public class GridCell extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
-        if(map.mode == MapActor.Mode.BUILD && (!isEmpty || isHighlighted)) {
+        if((map.mode == MapActor.Mode.BUILD || map.mode == MapActor.Mode.SPAWN) && (!isEmpty || isHighlighted)) {
             batch.end();
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             renderer.begin(ShapeRenderer.ShapeType.Filled);
-            if(!isEmpty){
+            if(map.mode == MapActor.Mode.BUILD && !isEmpty || map.mode == MapActor.Mode.SPAWN && isBlocked){
                 renderer.setColor(new Color(1.0f, 0.0f, 0.0f, 0.3f));
                 renderer.rect(getX(), getY(), getWidth(), getHeight());
             }
