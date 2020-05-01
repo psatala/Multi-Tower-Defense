@@ -14,10 +14,9 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import java.util.List;
 import java.util.Vector;
 
-import static java.lang.Math.random;
-
 
 public class GameManager extends ApplicationAdapter {
+	private int myPlayerId;
 	private List<Entity> entities;
 	private List<Unit> units;
 	private List<Missile> missiles;
@@ -27,23 +26,23 @@ public class GameManager extends ApplicationAdapter {
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
+	public GameManager(int playerId) {
+		myPlayerId = playerId;
+	}
+
 	@Override
 	public void create () {
 		activeStage = new Stage(new ScreenViewport());
 		passiveStage = new Stage(new ScreenViewport());
-		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, 0);
+		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
-		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, 0, "map0");
+		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0");
 		activeStage.addActor(map.getMapGroup());
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
 		units = new Vector<Unit>();
 		entities = new Vector<Entity>();
 		missiles = new Vector<Missile>();
-		for(int i = 0; i < 10; ++i)
-		    spawnUnit((float)random()*300+50, (float)random()*600, 0);
-		for(int i = 0; i < 0; ++i)
-			spawnUnit((float)random()*300+700, (float)random()*600, 1);
 
 		Timer.schedule(new Timer.Task(){
 						   @Override
@@ -64,7 +63,7 @@ public class GameManager extends ApplicationAdapter {
 	                entity.damage(missile.getDamage());
 	                missile.targetHit();
 	                if(!entity.isAlive()) {
-	                	if(missile.getPlayerId() == 0) {
+	                	if(missile.getPlayerId() == myPlayerId) {
 							info.addCoins(entity.getReward());
 						}
 						objectsToRemove.add(entity);
@@ -149,7 +148,7 @@ public class GameManager extends ApplicationAdapter {
 
 	public void spawnUnit(float x, float y, int playerId) {
 		Unit unit = new Unit("firstUnit", playerId, this);
-		if(playerId == 0 && !info.spendCoins(unit.getCost()))
+		if(myPlayerId == playerId && !info.spendCoins(unit.getCost()))
 			return;
 		unit.setPosition(x, y, Align.center);
 		entities.add(unit);
@@ -165,7 +164,7 @@ public class GameManager extends ApplicationAdapter {
 
 	public void spawnTower(float x, float y, int playerId) {
 		Tower tower = new Tower("firstTower", playerId);
-		if(playerId == 0 && !info.spendCoins(tower.getCost()))
+		if(myPlayerId == playerId && !info.spendCoins(tower.getCost()))
 			return;
 		tower.setPosition(x, y, Align.center);
 		entities.add(tower);
