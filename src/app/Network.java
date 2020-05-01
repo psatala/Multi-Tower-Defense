@@ -1,3 +1,9 @@
+/**
+ * The Network class handles all network related things common across all end points. This mainly includes
+ * registering classes for serialisation.
+ * @author Piotr Satała
+ */
+
 package app;
 
 import java.net.Inet4Address;
@@ -11,9 +17,14 @@ import app.requests.*;
 import app.responses.*;
 
 public class Network {
+
+    /**
+     * Register classes for serialisation
+     * @param endPoint end point of the connection
+     */
     public static void register(EndPoint endPoint) {
         
-        //register classes
+        //get kryo
         Kryo kryo = endPoint.getKryo();
         //requests
         kryo.register(GameRequest.class);

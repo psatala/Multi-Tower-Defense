@@ -1,3 +1,9 @@
+/**
+ * The GameServer class is the core class controlling the main server. There should be at most one main server
+ * running at once and its IP address should be specified in GameClient class.
+ * @author Piotr Satała
+ */
+
 package app;
 
 import java.io.IOException;
@@ -13,6 +19,13 @@ public class GameServer {
     private Server server;
     private RoomList roomList = new RoomList();
     
+
+    /**
+     * Public constructor for GameServer class
+     * @param tcpPortNumber tcp port for main server
+     * @param udpPortNumber udp port for main server
+     * @throws IOException
+     */
     public GameServer(int tcpPortNumber, int udpPortNumber) throws IOException {
         server = new Server();
         
@@ -23,35 +36,41 @@ public class GameServer {
         server.addListener(new Listener() {
             public void received(Connection connection, Object object) { //client sends a game message
                 connection.setTimeout(0); //never timeout - TODO: find proper solution for connection timeout
-                if(object instanceof GameRequest) {
+                if(object instanceof GameRequest) { //request with game data
+                    
                     GameRequest gameRequest = (GameRequest)object;
+                    
+                    //convert to a response
                     GameResponse gameResponse = new GameResponse(gameRequest.getMessage());
+                    
                     GameRoom currentRoom = roomList.get(gameRequest.getRoomID());
-                    if(currentRoom != null)
+                    if(currentRoom != null) {
+                        //send to everyone in the room apart from sender
                         for(Integer connectionID: currentRoom.connectionSet)
                             if(connectionID != connection.getID())
                                 server.sendToTCP(connectionID, gameResponse);
-                    
+                    }
+                        
                 }
                 else if(object instanceof CreateRoomRequest) { //client wants to create a room
                     
                     CreateRoomRequest createRoomRequest = (CreateRoomRequest)object;
                     GameRoom newRoom = new GameRoom(createRoomRequest.hostName, createRoomRequest.maxPlayers, createRoomRequest.gameType, connection.getID());
-                    roomList.add(newRoom);
+                    roomList.add(newRoom); //add to list of rooms
                     RoomCreatedResponse roomCreatedResponse = new RoomCreatedResponse(newRoom.roomID);
-                    server.sendToTCP(connection.getID(), roomCreatedResponse);
+                    server.sendToTCP(connection.getID(), roomCreatedResponse); //inform about successful creation
 
                 }
                 else if(object instanceof JoinRoomRequest) { //client wants to join a room
                     
                     JoinRoomRequest joinRoomRequest = (JoinRoomRequest)object;
-                    GameRoom currentRoom = roomList.get(joinRoomRequest.roomID);
+                    GameRoom currentRoom = roomList.get(joinRoomRequest.roomID); //get id
                     try {
                         currentRoom.addPlayer(connection.getID());
                         RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse();
-                        server.sendToTCP(connection.getID(), roomJoinedResponse);
+                        server.sendToTCP(connection.getID(), roomJoinedResponse); //room successfully joined
                     }
-                    catch(Exception e) {
+                    catch(Exception e) { //room already full
                         ControlResponse controlResponse = new ControlResponse(e.getMessage());
                         server.sendToTCP(connection.getID(), controlResponse);
                     }
@@ -63,7 +82,7 @@ public class GameServer {
                     try {
                         currentRoom.removePlayer(connection.getID());
                     }
-                    catch(Exception e) {
+                    catch(Exception e) { //room now empty
                         ControlResponse controlResponse = new ControlResponse(e.getMessage());
                         server.sendToTCP(connection.getID(), controlResponse);
                         roomList.remove(currentRoom.roomID);

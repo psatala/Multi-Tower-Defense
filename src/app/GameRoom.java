@@ -1,3 +1,9 @@
+/**
+ * The GameRoom class simulates a room on the network level in which a game can be played.
+ * It consists of IDs of clients connections to the room and other room metadata.
+ * @author Piotr Satała
+ */
+
 package app;
 
 import java.net.InetAddress;
@@ -19,6 +25,10 @@ public class GameRoom {
     public HashSet<Integer> connectionSet;
     public InetAddress ipOfHost; //ip for client to determine room host
 
+
+    /**
+     * Public empty constructor necessary for KryoNet to send instances of this class properly
+     */
     public GameRoom() {
         roomID = -1;
         hostName = "";
@@ -28,12 +38,21 @@ public class GameRoom {
         connectionSet = new HashSet<>();
     }
 
+
+    /**
+     * Public constructor for GameRoom class
+     * @param hostName name of either the client to request creation of the room from main server or the local server
+     * @param maxPlayers max number of players in a game
+     * @param gameType type of game - either GLOBAL - managed by main server or LOCAL - managed by a local server
+     * @param connectionID either ID of the connection between the client who requested this game and the main
+     * server or -1 if the game is LOCAL
+     */
     public GameRoom(String hostName, int maxPlayers, int gameType, int connectionID) {
 
         //set init
         connectionSet = new HashSet<>();
         
-        //copy
+        //copy paramieters
         this.hostName = hostName;
         this.maxPlayers = maxPlayers;
         this.gameType = gameType;
@@ -48,6 +67,12 @@ public class GameRoom {
 
     }
 
+
+    /**
+     * Add player to this room
+     * @param connectionID ID of connection between client and server (main/local)
+     * @throws Exception room already full
+     */
     public void addPlayer(int connectionID) throws Exception {
         if(currentPlayers == maxPlayers)
             throw new Exception("Game already full!");
@@ -57,6 +82,12 @@ public class GameRoom {
         }
     }
 
+
+    /**
+     * Remove player from this room
+     * @param connectionID ID of connection between client and server (main/local)
+     * @throws Exception room is now empty
+     */
     public void removePlayer(int connectionID) throws Exception {
         --currentPlayers;
         connectionSet.remove(connectionID);
@@ -64,6 +95,10 @@ public class GameRoom {
             throw new Exception("This room has been closed");
     }
 
+
+    /**
+     * Print information about the room
+     */
     public void printRoomInfo() {
         System.out.print("Room id: " + roomID + " IP address: " + ipOfHost + " host name: " + hostName + " players: " + currentPlayers + "/" + maxPlayers + " game type: ");
         if(gameType == GLOBAL)
