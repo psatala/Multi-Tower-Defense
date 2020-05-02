@@ -70,6 +70,29 @@ public class MapActor extends Actor {
         }
     }
 
+    public MapActor(float w, float h, String type) {
+        this.type = type;
+        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        gridW = Config.mapGrid.get(type)[0].length;
+        gridH = Config.mapGrid.get(type).length;
+        gridCells = new GridCell[gridW][gridH];
+        renderer = new ShapeRenderer();
+        setBounds(0, 0, w, h);
+        gridCellH = h/(float)gridH;
+        gridCellW = w/(float)gridW;
+        mapGroup = new Group();
+        mapGroup.addActor(this);
+        mapGroup.addListener(createInterfaceListener());
+        for(int x = 0; x < gridW; ++x) {
+            for(int y = 0; y < gridH; ++y) {
+                gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this);
+                mapGroup.addActor(gridCells[x][y]);
+                gridCells[x][y].setBlocked(Config.mapGrid.get(type)[y][x]);
+                gridCells[x][y].setEmpty(!Config.mapGrid.get(type)[y][x]);
+            }
+        }
+    }
+
     public Vector3 getGridCoords(Vector3 mapCoords){
         float x = mapCoords.x/gridCellW;
         float y = mapCoords.y/gridCellH;
@@ -140,7 +163,7 @@ public class MapActor extends Actor {
                         gridCells[gx][gy].setBlocked(true);
                         float tx = gridCells[gx][gy].getX(Align.center);
                         float ty = gridCells[gx][gy].getY(Align.center);
-                        gameManager.spawnTower(tx, ty, playerId);
+                        gameManager.spawnTower(tx, ty, "firstTower");
                     }
                 }
                 else if(mode == Mode.SPAWN){
@@ -149,7 +172,7 @@ public class MapActor extends Actor {
                     int gy = (int)gridCoords.y;
                     if(!gridCells[gx][gy].isBlocked()) {
                         gridCells[gx][gy].setEmpty(false);
-                        gameManager.spawnUnit(x, y, playerId);
+                        gameManager.spawnUnit(x, y, "firstUnit");
                     }
                 }
                 return true;
@@ -344,5 +367,15 @@ public class MapActor extends Actor {
         waypoints.setElementAt(start, 0);
         waypoints = smoothPath(waypoints);
         return waypoints;
+    }
+
+    public boolean isPositionEmpty(float x, float y) {
+        Vector3 pos = getGridCoords(x, y);
+        return gridCells[(int)pos.x][(int)pos.y].isEmpty();
+    }
+
+    public boolean isPositionBlocked(float x, float y) {
+        Vector3 pos = getGridCoords(x, y);
+        return gridCells[(int)pos.x][(int)pos.y].isBlocked();
     }
 }

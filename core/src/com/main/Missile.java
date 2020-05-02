@@ -12,14 +12,20 @@ import com.badlogic.gdx.utils.Align;
 import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
 
 public class Missile extends Actor {
+    static int idCounter = 0;
     private float velocity;
     private Vector3 target;
     private float damage;
     private Texture texture;
     private boolean isFlying = true;
+    private int id;
     private int playerId;
+    private String type;
 
     public Missile(Entity target, Entity source, String type) {
+        this.type = type;
+        id = idCounter;
+        idCounter++;
         texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
         velocity = Config.speed.get(type);
         this.target = new Vector3(target.getX(Align.center), target.getY(Align.center), 0);
@@ -38,6 +44,29 @@ public class Missile extends Actor {
         };
         addAction(sequence(moveAction, completionAction));
         playerId = source.playerId;
+    }
+
+    public Missile(Vector3 target, Vector3 source, float damage, String type, int playerId) {
+        id = idCounter;
+        idCounter++;
+        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        velocity = Config.speed.get(type);
+        this.target = new Vector3(target);
+        this.damage = damage;
+        setBounds(0, 0, texture.getWidth(), texture.getHeight());
+        setPosition(source.x, source.y, Align.center);
+
+        MoveToAction moveAction = new MoveToAction();
+        moveAction.setPosition(target.x, target.y);
+        float travelTime = Entity.distance(source, target) / velocity;
+        moveAction.setDuration(travelTime);
+        RunnableAction completionAction = new RunnableAction(){
+            public void run(){
+                isFlying = false;
+            }
+        };
+        addAction(sequence(moveAction, completionAction));
+        this.playerId = playerId;
     }
 
     public Vector3 getTarget() {
@@ -73,5 +102,24 @@ public class Missile extends Actor {
 
     public int getPlayerId() {
         return playerId;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Vector3 getPosition(int align) {
+        Vector3 pos = new Vector3();
+        pos.x = getX(align);
+        pos.y = getY(align);
+        return pos;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

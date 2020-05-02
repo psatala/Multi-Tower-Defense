@@ -11,7 +11,12 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Vector;
 
 
@@ -28,6 +33,9 @@ public class GameManager extends ApplicationAdapter {
 
 	public GameManager(int playerId) {
 		myPlayerId = playerId;
+		units = new Vector<>();
+		entities = new Vector<>();
+		missiles = new Vector<>();
 	}
 
 	@Override
@@ -40,76 +48,60 @@ public class GameManager extends ApplicationAdapter {
 		activeStage.addActor(map.getMapGroup());
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
-		units = new Vector<Unit>();
-		entities = new Vector<Entity>();
-		missiles = new Vector<Missile>();
 
 		Timer.schedule(new Timer.Task(){
 						   @Override
 						   public void run() {
-						   	   updateFight();
 						   	   updateGrid();
+						   	   getUpdates();
 						   }
 					   }
-				,0,1/30.0f);
+				,0,1/Config.refreshRate);
 	}
 
-	public void updateFight() {
-		Vector<Entity> objectsToRemove = new Vector<Entity>();
-		Vector<Missile> missilesToRemove = new Vector<Missile>();
-	    for(Entity entity : entities) {
-	        for(Missile missile : missiles) {
-	            if(missile.getPlayerId() != entity.playerId && missile.hitObject(entity)){
-	                entity.damage(missile.getDamage());
-	                missile.targetHit();
-	                if(!entity.isAlive()) {
-	                	if(missile.getPlayerId() == myPlayerId) {
-							info.addCoins(entity.getReward());
-						}
-						objectsToRemove.add(entity);
-					}
-                }
-	            if(!missile.isAlive()) {
-					missilesToRemove.add(missile);
+	public void getUpdates() {
+		try {
+			File myObj = new File("gamestate.txt");
+			Scanner myReader = new Scanner(myObj);
+			int count = 0;
+			Vector<Entity> newEntities = new Vector<>();
+			Vector<Unit> newUnits = new Vector<>();
+			Vector<Missile> newMissiles = new Vector<>();
+			while (myReader.hasNextLine()) {
+				String[] data = myReader.nextLine().split(" ");
+				if(data.length <= 2) {
+					count++;
+					continue;
 				}
-            }
-        }
-	    for(Entity entity : objectsToRemove) {
-			entities.remove(entity);
-			units.remove(entity);
-			entity.remove();
-		}
-	    if(!objectsToRemove.isEmpty()) {
-	    	updateGrid();
-			for(Unit unit : units) {
-				unit.reconsiderMovement();
-			}
-		}
-	    for(Missile missile : missilesToRemove) {
-			missiles.remove(missile);
-			missile.remove();
-		}
-		float bestDistance;
-		Entity bestTarget;
-		for(Entity shooter : entities) {
-			bestDistance = 1e9f;
-			bestTarget = null;
-            for(Entity entity : entities) {
-            	if(shooter.playerId == entity.playerId)
-            		continue;
-            	float distance = shooter.distance(entity);
-            	if(distance <= shooter.getRange() && distance < bestDistance) {
-            		bestDistance = distance;
-            		bestTarget = entity;
+				if(count == 0) {
+					Entity e = new Entity(data[1], Integer.parseInt(data[2]));
+					e.setId(Integer.parseInt(data[0]));
+					e.setPosition(Float.parseFloat(data[3]), Float.parseFloat(data[4]));
+					e.setReloadTime(Float.parseFloat(data[5]));
+					e.setHP(Float.parseFloat(data[6]));
+					newEntities.add(e);
+				}
+				else if(count == 1) {
+					Unit unit = new Unit("firstUnit", 0, map);
+					unit.setId(Integer.parseInt(data[0]));
+					unit.allowTargetChanging(true);
+					unit.goToPosition(new Vector3(Float.parseFloat(data[1]), Float.parseFloat(data[2]), 0));
+					newUnits.add(unit);
+				}
+				else if(count == 2) {
+					Missile m = new Missile(new Vector3(0, 0, 0), new Vector3(0, 0, 0), 0, data[1], Integer.parseInt(data[2]));
+					m.setId(Integer.parseInt(data[0]));
+					m.setPosition(Float.parseFloat(data[3]), Float.parseFloat(data[4]), 0);
+					newMissiles.add(m);
 				}
 			}
-            if(bestTarget != null) {
-            	if(shooter.shoot()) {
-            		Missile missile = new Missile(bestTarget, shooter, "missile");
-            		missiles.add(missile);
-            		passiveStage.addActor(missile);
-				}
-			}
+			myReader.close();
+			updateEntities(newEntities);
+			updateUnits(newUnits);
+			updateMissiles(newMissiles);
+		} catch (FileNotFoundException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
 		}
 	}
 
@@ -126,7 +118,7 @@ public class GameManager extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		for(Entity entity : entities) {
-			entity.update();
+			entity.update(Gdx.graphics.getDeltaTime());
 		}
 		activeStage.act(Gdx.graphics.getDeltaTime());
 		activeStage.draw();
@@ -146,37 +138,31 @@ public class GameManager extends ApplicationAdapter {
 		passiveStage.dispose();
 	}
 
-	public void spawnUnit(float x, float y, int playerId) {
-		Unit unit = new Unit("firstUnit", playerId, this);
-		if(myPlayerId == playerId && !info.spendCoins(unit.getCost()))
+	public void spawnUnit(float x, float y, String type) {
+		if(!info.spendCoins(Config.objectCost.get(type)) || map.isPositionBlocked(x, y))
 			return;
-		unit.setPosition(x, y, Align.center);
-		entities.add(unit);
-		units.add(unit);
-		passiveStage.addActor(unit.getObjectGroup());
+		sendSpawnRequest(x, y, type);
 	}
 
 	public void sendUnitsTo(Vector3 pos) {
 		for(Unit unit : units) {
-			unit.goToPosition(pos);
+			if(unit.isTargetChangeable()) {
+				sendMoveRequest(unit.getId(), pos);
+			}
 		}
 	}
 
-	public void spawnTower(float x, float y, int playerId) {
-		Tower tower = new Tower("firstTower", playerId);
-		if(myPlayerId == playerId && !info.spendCoins(tower.getCost()))
+	public void spawnTower(float x, float y, String type) {
+		if(!info.spendCoins(Config.objectCost.get(type)) || !map.isPositionEmpty(x, y))
 			return;
-		tower.setPosition(x, y, Align.center);
-		entities.add(tower);
-		passiveStage.addActor(tower.getObjectGroup());
-		for(Unit unit : units) {
-			unit.reconsiderMovement();
-		}
+		sendSpawnRequest(x, y, type);
 	}
 
 	public void selectUnits(Rectangle rect) {
 		float unitX, unitY;
 		for(Unit unit : units) {
+			if(unit.getPlayerId() != myPlayerId)
+				continue;
 			unitX = unit.getX(Align.center);
 			unitY = unit.getY(Align.center);
 			if(unitX >= rect.x && unitX <= rect.x+rect.width && unitY >= rect.y && unitY <= rect.y+rect.height) {
@@ -192,15 +178,153 @@ public class GameManager extends ApplicationAdapter {
 		map.setMode(mode);
 	}
 
-	public Vector<Vector3> findPath(Vector3 start, Vector3 finish) {
-		return map.findPath(start, finish);
+	public int getPlayerId() {
+		return myPlayerId;
 	}
 
-	public float getMapWidth() {
-		return map.getWidth();
+	public void addCoins(int amount) {
+		info.addCoins(amount);
 	}
 
-	public float getMapHeight() {
-		return map.getHeight();
+	public void addEntity(Entity e) {
+		if(e.entityType == Entity.Type.TOWER) {
+			Tower tower = new Tower(e.getType(), e.getPlayerId());
+			tower.setPosition(e.getX(), e.getY());
+			passiveStage.addActor(tower.getObjectGroup());
+			entities.add(tower);
+		}
+		else {
+			Unit unit = new Unit(e.getType(), e.getPlayerId(), map);
+			unit.setPosition(e.getX(), e.getY());
+			entities.add(unit);
+			units.add(unit);
+			passiveStage.addActor(unit.getObjectGroup());
+		}
+	}
+
+	public void deleteEntity(Entity e) {
+		entities.remove(e);
+		units.remove(e);
+		e.remove();
+	}
+
+	public void addMissile(Missile m) {
+		Missile missile = new Missile(m.getTarget(), m.getPosition(Align.center), m.getDamage(), m.getType(), m.getPlayerId());
+		missiles.add(missile);
+		passiveStage.addActor(missile);
+	}
+
+	public void deleteMissile(Missile m) {
+		missiles.remove(m);
+		m.remove();
+	}
+
+	public void updateEntities(Vector<Entity> newEntitiesVector) {
+		boolean found;
+		for(Entity entity : newEntitiesVector) {
+			found = false;
+			for(Entity ent2 : entities) {
+				if(entity.getId() == ent2.getId()) {
+					ent2.setPosition(entity.getX(), entity.getY());
+					ent2.setReloadTime(entity.getReloadTime());
+					ent2.setHP(entity.getHP());
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				addEntity(entity);
+			}
+		}
+		Vector<Entity> killedEntities = new Vector<>();
+		for(Entity ent2 : entities) {
+			found = false;
+			for(Entity entity : newEntitiesVector) {
+				if(ent2.getId() == entity.getId()) {
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				killedEntities.add(ent2);
+			}
+		}
+		for(Entity ent : killedEntities)
+			deleteEntity(ent);
+	}
+
+	public void updateMissiles(Vector<Missile> newMissilesVector) {
+		boolean found;
+		for(Missile missile : newMissilesVector) {
+			found = false;
+			for(Missile myM : missiles) {
+				if(myM.getId() == missile.getId()) {
+					myM.setPosition(missile.getX(), missile.getY());
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				addMissile(missile);
+			}
+		}
+		Vector<Missile> killedMissiles = new Vector<>();
+		for(Missile myM : missiles) {
+			found = false;
+			for(Missile missile : newMissilesVector) {
+				if(myM.getId() == missile.getId()) {
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				killedMissiles.add(myM);
+			}
+		}
+		for(Missile m : killedMissiles)
+			deleteMissile(m);
+	}
+
+	public void updateUnits(Vector<Unit> newUnitsVector) {
+		for(Unit unit : newUnitsVector) {
+			for(Unit myUnit : units) {
+				if(myUnit.getId() == unit.getId()) {
+					myUnit.allowTargetChanging(true);
+					myUnit.goToPosition(unit.getCurrentTarget());
+					break;
+				}
+			}
+		}
+	}
+
+	public void sendSpawnRequest(float x, float y, String type) {
+		try {
+			FileWriter myWriter = new FileWriter("requests.txt");
+			myWriter.append("Spawn ");
+			myWriter.append(type+' ');
+			myWriter.append(String.valueOf(myPlayerId)+' ');
+			myWriter.append(String.valueOf(x)+' ');
+			myWriter.append(String.valueOf(y)+' ');
+			myWriter.append('\n');
+			myWriter.close();
+		} catch (IOException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+	}
+
+	public void sendMoveRequest(int id, Vector3 pos) {
+		try {
+			FileWriter myWriter = new FileWriter("requests.txt");
+			myWriter.append("Move ");
+			myWriter.append(String.valueOf(id)+' ');
+			myWriter.append(String.valueOf(pos.x)+' ');
+			myWriter.append(String.valueOf(pos.y)+' ');
+			myWriter.append('\n');
+			myWriter.close();
+		} catch (IOException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
 	}
 }

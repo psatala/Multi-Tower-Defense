@@ -54,4 +54,8 @@ public class Healthbar extends Actor {
     public float getHP() {
         return hp;
     }
+
+    public void setHP(float hp) {
+        this.hp = hp;
+    }
 }

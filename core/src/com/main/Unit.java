@@ -22,7 +22,7 @@ public class Unit extends Entity {
     private float velocity;
     private TextureAtlas textureAtlas;
     private Animation<TextureRegion> animation;
-    private GameManager gameManager;
+    private MapActor map;
     private float elapsedTime = 0;
     private boolean unitMoving = false;
     private boolean changeTarget = false;
@@ -31,11 +31,12 @@ public class Unit extends Entity {
     private Vector3 currentTarget;
 
 
-    public Unit(String unitType, int playerId, GameManager gameManager) {
+    public Unit(String unitType, int playerId, MapActor map) {
         super(unitType, playerId);
-        this.gameManager = gameManager;
-        mapW = gameManager.getMapWidth();
-        mapH = gameManager.getMapHeight();
+        this.map = map;
+        entityType = Type.UNIT;
+        mapW = map.getWidth();
+        mapH = map.getHeight();
         textureAtlas = new TextureAtlas(Gdx.files.internal(Config.fullTexture.get(type)+String.valueOf(playerId)+".atlas"));
         animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
         healthbar.setWidth(getWidth());
@@ -58,7 +59,7 @@ public class Unit extends Entity {
 
     public void reconsiderMovement() {
         if(!targetAchieved()) {
-            Vector<Vector3> waypoints = gameManager.findPath(getCenter(), currentTarget);
+            Vector<Vector3> waypoints = map.findPath(getCenter(), currentTarget);
             SequenceAction seq = new SequenceAction();
             clearActions();
             MoveToAction moveAction;
@@ -116,6 +117,10 @@ public class Unit extends Entity {
         changeTarget = x;
     }
 
+    public boolean isTargetChangeable() {
+        return changeTarget;
+    }
+
     public Vector3 getCenter() {
         return new Vector3(getX(Align.center), getY(Align.center), 0);
     }
@@ -127,5 +132,9 @@ public class Unit extends Entity {
 
     public boolean equalsTarget(Vector3 pos) {
         return pos.x == currentTarget.x && pos.y == currentTarget.y;
+    }
+
+    public Vector3 getCurrentTarget() {
+        return currentTarget;
     }
 }

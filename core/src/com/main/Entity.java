@@ -14,8 +14,10 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 public class Entity extends Actor {
+    public enum Type{UNIT, TOWER};
     static int idCounter = 0;
 
+    public Type entityType;
     private float reloadTime;
     private float range;
     private float damage;
@@ -74,8 +76,8 @@ public class Entity extends Actor {
         return healthbar.damage(healthPoints);
     }
 
-    public void update() {
-        reloadTimeLeft -= Gdx.graphics.getDeltaTime();
+    public void update(float deltaTime) {
+        reloadTimeLeft -= deltaTime;
         reloadTimeLeft = max(0, reloadTimeLeft);
     }
 
@@ -96,7 +98,7 @@ public class Entity extends Actor {
         return (float)sqrt(pow(getX(Align.center)-pos.x, 2) + pow(getY(Align.center)-pos.y, 2));
     }
 
-    public float distance(Vector3 a, Vector3 b) {
+    static public float distance(Vector3 a, Vector3 b) {
         return (float)sqrt(pow(a.x-b.x, 2) + pow(a.y-b.y, 2));
     }
 
@@ -125,5 +127,37 @@ public class Entity extends Actor {
 
     public float getRange() {
         return range;
+    }
+
+    public int getPlayerId() {
+        return playerId;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public float getReloadTime() {
+        return reloadTimeLeft;
+    }
+
+    public void setReloadTime(float t) {
+        reloadTimeLeft = t;
+    }
+
+    public float getHP() {
+        return healthbar.getHP();
+    }
+
+    public void setHP(float hp) {
+        healthbar.setHP(hp);
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

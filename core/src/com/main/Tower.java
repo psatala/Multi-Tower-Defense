@@ -7,6 +7,7 @@ public class Tower extends Entity {
 
     public Tower(String type, int playerId) {
         super(type, playerId);
+        entityType = Type.TOWER;
     }
 
     @Override

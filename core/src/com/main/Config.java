@@ -17,6 +17,11 @@ public class Config {
     public static final Map<String, Boolean[][]> mapGrid;
 
     public static final int startingCoins = 5000;
+    public static final float refreshRate = 2f;
+
+    static boolean isUnit(String type) {
+        return type == "firstUnit";
+    }
 
     static {
         Map<String, Integer> tempObjectCost = new HashMap<>();
