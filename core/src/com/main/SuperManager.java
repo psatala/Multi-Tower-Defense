@@ -1,10 +1,8 @@
 package com.main;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
@@ -20,17 +18,16 @@ import java.util.Vector;
 
 
 public class SuperManager extends ApplicationAdapter {
-    private Vector<Entity> entities;
     private Vector<Unit> units;
+    private Vector<Tower> towers;
     private Vector<Missile> missiles;
     private MapActor map;
     protected Stage stage;
-    private ShapeRenderer renderer;
 
 
     public SuperManager() {
         units = new Vector<>();
-        entities = new Vector<>();
+        towers = new Vector<>();
         missiles = new Vector<>();
     }
 
@@ -39,7 +36,6 @@ public class SuperManager extends ApplicationAdapter {
         stage = new Stage(new ScreenViewport());
         map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()-InfoActor.topBarHeight, "map0");
         stage.addActor(map.getMapGroup());
-        renderer = new ShapeRenderer();
 
         Timer.schedule(new Timer.Task(){
                            @Override
@@ -58,30 +54,14 @@ public class SuperManager extends ApplicationAdapter {
         try {
             FileWriter myWriter = new FileWriter("gamestate.txt");
             myWriter.write("");
-            for(Entity entity : entities) {
-                myWriter.append(String.valueOf(entity.getId())+' ');
-                myWriter.append(entity.getType()+' ');
-                myWriter.append(String.valueOf(entity.getPlayerId())+' ');
-                myWriter.append(String.valueOf(entity.getX())+' ');
-                myWriter.append(String.valueOf(entity.getY())+' ');
-                myWriter.append(String.valueOf(entity.getReloadTime())+' ');
-                myWriter.append(String.valueOf(entity.getHP())+'\n');
-            }
-            myWriter.append('\n');
             for(Unit unit : units) {
-                myWriter.append(String.valueOf(unit.getId())+' ');
-                myWriter.append(unit.getType()+' ');
-                myWriter.append(String.valueOf(unit.getPlayerId())+' ');
-                myWriter.append(String.valueOf(unit.getCurrentTarget().x)+' ');
-                myWriter.append(String.valueOf(unit.getCurrentTarget().y)+' ');
+                myWriter.append(unit.toString());
             }
-            myWriter.append('\n');
+            for(Tower tower : towers) {
+                myWriter.append(tower.toString());
+            }
             for(Missile missile : missiles) {
-                myWriter.append(String.valueOf(missile.getId())+' ');
-                myWriter.append(missile.getType()+' ');
-                myWriter.append(String.valueOf(missile.getPlayerId())+' ');
-                myWriter.append(String.valueOf(missile.getX())+' ');
-                myWriter.append(String.valueOf(missile.getY())+' ');
+                myWriter.append(missile.toString());
             }
             myWriter.close();
         } catch (IOException e) {
@@ -91,22 +71,12 @@ public class SuperManager extends ApplicationAdapter {
     }
 
     private void getUpdates() {
+        Vector<String> requests = new Vector<>();
         try {
             File myObj = new File("requests.txt");
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
-                String[] data = myReader.nextLine().split(" ");
-                if(data[0].equals("Spawn")) {
-                    if(Config.isUnit(data[1])) {
-                        spawnUnit(Float.parseFloat(data[3]), Float.parseFloat(data[4]), data[1], Integer.parseInt(data[2]));
-                    }
-                    else {
-                        spawnTower(Float.parseFloat(data[3]), Float.parseFloat(data[4]), data[1], Integer.parseInt(data[2]));
-                    }
-                }
-                else {
-                    sendUnitTo(Integer.parseInt(data[1]), new Vector3(Float.parseFloat(data[2]), Float.parseFloat(data[3]), 0));
-                }
+                requests.add(myReader.nextLine());
             }
             myReader.close();
         } catch (FileNotFoundException e) {
@@ -121,6 +91,21 @@ public class SuperManager extends ApplicationAdapter {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
+
+        for(String request : requests) {
+            String[] data = request.split(" ");
+            if(request.charAt(0) == 'S') {
+                if(request.charAt(1) == 'U') {
+                    spawnUnit(Float.parseFloat(data[3]), Float.parseFloat(data[4]), data[1], Integer.parseInt(data[2]));
+                }
+                else if(request.charAt(1) == 'T') {
+                    spawnTower(Float.parseFloat(data[3]), Float.parseFloat(data[4]), data[1], Integer.parseInt(data[2]));
+                }
+            }
+            else if(request.charAt(0) == 'M') {
+                sendUnitTo(Integer.parseInt(data[1]), new Vector3(Float.parseFloat(data[2]), Float.parseFloat(data[3]), 0));
+            }
+        }
     }
 
     private void reward(int playerId, int amount) {
@@ -129,20 +114,24 @@ public class SuperManager extends ApplicationAdapter {
 
 
     public void updateFight() {
-        for(Entity entity : entities) {
-            entity.update(Config.refreshRate);
+        for(Unit unit : units) {
+            unit.update(Config.refreshRate);
+        }
+        for(Tower tower : towers) {
+            tower.update(Config.refreshRate);
         }
 
-        Vector<Entity> objectsToRemove = new Vector<Entity>();
+        Vector<Unit> unitsToRemove = new Vector<>();
+        Vector<Tower> towersToRemove = new Vector<>();
         Vector<Missile> missilesToRemove = new Vector<Missile>();
-        for(Entity entity : entities) {
+        for(Unit unit : units) {
             for(Missile missile : missiles) {
-                if(missile.getPlayerId() != entity.playerId && missile.hitObject(entity)){
-                    entity.damage(missile.getDamage());
+                if(missile.getPlayerId() != unit.playerId && missile.hitObject(unit)){
+                    unit.damage(missile.getDamage());
                     missile.targetHit();
-                    if(!entity.isAlive()) {
-                        reward(missile.getPlayerId(), entity.getReward());
-                        objectsToRemove.add(entity);
+                    if(!unit.isAlive()) {
+                        reward(missile.getPlayerId(), unit.getReward());
+                        unitsToRemove.add(unit);
                     }
                 }
                 if(!missile.isAlive()) {
@@ -150,12 +139,31 @@ public class SuperManager extends ApplicationAdapter {
                 }
             }
         }
-        for(Entity entity : objectsToRemove) {
-            entities.remove(entity);
-            units.remove(entity);
-            entity.remove();
+        for(Tower tower : towers) {
+            for(Missile missile : missiles) {
+                if(missile.getPlayerId() != tower.playerId && missile.hitObject(tower)){
+                    tower.damage(missile.getDamage());
+                    missile.targetHit();
+                    if(!tower.isAlive()) {
+                        reward(missile.getPlayerId(), tower.getReward());
+                        towersToRemove.add(tower);
+                    }
+                }
+                if(!missile.isAlive()) {
+                    missilesToRemove.add(missile);
+                }
+            }
         }
-        if(!objectsToRemove.isEmpty()) {
+
+        for(Unit unit : unitsToRemove) {
+            units.remove(unit);
+            unit.remove();
+        }
+        for(Tower tower : towersToRemove) {
+             towers.remove(tower);
+             tower.remove();
+        }
+        if(!towersToRemove.isEmpty()) {
             updateGrid();
             for(Unit unit : units) {
                 unit.reconsiderMovement();
@@ -165,34 +173,52 @@ public class SuperManager extends ApplicationAdapter {
             missiles.remove(missile);
             missile.remove();
         }
-        float bestDistance;
-        Entity bestTarget;
-        for(Entity shooter : entities) {
-            bestDistance = 1e9f;
-            bestTarget = null;
-            for(Entity entity : entities) {
-                if(shooter.playerId == entity.playerId)
-                    continue;
-                float distance = shooter.distance(entity);
-                if(distance <= shooter.getRange() && distance < bestDistance) {
-                    bestDistance = distance;
-                    bestTarget = entity;
-                }
+
+        for(Unit unit : units) {
+            findTargetAndShoot(unit);
+        }
+        for(Tower tower : towers) {
+            findTargetAndShoot(tower);
+        }
+    }
+
+    private void findTargetAndShoot(Entity shooter) {
+        float bestDistance = 1e9f;
+        Entity bestTarget = null;
+        for(Tower tower : towers) {
+            if(shooter.playerId == tower.playerId)
+                continue;
+            float distance = shooter.distance(tower);
+            if(distance <= shooter.getRange() && distance < bestDistance) {
+                bestDistance = distance;
+                bestTarget = tower;
             }
-            if(bestTarget != null) {
-                if(shooter.shoot()) {
-                    Missile missile = new Missile(bestTarget, shooter, "missile");
-                    missiles.add(missile);
-                    stage.addActor(missile);
-                }
+        }
+        for(Unit unit : units) {
+            if(shooter.playerId == unit.playerId)
+                continue;
+            float distance = shooter.distance(unit);
+            if(distance <= shooter.getRange() && distance < bestDistance) {
+                bestDistance = distance;
+                bestTarget = unit;
+            }
+        }
+        if(bestTarget != null) {
+            if(shooter.shoot()) {
+                Missile missile = new Missile(bestTarget, shooter, "missile");
+                missiles.add(missile);
+                stage.addActor(missile);
             }
         }
     }
 
     public void updateGrid() {
         Vector<Vector3> updates = new Vector<Vector3>();
-        for(Entity entity : entities) {
-            updates.add(entity.gridUpdate());
+        for(Unit unit : units) {
+            updates.add(unit.gridUpdate());
+        }
+        for(Tower tower : towers) {
+            updates.add(tower.gridUpdate());
         }
         map.updateGrid(updates);
     }
@@ -201,8 +227,11 @@ public class SuperManager extends ApplicationAdapter {
     public void render () {
         Gdx.gl.glClearColor(0, 0, 0, 0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        for(Entity entity : entities) {
-            entity.update(Gdx.graphics.getDeltaTime());
+        for(Unit unit : units) {
+            unit.update(Gdx.graphics.getDeltaTime());
+        }
+        for(Tower tower : towers) {
+            tower.update(Gdx.graphics.getDeltaTime());
         }
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
@@ -217,7 +246,6 @@ public class SuperManager extends ApplicationAdapter {
             return false;
         Unit unit = new Unit(type, playerId, map);
         unit.setPosition(x, y, Align.center);
-        entities.add(unit);
         units.add(unit);
         stage.addActor(unit.getObjectGroup());
         return true;
@@ -238,7 +266,7 @@ public class SuperManager extends ApplicationAdapter {
             return false;
         Tower tower = new Tower(type, playerId);
         tower.setPosition(x, y, Align.center);
-        entities.add(tower);
+        towers.add(tower);
         stage.addActor(tower.getObjectGroup());
         for(Unit unit : units) {
             unit.reconsiderMovement();

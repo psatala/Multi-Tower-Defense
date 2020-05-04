@@ -10,6 +10,19 @@ public class Tower extends Entity {
         entityType = Type.TOWER;
     }
 
+    public Tower(String stateString) {
+        super(stateString);
+        entityType = Type.TOWER;
+    }
+
+    @Override
+    public String toString() {
+        String s = super.toString();
+        s = s.substring(1, s.length()-1);
+        s = "T" + s;
+        return s;
+    }
+
     @Override
     public Vector3 gridUpdate() {
         return new Vector3(getX(Align.center), getY(Align.center), 1);

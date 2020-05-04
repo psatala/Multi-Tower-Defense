@@ -55,6 +55,54 @@ public class Entity extends Actor {
         objectGroup.addActor(healthbar);
     }
 
+    public Entity(String stateString) {
+        String[] data = stateString.split(" ");
+        id = Integer.parseInt(data[1]);
+        type = data[2];
+        textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.representativeTexture.get(type))));
+        setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
+
+        healthbar = new Healthbar(Config.hp.get(type), getWidth());
+        healthbar.setPosition(0, getHeight());
+        objectGroup = new Group();
+        objectGroup.addActor(this);
+        objectGroup.addActor(healthbar);
+        setHP(Float.parseFloat(data[7]));
+
+        playerId = Integer.parseInt(data[3]);
+        setX(Float.parseFloat(data[4]), Align.center);
+        setY(Float.parseFloat(data[5]), Align.center);
+        healthbar.setPosition(getX(), getY(Align.top));
+        reloadTimeLeft = Float.parseFloat(data[6]);
+
+        reloadTime = Config.reloadTime.get(type);
+        range = Config.range.get(type);
+        damage = Config.damage.get(type);
+        cost = Config.objectCost.get(type);
+        reward = Config.objectReward.get(type);
+    }
+
+    public void setState(String stateString) {
+        String[] data = stateString.split(" ");
+        setX(Float.parseFloat(data[4]), Align.center);
+        setY(Float.parseFloat(data[5]), Align.center);
+        reloadTimeLeft = Float.parseFloat(data[6]);
+        setHP(Float.parseFloat(data[7]));
+    }
+
+    public String toString() {
+        String s = "E ";
+        s += id + " ";
+        s += type + " ";
+        s += playerId + " ";
+        s += getX(Align.center) + " ";
+        s += getY(Align.center) + " ";
+        s += reloadTimeLeft + " ";
+        s += getHP() + " ";
+        s += "\n";
+        return s;
+    }
+
     public Vector3 gridUpdate() {
         return new Vector3(0, 0, 0);
     }

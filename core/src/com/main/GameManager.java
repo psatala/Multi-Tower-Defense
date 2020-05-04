@@ -22,8 +22,8 @@ import java.util.Vector;
 
 public class GameManager extends ApplicationAdapter {
 	private int myPlayerId;
-	private List<Entity> entities;
 	private List<Unit> units;
+	private List<Tower> towers;
 	private List<Missile> missiles;
 	private InfoActor info;
 	private MapActor map;
@@ -34,7 +34,7 @@ public class GameManager extends ApplicationAdapter {
 	public GameManager(int playerId) {
 		myPlayerId = playerId;
 		units = new Vector<>();
-		entities = new Vector<>();
+		towers = new Vector<>();
 		missiles = new Vector<>();
 	}
 
@@ -60,56 +60,132 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	public void getUpdates() {
+		Vector<String> objects = new Vector<>();
 		try {
 			File myObj = new File("gamestate.txt");
 			Scanner myReader = new Scanner(myObj);
-			int count = 0;
-			Vector<Entity> newEntities = new Vector<>();
-			Vector<Unit> newUnits = new Vector<>();
-			Vector<Missile> newMissiles = new Vector<>();
 			while (myReader.hasNextLine()) {
-				String[] data = myReader.nextLine().split(" ");
-				if(data.length <= 2) {
-					count++;
-					continue;
-				}
-				if(count == 0) {
-					Entity e = new Entity(data[1], Integer.parseInt(data[2]));
-					e.setId(Integer.parseInt(data[0]));
-					e.setPosition(Float.parseFloat(data[3]), Float.parseFloat(data[4]));
-					e.setReloadTime(Float.parseFloat(data[5]));
-					e.setHP(Float.parseFloat(data[6]));
-					newEntities.add(e);
-				}
-				else if(count == 1) {
-					Unit unit = new Unit("firstUnit", 0, map);
-					unit.setId(Integer.parseInt(data[0]));
-					unit.allowTargetChanging(true);
-					unit.goToPosition(new Vector3(Float.parseFloat(data[1]), Float.parseFloat(data[2]), 0));
-					newUnits.add(unit);
-				}
-				else if(count == 2) {
-					Missile m = new Missile(new Vector3(0, 0, 0), new Vector3(0, 0, 0), 0, data[1], Integer.parseInt(data[2]));
-					m.setId(Integer.parseInt(data[0]));
-					m.setPosition(Float.parseFloat(data[3]), Float.parseFloat(data[4]), 0);
-					newMissiles.add(m);
-				}
+				objects.add(myReader.nextLine());
 			}
 			myReader.close();
-			updateEntities(newEntities);
-			updateUnits(newUnits);
-			updateMissiles(newMissiles);
 		} catch (FileNotFoundException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
 		}
+
+		deleteKilledObjects(objects);
+
+		int id;
+		boolean found;
+		Vector<String> newObjects = new Vector<>();
+		for(String object : objects) {
+			id = Integer.parseInt(object.split(" ")[1]);
+			found = false;
+			if(object.charAt(0) == 'U') {
+				for(Unit unit : units) {
+					if(id == unit.getId()) {
+						unit.setState(object);
+						found = true;
+						break;
+					}
+				}
+			}
+			else if(object.charAt(0) == 'T') {
+				for(Tower tower : towers) {
+					if(id == tower.getId()) {
+						tower.setState(object);
+						found = true;
+						break;
+					}
+				}
+			}
+			else if(object.charAt(0) == 'M') {
+				for(Missile missile : missiles) {
+					if(id == missile.getId()) {
+						missile.setState(object);
+						found = true;
+						break;
+					}
+				}
+			}
+			if(!found) {
+				newObjects.add(object);
+			}
+		}
+		addNewObjects(newObjects);
 	}
+
+	public void deleteKilledObjects(Vector<String> objects) {
+		Vector<Unit> unitsToRemove = new Vector<>();
+		Vector<Tower> towersToRemove = new Vector<>();
+		Vector<Missile> missilesToRemove = new Vector<>();
+		for(Unit unit : units) {
+			if(!objectExists(objects, unit.getId(), 'U'))
+				unitsToRemove.add(unit);
+		}
+		for(Tower tower : towers) {
+			if(!objectExists(objects, tower.getId(), 'T'))
+				towersToRemove.add(tower);
+		}
+		for(Missile missile : missiles) {
+			if(!objectExists(objects, missile.getId(), 'M'))
+				missilesToRemove.add(missile);
+		}
+		for(Unit unit : unitsToRemove) {
+			units.remove(unit);
+			unit.remove();
+		}
+		for(Tower tower : towersToRemove) {
+			towers.remove(tower);
+			tower.remove();
+		}
+		for(Missile missile : missilesToRemove) {
+			missiles.remove(missile);
+			missile.remove();
+		}
+	}
+
+	public boolean objectExists(Vector<String> objects, int id, char objectType) {
+		for(String object : objects) {
+			if(object.charAt(0) == objectType && id == Integer.parseInt(object.split(" ")[1])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void addNewObjects(Vector<String> objects){
+		for(String object : objects) {
+			if(object.charAt(0) == 'U') {
+				Unit unit = new Unit(object, map);
+				units.add(unit);
+				passiveStage.addActor(unit.getObjectGroup());
+			}
+			else if(object.charAt(0) == 'T') {
+				Tower tower = new Tower(object);
+				towers.add(tower);
+				passiveStage.addActor(tower.getObjectGroup());
+			}
+			else if(object.charAt(0) == 'M') {
+				Missile missile = new Missile(object);
+				missiles.add(missile);
+				passiveStage.addActor(missile);
+			}
+		}
+	}
+
+
+
+
 
 	public void updateGrid() {
 	    Vector<Vector3> updates = new Vector<Vector3>();
-	    for(Entity entity : entities) {
-	        updates.add(entity.gridUpdate());
+	    for(Tower tower : towers) {
+	        updates.add(tower.gridUpdate());
         }
+	    for(Unit unit : units) {
+	    	updates.add(unit.gridUpdate());
+		}
 	    map.updateGrid(updates);
     }
 
@@ -117,8 +193,11 @@ public class GameManager extends ApplicationAdapter {
 	public void render () {
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		for(Entity entity : entities) {
-			entity.update(Gdx.graphics.getDeltaTime());
+		for(Tower tower : towers) {
+			tower.update(Gdx.graphics.getDeltaTime());
+		}
+		for(Unit unit : units) {
+			unit.update(Gdx.graphics.getDeltaTime());
 		}
 		activeStage.act(Gdx.graphics.getDeltaTime());
 		activeStage.draw();
@@ -141,7 +220,7 @@ public class GameManager extends ApplicationAdapter {
 	public void spawnUnit(float x, float y, String type) {
 		if(!info.spendCoins(Config.objectCost.get(type)) || map.isPositionBlocked(x, y))
 			return;
-		sendSpawnRequest(x, y, type);
+		sendSpawnRequest(x, y, 'U', type);
 	}
 
 	public void sendUnitsTo(Vector3 pos) {
@@ -155,7 +234,7 @@ public class GameManager extends ApplicationAdapter {
 	public void spawnTower(float x, float y, String type) {
 		if(!info.spendCoins(Config.objectCost.get(type)) || !map.isPositionEmpty(x, y))
 			return;
-		sendSpawnRequest(x, y, type);
+		sendSpawnRequest(x, y, 'T', type);
 	}
 
 	public void selectUnits(Rectangle rect) {
@@ -186,141 +265,30 @@ public class GameManager extends ApplicationAdapter {
 		info.addCoins(amount);
 	}
 
-	public void addEntity(Entity e) {
-		if(e.entityType == Entity.Type.TOWER) {
-			Tower tower = new Tower(e.getType(), e.getPlayerId());
-			tower.setPosition(e.getX(), e.getY());
-			passiveStage.addActor(tower.getObjectGroup());
-			entities.add(tower);
-		}
-		else {
-			Unit unit = new Unit(e.getType(), e.getPlayerId(), map);
-			unit.setPosition(e.getX(), e.getY());
-			entities.add(unit);
-			units.add(unit);
-			passiveStage.addActor(unit.getObjectGroup());
-		}
-	}
 
-	public void deleteEntity(Entity e) {
-		entities.remove(e);
-		units.remove(e);
-		e.remove();
-	}
-
-	public void addMissile(Missile m) {
-		Missile missile = new Missile(m.getTarget(), m.getPosition(Align.center), m.getDamage(), m.getType(), m.getPlayerId());
-		missiles.add(missile);
-		passiveStage.addActor(missile);
-	}
-
-	public void deleteMissile(Missile m) {
-		missiles.remove(m);
-		m.remove();
-	}
-
-	public void updateEntities(Vector<Entity> newEntitiesVector) {
-		boolean found;
-		for(Entity entity : newEntitiesVector) {
-			found = false;
-			for(Entity ent2 : entities) {
-				if(entity.getId() == ent2.getId()) {
-					ent2.setPosition(entity.getX(), entity.getY());
-					ent2.setReloadTime(entity.getReloadTime());
-					ent2.setHP(entity.getHP());
-					found = true;
-					break;
-				}
-			}
-			if(!found) {
-				addEntity(entity);
-			}
-		}
-		Vector<Entity> killedEntities = new Vector<>();
-		for(Entity ent2 : entities) {
-			found = false;
-			for(Entity entity : newEntitiesVector) {
-				if(ent2.getId() == entity.getId()) {
-					found = true;
-					break;
-				}
-			}
-			if(!found) {
-				killedEntities.add(ent2);
-			}
-		}
-		for(Entity ent : killedEntities)
-			deleteEntity(ent);
-	}
-
-	public void updateMissiles(Vector<Missile> newMissilesVector) {
-		boolean found;
-		for(Missile missile : newMissilesVector) {
-			found = false;
-			for(Missile myM : missiles) {
-				if(myM.getId() == missile.getId()) {
-					myM.setPosition(missile.getX(), missile.getY());
-					found = true;
-					break;
-				}
-			}
-			if(!found) {
-				addMissile(missile);
-			}
-		}
-		Vector<Missile> killedMissiles = new Vector<>();
-		for(Missile myM : missiles) {
-			found = false;
-			for(Missile missile : newMissilesVector) {
-				if(myM.getId() == missile.getId()) {
-					found = true;
-					break;
-				}
-			}
-			if(!found) {
-				killedMissiles.add(myM);
-			}
-		}
-		for(Missile m : killedMissiles)
-			deleteMissile(m);
-	}
-
-	public void updateUnits(Vector<Unit> newUnitsVector) {
-		for(Unit unit : newUnitsVector) {
-			for(Unit myUnit : units) {
-				if(myUnit.getId() == unit.getId()) {
-					myUnit.allowTargetChanging(true);
-					myUnit.goToPosition(unit.getCurrentTarget());
-					break;
-				}
-			}
-		}
-	}
-
-	public void sendSpawnRequest(float x, float y, String type) {
-		try {
-			FileWriter myWriter = new FileWriter("requests.txt");
-			myWriter.append("Spawn ");
-			myWriter.append(type+' ');
-			myWriter.append(String.valueOf(myPlayerId)+' ');
-			myWriter.append(String.valueOf(x)+' ');
-			myWriter.append(String.valueOf(y)+' ');
-			myWriter.append('\n');
-			myWriter.close();
-		} catch (IOException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+	public void sendSpawnRequest(float x, float y, char entityType, String type) {
+		String request = "S" + entityType + " ";
+		request += type + " ";
+		request += myPlayerId + " ";
+		request += x + " ";
+		request += y + " ";
+		request += "\n";
+		sendRequest(request);
 	}
 
 	public void sendMoveRequest(int id, Vector3 pos) {
+		String request = "M ";
+		request += id + " ";
+		request += pos.x + " ";
+		request += pos.y + " ";
+		request += "\n";
+		sendRequest(request);
+	}
+
+	public void sendRequest(String request) {
 		try {
-			FileWriter myWriter = new FileWriter("requests.txt");
-			myWriter.append("Move ");
-			myWriter.append(String.valueOf(id)+' ');
-			myWriter.append(String.valueOf(pos.x)+' ');
-			myWriter.append(String.valueOf(pos.y)+' ');
-			myWriter.append('\n');
+			FileWriter myWriter = new FileWriter("requests.txt", true);
+			myWriter.append(request);
 			myWriter.close();
 		} catch (IOException e) {
 			System.out.println("An error occurred.");

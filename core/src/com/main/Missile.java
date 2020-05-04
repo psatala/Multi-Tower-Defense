@@ -46,19 +46,21 @@ public class Missile extends Actor {
         playerId = source.playerId;
     }
 
-    public Missile(Vector3 target, Vector3 source, float damage, String type, int playerId) {
-        id = idCounter;
-        idCounter++;
+    public Missile(String stateString) {
+        String[] data = stateString.split(" ");
+        id = Integer.parseInt(data[1]);
+        type = data[2];
+        playerId = Integer.parseInt(data[3]);
+        setX(Float.parseFloat(data[4]), Align.center);
+        setY(Float.parseFloat(data[5]), Align.center);
+        target = new Vector3(Float.parseFloat(data[6]), Float.parseFloat(data[7]), 0);
+        damage = Integer.parseInt(data[8]);
         texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
         velocity = Config.speed.get(type);
-        this.target = new Vector3(target);
-        this.damage = damage;
         setBounds(0, 0, texture.getWidth(), texture.getHeight());
-        setPosition(source.x, source.y, Align.center);
-
         MoveToAction moveAction = new MoveToAction();
         moveAction.setPosition(target.x, target.y);
-        float travelTime = Entity.distance(source, target) / velocity;
+        float travelTime = Entity.distance(getPosition(Align.center), target) / velocity;
         moveAction.setDuration(travelTime);
         RunnableAction completionAction = new RunnableAction(){
             public void run(){
@@ -66,7 +68,26 @@ public class Missile extends Actor {
             }
         };
         addAction(sequence(moveAction, completionAction));
-        this.playerId = playerId;
+    }
+
+    public void setState(String stateString) {
+        String[] data = stateString.split(" ");
+        setX(Float.parseFloat(data[4]), Align.center);
+        setY(Float.parseFloat(data[5]), Align.center);
+    }
+
+    public String toString() {
+        String s = "M ";
+        s += id + " ";
+        s += type + " ";
+        s += playerId + " ";
+        s += getX(Align.center) + " ";
+        s += getY(Align.center) + " ";
+        s += target.x + " ";
+        s += target.y + " ";
+        s += damage + " ";
+        s += "\n";
+        return s;
     }
 
     public Vector3 getTarget() {

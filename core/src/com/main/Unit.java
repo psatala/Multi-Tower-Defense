@@ -44,6 +44,45 @@ public class Unit extends Entity {
         velocity = Config.speed.get(type);
     }
 
+    public Unit(String stateString, MapActor map) {
+        super(stateString);
+        System.out.println(stateString);
+        String[] data = stateString.split(" ");
+        currentTarget = new Vector3();
+        currentTarget.x = Float.parseFloat(data[8]);
+        currentTarget.y = Float.parseFloat(data[9]);
+
+        this.map = map;
+        entityType = Type.UNIT;
+        mapW = map.getWidth();
+        mapH = map.getHeight();
+        textureAtlas = new TextureAtlas(Gdx.files.internal(Config.fullTexture.get(type)+String.valueOf(playerId)+".atlas"));
+        animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
+        healthbar.setWidth(getWidth());
+        velocity = Config.speed.get(type);
+        reconsiderMovement();
+    }
+
+    @Override
+    public void setState(String stateString) {
+        super.setState(stateString);
+        String[] data = stateString.split(" ");
+        currentTarget.x = Float.parseFloat(data[8]);
+        currentTarget.y = Float.parseFloat(data[9]);
+        reconsiderMovement();
+    }
+
+    @Override
+    public String toString() {
+        String s = super.toString();
+        s = s.substring(1, s.length()-1);
+        s = "U" + s;
+        s += currentTarget.x + " ";
+        s += currentTarget.y + " ";
+        s += "\n";
+        return s;
+    }
+
     public void goToPosition(Vector3 pos) {
         if(changeTarget && !equalsTarget(pos)) {
             float dx = ((float)random()-0.5f)*getWidth()/2;
