@@ -7,6 +7,8 @@ import java.util.Map;
 public class Config {
     public static final Map<String, Integer> objectCost;
     public static final Map<String, Integer> objectReward;
+    public static final Map<String, Float> width;
+    public static final Map<String, Float> height;
     public static final Map<String, Integer> damage;
     public static final Map<String, Float> range;
     public static final Map<String, Float> reloadTime;
@@ -26,6 +28,8 @@ public class Config {
     static {
         Map<String, Integer> tempObjectCost = new HashMap<>();
         Map<String, Integer> tempObjectReward = new HashMap<>();
+        Map<String, Float> tempWidth = new HashMap<>();
+        Map<String, Float> tempHeight = new HashMap<>();
         Map<String, Integer> tempDamage = new HashMap<>();
         Map<String, Float> tempRange = new HashMap<>();
         Map<String, Float> tempReloadTime = new HashMap<>();
@@ -38,6 +42,8 @@ public class Config {
         String type = "firstUnit";
         tempObjectCost.put(type, 300);
         tempObjectReward.put(type, 100);
+        tempWidth.put(type, 64f);
+        tempHeight.put(type, 64f);
         tempDamage.put(type, 5);
         tempRange.put(type, 300.0f);
         tempReloadTime.put(type, 1.0f);
@@ -49,6 +55,8 @@ public class Config {
         type = "firstTower";
         tempObjectCost.put(type, 400);
         tempObjectReward.put(type, 200);
+        tempWidth.put(type, 64f);
+        tempHeight.put(type, 64f);
         tempDamage.put(type, 10);
         tempRange.put(type, 300.0f);
         tempReloadTime.put(type, 2.0f);
@@ -58,6 +66,8 @@ public class Config {
 
         type = "missile";
         tempSpeed.put(type, 300f);
+        tempWidth.put(type, 8f);
+        tempHeight.put(type, 8f);
         tempRepresentativeTexture.put(type, "missile.png");
 
         type = "map0";
@@ -78,6 +88,8 @@ public class Config {
 
         objectCost = Collections.unmodifiableMap(tempObjectCost);
         objectReward = Collections.unmodifiableMap(tempObjectReward);
+        width = Collections.unmodifiableMap(tempWidth);
+        height = Collections.unmodifiableMap(tempHeight);
         damage = Collections.unmodifiableMap(tempDamage);
         range = Collections.unmodifiableMap(tempRange);
         reloadTime = Collections.unmodifiableMap(tempReloadTime);

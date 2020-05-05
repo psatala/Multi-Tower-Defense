@@ -1,52 +1,41 @@
 package com.main;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Timer;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 
-public class SuperManager extends ApplicationAdapter {
+public class SuperManager{
     private Vector<Unit> units;
     private Vector<Tower> towers;
     private Vector<Missile> missiles;
     private MapActor map;
-    protected Stage stage;
 
 
     public SuperManager() {
         units = new Vector<>();
         towers = new Vector<>();
         missiles = new Vector<>();
-    }
-
-    @Override
-    public void create () {
-        stage = new Stage(new ScreenViewport());
-        map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()-InfoActor.topBarHeight, "map0");
-        stage.addActor(map.getMapGroup());
-
-        Timer.schedule(new Timer.Task(){
-                           @Override
-                           public void run() {
-                               updateFight();
-                               updateGrid();
-                               getUpdates();
-                               sendUpdates();
-                           }
-                       }
-                ,0,1/Config.refreshRate);
+        map = new MapActor(1080, 720-InfoActor.topBarHeight, "map0", false);
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateFight();
+                updateGrid();
+                getUpdates();
+                sendUpdates();
+            }
+        }, 0, (long) (1000/Config.refreshRate));
     }
 
 
@@ -124,9 +113,14 @@ public class SuperManager extends ApplicationAdapter {
     public void updateFight() {
         for(Unit unit : units) {
             unit.update(1/Config.refreshRate);
+            unit.act(1/Config.refreshRate);
         }
         for(Tower tower : towers) {
             tower.update(1/Config.refreshRate);
+            tower.act(1/Config.refreshRate);
+        }
+        for(Missile missile : missiles) {
+            missile.act(1/Config.refreshRate);
         }
 
         Vector<Unit> unitsToRemove = new Vector<>();
@@ -217,9 +211,8 @@ public class SuperManager extends ApplicationAdapter {
         }
         if(bestTarget != null) {
             if(shooter.shoot()) {
-                Missile missile = new Missile(bestTarget, shooter, "missile");
+                Missile missile = new Missile(bestTarget, shooter, "missile", false);
                 missiles.add(missile);
-                stage.addActor(missile);
             }
         }
     }
@@ -235,25 +228,13 @@ public class SuperManager extends ApplicationAdapter {
         map.updateGrid(updates);
     }
 
-    @Override
-    public void render () {
-        Gdx.gl.glClearColor(0, 0, 0, 0);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act(Gdx.graphics.getDeltaTime());
-        stage.draw();
-    }
-
-    public void dispose () {
-        stage.dispose();
-    }
 
     public boolean spawnUnit(float x, float y, String type, int playerId) {
         if(map.isPositionBlocked(x, y))
             return false;
-        Unit unit = new Unit(type, playerId, map);
+        Unit unit = new Unit(type, playerId, map, false);
         unit.setPosition(x, y, Align.center);
         units.add(unit);
-        stage.addActor(unit.getObjectGroup());
         return true;
     }
 
@@ -270,10 +251,9 @@ public class SuperManager extends ApplicationAdapter {
     public boolean spawnTower(float x, float y, String type, int playerId) {
         if(!map.isPositionEmpty(x, y))
             return false;
-        Tower tower = new Tower(type, playerId);
+        Tower tower = new Tower(type, playerId, false);
         tower.setPosition(x, y, Align.center);
         towers.add(tower);
-        stage.addActor(tower.getObjectGroup());
         for(Unit unit : units) {
             unit.reconsiderMovement();
         }
