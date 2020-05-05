@@ -109,16 +109,24 @@ public class SuperManager extends ApplicationAdapter {
     }
 
     private void reward(int playerId, int amount) {
-
+        String rewardMsg = amount +" \n";
+        try {
+            FileWriter myWriter = new FileWriter("rewards"+playerId+".txt", true);
+            myWriter.append(rewardMsg);
+            myWriter.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 
 
     public void updateFight() {
         for(Unit unit : units) {
-            unit.update(Config.refreshRate);
+            unit.update(1/Config.refreshRate);
         }
         for(Tower tower : towers) {
-            tower.update(Config.refreshRate);
+            tower.update(1/Config.refreshRate);
         }
 
         Vector<Unit> unitsToRemove = new Vector<>();
@@ -153,6 +161,10 @@ public class SuperManager extends ApplicationAdapter {
                     missilesToRemove.add(missile);
                 }
             }
+        }
+        for(Missile missile : missiles) {
+            if(!missile.isAlive())
+                missilesToRemove.add(missile);
         }
 
         for(Unit unit : unitsToRemove) {
@@ -227,12 +239,6 @@ public class SuperManager extends ApplicationAdapter {
     public void render () {
         Gdx.gl.glClearColor(0, 0, 0, 0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        for(Unit unit : units) {
-            unit.update(Gdx.graphics.getDeltaTime());
-        }
-        for(Tower tower : towers) {
-            tower.update(Gdx.graphics.getDeltaTime());
-        }
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
     }

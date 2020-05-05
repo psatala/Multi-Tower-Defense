@@ -59,7 +59,36 @@ public class GameManager extends ApplicationAdapter {
 				,0,1/Config.refreshRate);
 	}
 
+	public void getRewards() {
+		Vector<String> rewards = new Vector<>();
+		try {
+			File myObj = new File("rewards"+myPlayerId+".txt");
+			Scanner myReader = new Scanner(myObj);
+			while (myReader.hasNextLine()) {
+				rewards.add(myReader.nextLine());
+			}
+			myReader.close();
+		} catch (FileNotFoundException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+		try {
+			FileWriter myWriter = new FileWriter("rewards"+myPlayerId+".txt");
+			myWriter.write("");
+			myWriter.close();
+		} catch (IOException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+
+		for(String reward : rewards) {
+			String r = reward.split(" ")[0];
+			addCoins(Integer.parseInt(r));
+		}
+	}
+
 	public void getUpdates() {
+		getRewards();
 		Vector<String> objects = new Vector<>();
 		try {
 			File myObj = new File("gamestate.txt");
@@ -143,6 +172,11 @@ public class GameManager extends ApplicationAdapter {
 			missiles.remove(missile);
 			missile.remove();
 		}
+		//if(towersToRemove.size() > 0) {
+		//	for(Unit unit : units) {
+		//		unit.reconsiderMovement();
+		//	}
+		//}
 	}
 
 	public boolean objectExists(Vector<String> objects, int id, char objectType) {
@@ -218,7 +252,7 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	public void spawnUnit(float x, float y, String type) {
-		if(!info.spendCoins(Config.objectCost.get(type)) || map.isPositionBlocked(x, y))
+		if(!info.spendCoins(Config.objectCost.get(type)))
 			return;
 		sendSpawnRequest(x, y, 'U', type);
 	}
@@ -232,7 +266,7 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	public void spawnTower(float x, float y, String type) {
-		if(!info.spendCoins(Config.objectCost.get(type)) || !map.isPositionEmpty(x, y))
+		if(!info.spendCoins(Config.objectCost.get(type)))
 			return;
 		sendSpawnRequest(x, y, 'T', type);
 	}

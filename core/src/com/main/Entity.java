@@ -86,6 +86,7 @@ public class Entity extends Actor {
         String[] data = stateString.split(" ");
         setX(Float.parseFloat(data[4]), Align.center);
         setY(Float.parseFloat(data[5]), Align.center);
+        healthbar.setPosition(getX(), getY(Align.top));
         reloadTimeLeft = Float.parseFloat(data[6]);
         setHP(Float.parseFloat(data[7]));
     }

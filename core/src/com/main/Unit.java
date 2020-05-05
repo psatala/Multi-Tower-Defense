@@ -46,7 +46,6 @@ public class Unit extends Entity {
 
     public Unit(String stateString, MapActor map) {
         super(stateString);
-        System.out.println(stateString);
         String[] data = stateString.split(" ");
         currentTarget = new Vector3();
         currentTarget.x = Float.parseFloat(data[8]);
@@ -67,9 +66,13 @@ public class Unit extends Entity {
     public void setState(String stateString) {
         super.setState(stateString);
         String[] data = stateString.split(" ");
-        currentTarget.x = Float.parseFloat(data[8]);
-        currentTarget.y = Float.parseFloat(data[9]);
-        reconsiderMovement();
+        Vector3 setTarget = new Vector3();
+        setTarget.x = Float.parseFloat(data[8]);
+        setTarget.y = Float.parseFloat(data[9]);
+        if(!equalsTarget(setTarget)){
+            currentTarget = setTarget;
+            reconsiderMovement();
+        }
     }
 
     @Override

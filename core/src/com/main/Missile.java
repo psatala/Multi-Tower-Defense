@@ -51,13 +51,13 @@ public class Missile extends Actor {
         id = Integer.parseInt(data[1]);
         type = data[2];
         playerId = Integer.parseInt(data[3]);
-        setX(Float.parseFloat(data[4]), Align.center);
-        setY(Float.parseFloat(data[5]), Align.center);
         target = new Vector3(Float.parseFloat(data[6]), Float.parseFloat(data[7]), 0);
-        damage = Integer.parseInt(data[8]);
+        damage = Float.parseFloat(data[8]);
         texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
         velocity = Config.speed.get(type);
         setBounds(0, 0, texture.getWidth(), texture.getHeight());
+        setX(Float.parseFloat(data[4]), Align.center);
+        setY(Float.parseFloat(data[5]), Align.center);
         MoveToAction moveAction = new MoveToAction();
         moveAction.setPosition(target.x, target.y);
         float travelTime = Entity.distance(getPosition(Align.center), target) / velocity;

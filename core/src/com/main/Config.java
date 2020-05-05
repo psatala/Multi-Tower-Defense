@@ -49,11 +49,12 @@ public class Config {
         type = "firstTower";
         tempObjectCost.put(type, 400);
         tempObjectReward.put(type, 200);
-        tempDamage.put(type, 50);
-        tempRange.put(type, 200.0f);
+        tempDamage.put(type, 10);
+        tempRange.put(type, 300.0f);
         tempReloadTime.put(type, 2.0f);
         tempHp.put(type, 200);
-        tempRepresentativeTexture.put(type, "towers/firstTower/firstTower00.png");
+        tempRepresentativeTexture.put(type, "towers/firstTower/firstTower0.png");
+        tempFullTexture.put(type, "towers/firstTower/firstTower");
 
         type = "missile";
         tempSpeed.put(type, 300f);
