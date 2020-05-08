@@ -93,7 +93,7 @@ public class LocalGameServer {
         localServer.start();
         try {
             localServer.bind(tcpSecondPortNumber, udpSecondPortNumber);
-            run();
+            //run();
         }
         catch(BindException e) { //another server already running on this computer
             System.out.println("Another server is already running on this computer");
@@ -110,7 +110,7 @@ public class LocalGameServer {
      * @throws InterruptedException
      * @throws IOException
      */
-    public void run() throws InterruptedException, IOException {
+    /*public void run() throws InterruptedException, IOException {
         
         System.out.println("Press 'q' to quit");
 
@@ -131,6 +131,6 @@ public class LocalGameServer {
                         localServer.sendToTCP(connectionID, gameResponse);
             }
         }
-    }
+    }*/
     
 }

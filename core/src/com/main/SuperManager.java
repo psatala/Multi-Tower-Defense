@@ -3,15 +3,17 @@ package com.main;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
+import com.main.Networking.GameServer;
+import com.main.Networking.UpdatesListener;
+import com.main.Networking.requests.GameRequest;
+import com.main.Networking.responses.GameResponse;
+import com.main.Networking.responses.RewardResponse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
+import java.util.*;
 
 
 public class SuperManager{
@@ -20,8 +22,32 @@ public class SuperManager{
     private Vector<Missile> missiles;
     private MapActor map;
 
+    public UpdatesListener updatesListener;
+    private GameServer gameServer;
+    private GameResponse gameResponse;
+    private RewardResponse rewardResponse;
 
     public SuperManager() {
+        //networking stuff
+        updatesListener = new UpdatesListener() {
+            @Override
+            public void updatesReceived(Object object) {
+                GameRequest gameRequest = (GameRequest)object;
+                getUpdates(gameRequest);
+            }
+        };
+
+        try {
+            gameServer = new GameServer(54545, 54545);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        gameServer.addObserver(this);
+        gameResponse = new GameResponse();
+        rewardResponse = new RewardResponse();
+
+
+        //other stuff
         units = new Vector<>();
         towers = new Vector<>();
         missiles = new Vector<>();
@@ -32,7 +58,7 @@ public class SuperManager{
             public void run() {
                 updateFight();
                 updateGrid();
-                getUpdates();
+                sendRewards();
                 sendUpdates();
             }
         }, 0, (long) (1000/Config.refreshRate));
@@ -40,28 +66,27 @@ public class SuperManager{
 
 
     private void sendUpdates() {
-        try {
-            FileWriter myWriter = new FileWriter("gamestate.txt");
-            myWriter.write("");
-            for(Unit unit : units) {
-                myWriter.append(unit.toString());
-            }
-            for(Tower tower : towers) {
-                myWriter.append(tower.toString());
-            }
-            for(Missile missile : missiles) {
-                myWriter.append(missile.toString());
-            }
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+        for(Unit unit : units) {
+            gameResponse.appendMessage(unit.toString());
         }
+        for(Tower tower : towers) {
+            gameResponse.appendMessage(tower.toString());
+        }
+        for(Missile missile : missiles) {
+            gameResponse.appendMessage(missile.toString());
+        }
+        gameServer.send(gameResponse);
+        gameResponse.clearMessage();
     }
 
-    private void getUpdates() {
-        Vector<String> requests = new Vector<>();
-        try {
+    private void sendRewards() {
+        gameServer.send(rewardResponse);
+        rewardResponse.clearMessage();
+    }
+
+    private void getUpdates(GameRequest gameRequest) {
+        Vector<String> requests = gameRequest.getMessage();
+        /*try {
             File myObj = new File("requests.txt");
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
@@ -79,7 +104,7 @@ public class SuperManager{
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
-        }
+        }*/
 
         for(String request : requests) {
             String[] data = request.split(" ");
@@ -99,14 +124,7 @@ public class SuperManager{
 
     private void reward(int playerId, int amount) {
         String rewardMsg = amount +" \n";
-        try {
-            FileWriter myWriter = new FileWriter("rewards"+playerId+".txt", true);
-            myWriter.append(rewardMsg);
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
+        rewardResponse.appendMessage(rewardMsg);
     }
 
 

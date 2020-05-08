@@ -9,6 +9,7 @@ import com.esotericsoftware.kryonet.Server;
 
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
+import com.main.SuperManager;
 
 /**
  * The GameServer class is the core class controlling the main server. There should be at most one main server
@@ -18,7 +19,7 @@ import com.main.Networking.responses.*;
 public class GameServer {
     private Server server;
     private RoomList roomList = new RoomList();
-    
+    private SuperManager observer;
 
     /**
      * Public constructor for GameServer class
@@ -28,7 +29,6 @@ public class GameServer {
      */
     public GameServer(int tcpPortNumber, int udpPortNumber) throws IOException {
         server = new Server();
-        
         //register classes
         Network.register(server);
 
@@ -39,17 +39,8 @@ public class GameServer {
                 if(object instanceof GameRequest) { //request with game data
                     
                     GameRequest gameRequest = (GameRequest)object;
-                    
-                    //convert to a response
-                    GameResponse gameResponse = new GameResponse(gameRequest.getMessage());
-                    
-                    GameRoom currentRoom = roomList.get(gameRequest.getRoomID());
-                    if(currentRoom != null) {
-                        //send to everyone in the room apart from sender
-                        for(Integer connectionID: currentRoom.connectionSet)
-                            if(connectionID != connection.getID())
-                                server.sendToTCP(connectionID, gameResponse);
-                    }
+                    if(gameRequest != null & observer != null)
+                        observer.updatesListener.updatesReceived(gameRequest);
                         
                 }
                 else if(object instanceof CreateRoomRequest) { //client wants to create a room
@@ -101,4 +92,12 @@ public class GameServer {
 
     }
 
+
+    public void addObserver(SuperManager observer) {
+        this.observer = observer;
+    }
+
+    public void send(Object object) {
+        server.sendToAllTCP(object);
+    }
 }

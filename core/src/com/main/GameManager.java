@@ -10,13 +10,14 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.main.Networking.GameClient;
+import com.main.Networking.UpdatesListener;
+import com.main.Networking.requests.GameRequest;
+import com.main.Networking.responses.GameResponse;
+import com.main.Networking.responses.RewardResponse;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Vector;
 
 
@@ -31,7 +32,42 @@ public class GameManager extends ApplicationAdapter {
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
+	private GameClient gameClient;
+	private GameRequest gameRequest;
+	public UpdatesListener updatesListener;
+	private Vector<String> objectsToAdd;
+
 	public GameManager(int playerId) {
+		//networking stuff
+		updatesListener = new UpdatesListener() {
+			@Override
+			public void updatesReceived(Object object) {
+				if(object instanceof RewardResponse) {
+					RewardResponse rewardResponse = (RewardResponse)object;
+					getRewards(rewardResponse);
+				}
+				else if (object instanceof GameResponse) {
+					GameResponse gameResponse = (GameResponse)object;
+					if(gameResponse.message.size() > 0) {
+						int debugHere = 0;
+					}
+					getUpdates(gameResponse);
+				}
+			}
+		};
+
+		try {
+			gameClient = new GameClient(54545, 54545, 54546, 54546, 500);
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		gameClient.addObserver(this);
+		gameRequest = new GameRequest();
+
+
+
+
+		//other stuff
 		myPlayerId = playerId;
 		units = new Vector<>();
 		towers = new Vector<>();
@@ -53,15 +89,16 @@ public class GameManager extends ApplicationAdapter {
 						   @Override
 						   public void run() {
 						   	   updateGrid();
-						   	   getUpdates();
+						   	   sendUpdates();
+						   	   addNewObjectsFromAnotherThread();
 						   }
 					   }
 				,0,1/Config.refreshRate);
 	}
 
-	public void getRewards() {
-		Vector<String> rewards = new Vector<>();
-		try {
+	public void getRewards(RewardResponse rewardResponse) {
+		Vector<String> rewards = rewardResponse.getMessage();
+		/*try {
 			File myObj = new File("rewards"+myPlayerId+".txt");
 			Scanner myReader = new Scanner(myObj);
 			while (myReader.hasNextLine()) {
@@ -79,7 +116,7 @@ public class GameManager extends ApplicationAdapter {
 		} catch (IOException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
-		}
+		}*/
 
 		for(String reward : rewards) {
 			String r = reward.split(" ")[0];
@@ -87,10 +124,16 @@ public class GameManager extends ApplicationAdapter {
 		}
 	}
 
-	public void getUpdates() {
-		getRewards();
-		Vector<String> objects = new Vector<>();
-		try {
+
+	public void sendUpdates() {
+		gameRequest.setRoomID(gameClient.roomID);
+		gameClient.send(gameRequest);
+		gameRequest.clearMessage();
+	}
+
+	public void getUpdates(GameResponse gameResponse) {
+		Vector<String> objects = gameResponse.getMessage();
+		/*try {
 			File myObj = new File("gamestate.txt");
 			Scanner myReader = new Scanner(myObj);
 			while (myReader.hasNextLine()) {
@@ -100,7 +143,7 @@ public class GameManager extends ApplicationAdapter {
 		} catch (FileNotFoundException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
-		}
+		}*/
 
 		deleteKilledObjects(objects);
 
@@ -141,8 +184,17 @@ public class GameManager extends ApplicationAdapter {
 				newObjects.add(object);
 			}
 		}
-		addNewObjects(newObjects);
+		objectsToAdd = newObjects; //store objects to add so that the main thread can actually add them
 	}
+
+
+
+	private void addNewObjectsFromAnotherThread() {
+		addNewObjects(objectsToAdd);
+		objectsToAdd.clear();
+	}
+
+
 
 	public void deleteKilledObjects(Vector<String> objects) {
 		Vector<Unit> unitsToRemove = new Vector<>();
@@ -320,13 +372,6 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	public void sendRequest(String request) {
-		try {
-			FileWriter myWriter = new FileWriter("requests.txt", true);
-			myWriter.append(request);
-			myWriter.close();
-		} catch (IOException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+		gameRequest.appendMessage(request);
 	}
 }

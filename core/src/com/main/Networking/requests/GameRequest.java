@@ -1,12 +1,14 @@
 
 package com.main.Networking.requests;
 
+import java.util.Vector;
+
 /**
  * The GameRequest class is a request transferring core game data from client to the server.
  * @author Piotr Satała
  */
 public class GameRequest {
-    private String message;
+    private Vector<String> message;
     private int roomID;
 
     
@@ -14,7 +16,7 @@ public class GameRequest {
      * Public empty constructor necessary for KryoNet to send instances of this class properly
      */
     public GameRequest() {
-        setMessage("");
+        setMessage(new Vector<String>());
         setRoomID(-1);
     }
 
@@ -32,7 +34,7 @@ public class GameRequest {
      * Public constructor for GameRequest class
      * @param initialMessage message to be sent to the server
      */
-    public GameRequest(String initialMessage) {
+    public GameRequest(Vector<String> initialMessage) {
         setMessage(initialMessage);
     }
 
@@ -47,7 +49,7 @@ public class GameRequest {
      * Getter for message to server
      * @return message to server
      */
-    public String getMessage() {
+    public Vector<String> getMessage() {
         return message;
     }
 
@@ -68,7 +70,7 @@ public class GameRequest {
      * Setter for message to server
      * @param newMessage message to server
      */
-    public void setMessage(String newMessage) {
+    public void setMessage(Vector<String> newMessage) {
         message = newMessage;
     }
 
@@ -80,4 +82,25 @@ public class GameRequest {
     public void setRoomID(int newRoomID) {
         roomID = newRoomID;
     }
+
+
+    //------------------------------------other---------------------------------------------//
+
+
+    /**
+     * Function appends one request
+     * @param newMessage new request
+     */
+    public void appendMessage(String newMessage) {
+        message.add(newMessage);
+    }
+
+
+    /**
+     * Function clears the message vector
+     */
+    public void clearMessage() {
+        message.clear();
+    }
+
 }

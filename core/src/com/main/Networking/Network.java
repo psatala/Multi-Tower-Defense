@@ -4,6 +4,7 @@ package com.main.Networking;
 import java.net.Inet4Address;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Vector;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.EndPoint;
@@ -35,11 +36,13 @@ public class Network {
         kryo.register(GetRoomInfoRequest.class);
         //responses
         kryo.register(GameResponse.class);
+        kryo.register(RewardResponse.class);
         kryo.register(ControlResponse.class);
         kryo.register(RoomList.class);
         kryo.register(HashMap.class);
         kryo.register(GameRoom.class);
         kryo.register(HashSet.class);
+        kryo.register(Vector.class);
         kryo.register(RoomCreatedResponse.class);
         kryo.register(RoomJoinedResponse.class);
         kryo.register(RoomClosedResponse.class);

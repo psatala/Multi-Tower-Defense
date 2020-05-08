@@ -16,6 +16,7 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Client;
 
+import com.main.GameManager;
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
 
@@ -26,9 +27,10 @@ public class GameClient {
     private Client activeClient;
     private Scanner inputScanner = null;
     public String playerName;
-    private int roomID;
+    public int roomID;
     private RoomList roomList = null;
-    
+    private GameManager observer;
+
     private int tcpSecondPortNumber;
     private int udpSecondPortNumber;
     private int maxDelay;
@@ -63,7 +65,13 @@ public class GameClient {
             public void received(Connection connection, Object object) {
                 if (object instanceof GameResponse) { //response with game data
                     GameResponse gameResponse = (GameResponse) object;
-                    System.out.println(gameResponse.getMessage());
+                    if(gameResponse != null & observer != null)
+                        observer.updatesListener.updatesReceived(gameResponse);
+
+                } else if(object instanceof RewardResponse) { //response with rewards
+                    RewardResponse rewardResponse = (RewardResponse)object;
+                    if(rewardResponse != null & observer != null)
+                        observer.updatesListener.updatesReceived(rewardResponse);
 
                 } else if (object instanceof ControlResponse) { //control response
                     ControlResponse controlResponse = (ControlResponse) object;
@@ -180,7 +188,8 @@ public class GameClient {
 
         String input;
         inputScanner.reset();
-        while(true) {
+        //while(true)
+        {
             System.out.println("Enter 'j' to join a room, 'c' to create a global room, 'h' to host a local room, 'q' to quit");
             input = inputScanner.nextLine();
     
@@ -192,7 +201,7 @@ public class GameClient {
                 hostLocalGame();
             else if(input.equals("q")) {
                 quit();
-                break;
+                //break;
             }
         }
         
@@ -251,7 +260,7 @@ public class GameClient {
                 localClient.connect(maxDelay, roomList.get(roomID).ipOfHost, tcpSecondPortNumber, udpSecondPortNumber);
                 localClient.sendTCP(new JoinRoomRequest());
             }
-            run(); //run the game
+            //run(); //run the game
         }
         else //-1 chosen
             menu(); //go back to menu
@@ -281,7 +290,7 @@ public class GameClient {
                     client.sendTCP(createRoomRequest);
                     client.wait();
                 }
-                run();
+                //run();
             }
             else //no connection
                 System.out.println("This option requires connection to the main server");
@@ -314,15 +323,20 @@ public class GameClient {
     }
 
 
+    public void addObserver(GameManager observer) {
+        this.observer = observer;
+    }
+
 
     /**
-     * After joining or creating a room, run the game in it
-     * @throws InterruptedException
-     * @throws IOException
+     * After joining or creating a room, send request with client updates
      */
-    public void run() throws InterruptedException, IOException {
-        
-        System.out.println("Press 'q' to quit");
+    public void send(GameRequest gameRequest) {
+
+        if(activeClient.isConnected())
+            activeClient.sendTCP(gameRequest);
+
+        /*System.out.println("Press 'q' to quit");
         GameRequest gameRequest = new GameRequest(roomID); //new request with game data
         while(true) {
             gameRequest.setMessage(inputScanner.nextLine()); //get data here
@@ -335,7 +349,7 @@ public class GameClient {
                 activeClient.sendTCP(gameRequest); //send data
             else
                 break; //connection terminated by host (local only)
-        }
+        }*/
     }
     
 }
