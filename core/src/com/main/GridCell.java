@@ -18,16 +18,22 @@ public class GridCell extends Actor {
     private boolean isHighlighted = false;
     private MapActor map;
     private ShapeRenderer renderer;
+    private boolean isDrawable;
 
-    public GridCell(float x, float y, float w, float h, MapActor m) {
+    public GridCell(float x, float y, float w, float h, MapActor m, boolean drawable) {
+        isDrawable = drawable;
         map = m;
         setBounds(x, y, w, h);
-        renderer = new ShapeRenderer();
-        addListener(createHoverListener());
+        if(isDrawable) {
+            renderer = new ShapeRenderer();
+            addListener(createHoverListener());
+        }
     }
 
     @Override
     public void draw(Batch batch, float alpha) {
+        if(!isDrawable)
+            return;
         if((map.mode == MapActor.Mode.BUILD || map.mode == MapActor.Mode.SPAWN) && (!isEmpty || isHighlighted)) {
             batch.end();
             Gdx.gl.glEnable(GL20.GL_BLEND);

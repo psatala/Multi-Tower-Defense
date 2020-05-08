@@ -14,12 +14,15 @@ public class Healthbar extends Actor {
     private Texture redPart;
     private float hp;
     private float maxHP;
+    private boolean isDrawable;
 
-    public Healthbar(float maximumHP, float w) {
+    public Healthbar(float maximumHP, float w, boolean drawable) {
         setBounds(0, 0, w, height);
+        isDrawable = drawable;
         maxHP = maximumHP;
         hp = maxHP;
-        createTexture();
+        if(isDrawable)
+            createTexture();
     }
 
     private void createTexture() {
@@ -47,8 +50,10 @@ public class Healthbar extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
-        batch.draw(greenPart, getX(), getY(), getWidth()*(hp/maxHP), getHeight());
-        batch.draw(redPart, getX()+getWidth()*(hp/maxHP), getY(), getWidth()*(1-hp/maxHP), getHeight());
+        if(isDrawable) {
+            batch.draw(greenPart, getX(), getY(), getWidth()*(hp/maxHP), getHeight());
+            batch.draw(redPart, getX()+getWidth()*(hp/maxHP), getY(), getWidth()*(1-hp/maxHP), getHeight());
+        }
     }
 
     public float getHP() {

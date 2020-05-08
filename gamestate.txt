@@ -1,0 +1,12 @@
+T 0 firstTower 0 243.0 583.1 0.0 200.0 
+T 1 firstTower 0 135.0 583.1 0.0 200.0 
+T 2 firstTower 0 297.0 651.69995 0.0 200.0 
+T 3 firstTower 0 297.0 514.5 0.0 200.0 
+T 4 firstTower 0 135.0 445.89996 0.0 200.0 
+T 5 firstTower 0 189.0 377.3 0.0 200.0 
+T 6 firstTower 0 297.0 377.3 0.0 200.0 
+T 7 firstTower 0 351.0 308.69998 0.0 200.0 
+T 8 firstTower 0 243.0 308.69998 0.0 200.0 
+T 9 firstTower 0 243.0 240.09999 0.0 200.0 
+T 10 firstTower 0 189.0 171.5 0.0 200.0 
+T 11 firstTower 0 297.0 102.899994 0.0 200.0 

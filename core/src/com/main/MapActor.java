@@ -44,25 +44,29 @@ public class MapActor extends Actor {
     private int playerId;
     private String type;
     private Texture texture;
+    private boolean isDrawable;
 
-    public MapActor(float w, float h, GameManager gameManager, int playerId, String type) {
+    public MapActor(float w, float h, GameManager gameManager, int playerId, String type, boolean drawable) {
+        isDrawable = drawable;
         this.gameManager = gameManager;
         this.playerId = playerId;
         this.type = type;
-        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        mapGroup = new Group();
+        mapGroup.addActor(this);
+        if(isDrawable) {
+            texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+            renderer = new ShapeRenderer();
+            mapGroup.addListener(createInterfaceListener());
+        }
         gridW = Config.mapGrid.get(type)[0].length;
         gridH = Config.mapGrid.get(type).length;
         gridCells = new GridCell[gridW][gridH];
-        renderer = new ShapeRenderer();
         setBounds(0, 0, w, h);
         gridCellH = h/(float)gridH;
         gridCellW = w/(float)gridW;
-        mapGroup = new Group();
-        mapGroup.addActor(this);
-        mapGroup.addListener(createInterfaceListener());
         for(int x = 0; x < gridW; ++x) {
             for(int y = 0; y < gridH; ++y) {
-                gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this);
+                gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this, true);
                 mapGroup.addActor(gridCells[x][y]);
                 gridCells[x][y].setBlocked(Config.mapGrid.get(type)[y][x]);
                 gridCells[x][y].setEmpty(!Config.mapGrid.get(type)[y][x]);
@@ -70,22 +74,25 @@ public class MapActor extends Actor {
         }
     }
 
-    public MapActor(float w, float h, String type) {
+    public MapActor(float w, float h, String type, boolean drawable) {
+        isDrawable = drawable;
         this.type = type;
-        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        mapGroup = new Group();
+        mapGroup.addActor(this);
+        if(isDrawable) {
+            texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+            renderer = new ShapeRenderer();
+            mapGroup.addListener(createInterfaceListener());
+        }
         gridW = Config.mapGrid.get(type)[0].length;
         gridH = Config.mapGrid.get(type).length;
         gridCells = new GridCell[gridW][gridH];
-        renderer = new ShapeRenderer();
         setBounds(0, 0, w, h);
         gridCellH = h/(float)gridH;
         gridCellW = w/(float)gridW;
-        mapGroup = new Group();
-        mapGroup.addActor(this);
-        mapGroup.addListener(createInterfaceListener());
         for(int x = 0; x < gridW; ++x) {
             for(int y = 0; y < gridH; ++y) {
-                gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this);
+                gridCells[x][y] = new GridCell(x*gridCellW, y*gridCellH, gridCellW, gridCellH, this, false);
                 mapGroup.addActor(gridCells[x][y]);
                 gridCells[x][y].setBlocked(Config.mapGrid.get(type)[y][x]);
                 gridCells[x][y].setEmpty(!Config.mapGrid.get(type)[y][x]);
@@ -125,6 +132,8 @@ public class MapActor extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
+        if(!isDrawable)
+            return;
         batch.draw(texture, getX(), getY(), getWidth(), getHeight());
         if(drawSelection) {
             batch.end();

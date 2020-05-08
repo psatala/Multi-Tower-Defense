@@ -21,16 +21,23 @@ public class Missile extends Actor {
     private int id;
     private int playerId;
     private String type;
+    private boolean isDrawable;
 
-    public Missile(Entity target, Entity source, String type) {
+    public Missile(Entity target, Entity source, String type, boolean drawable) {
+        isDrawable = drawable;
         this.type = type;
         id = idCounter;
         idCounter++;
-        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        if(isDrawable) {
+            texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+            setBounds(0, 0, texture.getWidth(), texture.getHeight());
+        }
+        else {
+            setBounds(0, 0, Config.width.get(type), Config.height.get(type));
+        }
         velocity = Config.speed.get(type);
         this.target = new Vector3(target.getX(Align.center), target.getY(Align.center), 0);
         damage = source.getDamage();
-        setBounds(0, 0, texture.getWidth(), texture.getHeight());
         setPosition(source.getX(Align.center), source.getY(Align.center), Align.center);
 
         MoveToAction moveAction = new MoveToAction();
@@ -46,16 +53,22 @@ public class Missile extends Actor {
         playerId = source.playerId;
     }
 
-    public Missile(String stateString) {
+    public Missile(String stateString, boolean drawable) {
+        isDrawable = drawable;
         String[] data = stateString.split(" ");
         id = Integer.parseInt(data[1]);
         type = data[2];
         playerId = Integer.parseInt(data[3]);
         target = new Vector3(Float.parseFloat(data[6]), Float.parseFloat(data[7]), 0);
         damage = Float.parseFloat(data[8]);
-        texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+        if(isDrawable) {
+            texture = new Texture(Gdx.files.internal(Config.representativeTexture.get(type)));
+            setBounds(0, 0, texture.getWidth(), texture.getHeight());
+        }
+        else {
+            setBounds(0, 0, Config.width.get(type), Config.height.get(type));
+        }
         velocity = Config.speed.get(type);
-        setBounds(0, 0, texture.getWidth(), texture.getHeight());
         setX(Float.parseFloat(data[4]), Align.center);
         setY(Float.parseFloat(data[5]), Align.center);
         MoveToAction moveAction = new MoveToAction();
@@ -96,7 +109,8 @@ public class Missile extends Actor {
 
     @Override
     public void draw(Batch batch, float alpha) {
-        batch.draw(texture, getX(), getY());
+        if(isDrawable)
+            batch.draw(texture, getX(), getY());
     }
 
     public boolean isAlive() {

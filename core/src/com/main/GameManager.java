@@ -44,7 +44,7 @@ public class GameManager extends ApplicationAdapter {
 		passiveStage = new Stage(new ScreenViewport());
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
-		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0");
+		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
 		activeStage.addActor(map.getMapGroup());
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
@@ -191,17 +191,17 @@ public class GameManager extends ApplicationAdapter {
 	public void addNewObjects(Vector<String> objects){
 		for(String object : objects) {
 			if(object.charAt(0) == 'U') {
-				Unit unit = new Unit(object, map);
+				Unit unit = new Unit(object, map, true);
 				units.add(unit);
 				passiveStage.addActor(unit.getObjectGroup());
 			}
 			else if(object.charAt(0) == 'T') {
-				Tower tower = new Tower(object);
+				Tower tower = new Tower(object, true);
 				towers.add(tower);
 				passiveStage.addActor(tower.getObjectGroup());
 			}
 			else if(object.charAt(0) == 'M') {
-				Missile missile = new Missile(object);
+				Missile missile = new Missile(object, true);
 				missiles.add(missile);
 				passiveStage.addActor(missile);
 			}
