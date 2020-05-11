@@ -48,11 +48,13 @@ public class GameManager extends ApplicationAdapter {
 				}
 				else if (object instanceof GameResponse) {
 					GameResponse gameResponse = (GameResponse)object;
-					if(gameResponse.message.size() > 0) {
-						int debugHere = 0;
-					}
 					getUpdates(gameResponse);
 				}
+			}
+
+			@Override
+			public void updatesPending(Object object, int roomID) {
+
 			}
 		};
 
@@ -190,8 +192,10 @@ public class GameManager extends ApplicationAdapter {
 
 
 	private void addNewObjectsFromAnotherThread() {
-		addNewObjects(objectsToAdd);
-		objectsToAdd.clear();
+		if(objectsToAdd != null) {
+			addNewObjects(objectsToAdd);
+			objectsToAdd.clear();
+		}
 	}
 
 

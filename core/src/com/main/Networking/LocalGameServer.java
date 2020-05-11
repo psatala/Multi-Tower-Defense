@@ -36,7 +36,8 @@ public class LocalGameServer {
             int maxPlayers, Scanner inputScanner) throws IOException, InterruptedException {
 
         localServer = new Server();
-        gameRoom = new GameRoom(hostName, maxPlayers, GameRoom.LOCAL, -1); //add host to game room
+        //TODO: uncomment and fix
+        //gameRoom = new GameRoom(hostName, maxPlayers, GameRoom.LOCAL, -1); //add host to game room
 
         this.inputScanner = inputScanner;
 

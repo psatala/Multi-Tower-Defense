@@ -2,6 +2,7 @@
 package com.main.Networking;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -19,7 +20,12 @@ import com.main.SuperManager;
 public class GameServer {
     private Server server;
     private RoomList roomList = new RoomList();
-    private SuperManager observer;
+    public UpdatesListener updatesListener;
+    private HashMap<Integer, SuperManager> managerHashMap;
+    /**
+     * Public empty constructor necessary for KryoNet to send instances of this class properly
+     */
+    public GameServer() {}
 
     /**
      * Public constructor for GameServer class
@@ -29,8 +35,25 @@ public class GameServer {
      */
     public GameServer(int tcpPortNumber, int udpPortNumber) throws IOException {
         server = new Server();
+
+        //hashmap with managers
+        managerHashMap = new HashMap<>();
+
         //register classes
         Network.register(server);
+
+        updatesListener = new UpdatesListener() {
+            @Override
+            public void updatesReceived(Object object) {
+
+            }
+
+            @Override
+            public void updatesPending(Object object, int roomID) {
+                send(object, roomID);
+            }
+        };
+
 
         //add listener
         server.addListener(new Listener() {
@@ -39,14 +62,17 @@ public class GameServer {
                 if(object instanceof GameRequest) { //request with game data
                     
                     GameRequest gameRequest = (GameRequest)object;
-                    if(gameRequest != null & observer != null)
-                        observer.updatesListener.updatesReceived(gameRequest);
-                        
+                    if(gameRequest != null)
+                        managerHashMap.get(gameRequest.getRoomID()).getUpdates(gameRequest); //apply updates
+
                 }
                 else if(object instanceof CreateRoomRequest) { //client wants to create a room
                     
                     CreateRoomRequest createRoomRequest = (CreateRoomRequest)object;
                     GameRoom newRoom = new GameRoom(createRoomRequest.hostName, createRoomRequest.maxPlayers, createRoomRequest.gameType, connection.getID());
+                    managerHashMap.put(GameRoom.getLastRoomID(), new SuperManager());
+                    managerHashMap.get(GameRoom.getLastRoomID()).roomID = GameRoom.getLastRoomID(); //specify id of room
+                    managerHashMap.get(GameRoom.getLastRoomID()).addObserver(GameServer.this); //add observer to newly created manager
                     roomList.add(newRoom); //add to list of rooms
                     RoomCreatedResponse roomCreatedResponse = new RoomCreatedResponse(newRoom.roomID);
                     server.sendToTCP(connection.getID(), roomCreatedResponse); //inform about successful creation
@@ -93,11 +119,9 @@ public class GameServer {
     }
 
 
-    public void addObserver(SuperManager observer) {
-        this.observer = observer;
-    }
 
-    public void send(Object object) {
-        server.sendToAllTCP(object);
+    public void send(Object object, int roomID) {
+        for(Integer connectionID: roomList.get(roomID).connectionSet)
+            server.sendToTCP(connectionID, object);
     }
 }

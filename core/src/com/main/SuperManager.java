@@ -3,6 +3,7 @@ package com.main;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
+import com.main.Networking.GameRoom;
 import com.main.Networking.GameServer;
 import com.main.Networking.UpdatesListener;
 import com.main.Networking.requests.GameRequest;
@@ -22,27 +23,13 @@ public class SuperManager{
     private Vector<Missile> missiles;
     private MapActor map;
 
-    public UpdatesListener updatesListener;
-    private GameServer gameServer;
     private GameResponse gameResponse;
     private RewardResponse rewardResponse;
+    public int roomID;
+    public GameServer observer;
 
     public SuperManager() {
         //networking stuff
-        updatesListener = new UpdatesListener() {
-            @Override
-            public void updatesReceived(Object object) {
-                GameRequest gameRequest = (GameRequest)object;
-                getUpdates(gameRequest);
-            }
-        };
-
-        try {
-            gameServer = new GameServer(54545, 54545);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        gameServer.addObserver(this);
         gameResponse = new GameResponse();
         rewardResponse = new RewardResponse();
 
@@ -64,27 +51,34 @@ public class SuperManager{
         }, 0, (long) (1000/Config.refreshRate));
     }
 
+    public void addObserver(GameServer observer) {
+        this.observer = observer;
+    }
 
     private void sendUpdates() {
-        for(Unit unit : units) {
-            gameResponse.appendMessage(unit.toString());
+        if(observer != null) {
+            for (Unit unit : units) {
+                gameResponse.appendMessage(unit.toString());
+            }
+            for (Tower tower : towers) {
+                gameResponse.appendMessage(tower.toString());
+            }
+            for (Missile missile : missiles) {
+                gameResponse.appendMessage(missile.toString());
+            }
+            observer.updatesListener.updatesPending(gameResponse, roomID);
+            gameResponse.clearMessage();
         }
-        for(Tower tower : towers) {
-            gameResponse.appendMessage(tower.toString());
-        }
-        for(Missile missile : missiles) {
-            gameResponse.appendMessage(missile.toString());
-        }
-        gameServer.send(gameResponse);
-        gameResponse.clearMessage();
     }
 
     private void sendRewards() {
-        gameServer.send(rewardResponse);
-        rewardResponse.clearMessage();
+        if(observer != null) {
+            observer.updatesListener.updatesPending(rewardResponse, roomID);
+            rewardResponse.clearMessage();
+        }
     }
 
-    private void getUpdates(GameRequest gameRequest) {
+    public void getUpdates(GameRequest gameRequest) {
         Vector<String> requests = gameRequest.getMessage();
         /*try {
             File myObj = new File("requests.txt");

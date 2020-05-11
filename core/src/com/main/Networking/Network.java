@@ -11,6 +11,7 @@ import com.esotericsoftware.kryonet.EndPoint;
 
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
+import com.main.SuperManager;
 
 /**
  * The Network class handles all network related things common across all end points. This mainly includes

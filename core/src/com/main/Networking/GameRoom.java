@@ -1,6 +1,8 @@
 
 package com.main.Networking;
 
+import com.main.SuperManager;
+
 import java.net.InetAddress;
 import java.util.HashSet;
 
@@ -52,7 +54,7 @@ public class GameRoom {
         //set init
         connectionSet = new HashSet<>();
         
-        //copy paramieters
+        //copy parameters
         this.hostName = hostName;
         this.maxPlayers = maxPlayers;
         this.gameType = gameType;
@@ -105,5 +107,9 @@ public class GameRoom {
             System.out.println("Global");
         else
             System.out.println("Local");
+    }
+
+    public static int getLastRoomID() {
+        return nextRoomID - 1;
     }
 }
