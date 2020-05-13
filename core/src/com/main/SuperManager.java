@@ -1,96 +1,78 @@
 package com.main;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Timer;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.main.Networking.GameServer;
+import com.main.Networking.requests.GameRequest;
+import com.main.Networking.responses.GameResponse;
+import com.main.Networking.responses.RewardResponse;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Scanner;
-import java.util.Vector;
+import java.util.*;
 
 
-public class SuperManager extends ApplicationAdapter {
+public class SuperManager{
     private Vector<Unit> units;
     private Vector<Tower> towers;
     private Vector<Missile> missiles;
     private MapActor map;
-    protected Stage stage;
 
+    private final GameResponse gameResponse;
+    private final RewardResponse rewardResponse;
+    public int roomID;
+    public GameServer observer;
 
     public SuperManager() {
+        //networking stuff
+        gameResponse = new GameResponse();
+        rewardResponse = new RewardResponse();
+
+
+        //other stuff
         units = new Vector<>();
         towers = new Vector<>();
         missiles = new Vector<>();
+        map = new MapActor(1080, 720-InfoActor.topBarHeight, "map0", false);
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateFight();
+                updateGrid();
+                sendRewards();
+                sendUpdates();
+            }
+        }, 0, (long) (1000/Config.refreshRate));
     }
 
-    @Override
-    public void create () {
-        stage = new Stage(new ScreenViewport());
-        map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()-InfoActor.topBarHeight, "map0");
-        stage.addActor(map.getMapGroup());
-
-        Timer.schedule(new Timer.Task(){
-                           @Override
-                           public void run() {
-                               updateFight();
-                               updateGrid();
-                               getUpdates();
-                               sendUpdates();
-                           }
-                       }
-                ,0,1/Config.refreshRate);
+    public void addObserver(GameServer observer) {
+        this.observer = observer;
     }
-
 
     private void sendUpdates() {
-        try {
-            FileWriter myWriter = new FileWriter("gamestate.txt");
-            myWriter.write("");
-            for(Unit unit : units) {
-                myWriter.append(unit.toString());
+        if(observer != null) {
+            for (Unit unit : units) {
+                gameResponse.appendMessage(unit.toString());
             }
-            for(Tower tower : towers) {
-                myWriter.append(tower.toString());
+            for (Tower tower : towers) {
+                gameResponse.appendMessage(tower.toString());
             }
-            for(Missile missile : missiles) {
-                myWriter.append(missile.toString());
+            for (Missile missile : missiles) {
+                gameResponse.appendMessage(missile.toString());
             }
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+            observer.updatesListener.updatesPending(gameResponse, roomID);
+            gameResponse.clearMessage();
         }
     }
 
-    private void getUpdates() {
-        Vector<String> requests = new Vector<>();
-        try {
-            File myObj = new File("requests.txt");
-            Scanner myReader = new Scanner(myObj);
-            while (myReader.hasNextLine()) {
-                requests.add(myReader.nextLine());
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+    private void sendRewards() {
+        if(observer != null) {
+            observer.updatesListener.updatesPending(rewardResponse, roomID);
+            rewardResponse.clearMessage();
         }
-        try {
-            FileWriter myWriter = new FileWriter("requests.txt");
-            myWriter.write("");
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
+    }
+
+    public void getUpdates(GameRequest gameRequest) {
+        Vector<String> requests = gameRequest.getMessage();
 
         for(String request : requests) {
             String[] data = request.split(" ");
@@ -110,23 +92,21 @@ public class SuperManager extends ApplicationAdapter {
 
     private void reward(int playerId, int amount) {
         String rewardMsg = amount +" \n";
-        try {
-            FileWriter myWriter = new FileWriter("rewards"+playerId+".txt", true);
-            myWriter.append(rewardMsg);
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
+        rewardResponse.appendMessage(rewardMsg);
     }
 
 
     public void updateFight() {
         for(Unit unit : units) {
             unit.update(1/Config.refreshRate);
+            unit.act(1/Config.refreshRate);
         }
         for(Tower tower : towers) {
             tower.update(1/Config.refreshRate);
+            tower.act(1/Config.refreshRate);
+        }
+        for(Missile missile : missiles) {
+            missile.act(1/Config.refreshRate);
         }
 
         Vector<Unit> unitsToRemove = new Vector<>();
@@ -217,9 +197,8 @@ public class SuperManager extends ApplicationAdapter {
         }
         if(bestTarget != null) {
             if(shooter.shoot()) {
-                Missile missile = new Missile(bestTarget, shooter, "missile");
+                Missile missile = new Missile(bestTarget, shooter, "missile", false);
                 missiles.add(missile);
-                stage.addActor(missile);
             }
         }
     }
@@ -235,25 +214,13 @@ public class SuperManager extends ApplicationAdapter {
         map.updateGrid(updates);
     }
 
-    @Override
-    public void render () {
-        Gdx.gl.glClearColor(0, 0, 0, 0);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act(Gdx.graphics.getDeltaTime());
-        stage.draw();
-    }
-
-    public void dispose () {
-        stage.dispose();
-    }
 
     public boolean spawnUnit(float x, float y, String type, int playerId) {
         if(map.isPositionBlocked(x, y))
             return false;
-        Unit unit = new Unit(type, playerId, map);
+        Unit unit = new Unit(type, playerId, map, false);
         unit.setPosition(x, y, Align.center);
         units.add(unit);
-        stage.addActor(unit.getObjectGroup());
         return true;
     }
 
@@ -270,10 +237,9 @@ public class SuperManager extends ApplicationAdapter {
     public boolean spawnTower(float x, float y, String type, int playerId) {
         if(!map.isPositionEmpty(x, y))
             return false;
-        Tower tower = new Tower(type, playerId);
+        Tower tower = new Tower(type, playerId, false);
         tower.setPosition(x, y, Align.center);
         towers.add(tower);
-        stage.addActor(tower.getObjectGroup());
         for(Unit unit : units) {
             unit.reconsiderMovement();
         }

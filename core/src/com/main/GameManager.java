@@ -10,13 +10,12 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.main.Networking.GameClient;
+import com.main.Networking.requests.GameRequest;
+import com.main.Networking.responses.GameResponse;
+import com.main.Networking.responses.RewardResponse;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Vector;
 
 
@@ -31,11 +30,23 @@ public class GameManager extends ApplicationAdapter {
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
+	private GameClient observer;
+	private final GameRequest gameRequest;
+	private Vector<String> objectsToAdd;
+
 	public GameManager(int playerId) {
+
+		gameRequest = new GameRequest();
+
+
 		myPlayerId = playerId;
 		units = new Vector<>();
 		towers = new Vector<>();
 		missiles = new Vector<>();
+	}
+
+	public void addObserver(GameClient observer) {
+		this.observer = observer;
 	}
 
 	@Override
@@ -44,7 +55,7 @@ public class GameManager extends ApplicationAdapter {
 		passiveStage = new Stage(new ScreenViewport());
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
-		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0");
+		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
 		activeStage.addActor(map.getMapGroup());
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
@@ -53,33 +64,15 @@ public class GameManager extends ApplicationAdapter {
 						   @Override
 						   public void run() {
 						   	   updateGrid();
-						   	   getUpdates();
+						   	   sendUpdates();
+						   	   addNewObjectsFromAnotherThread();
 						   }
 					   }
 				,0,1/Config.refreshRate);
 	}
 
-	public void getRewards() {
-		Vector<String> rewards = new Vector<>();
-		try {
-			File myObj = new File("rewards"+myPlayerId+".txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				rewards.add(myReader.nextLine());
-			}
-			myReader.close();
-		} catch (FileNotFoundException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
-		try {
-			FileWriter myWriter = new FileWriter("rewards"+myPlayerId+".txt");
-			myWriter.write("");
-			myWriter.close();
-		} catch (IOException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+	public void getRewards(RewardResponse rewardResponse) {
+		Vector<String> rewards = rewardResponse.getMessage();
 
 		for(String reward : rewards) {
 			String r = reward.split(" ")[0];
@@ -87,20 +80,15 @@ public class GameManager extends ApplicationAdapter {
 		}
 	}
 
-	public void getUpdates() {
-		getRewards();
-		Vector<String> objects = new Vector<>();
-		try {
-			File myObj = new File("gamestate.txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				objects.add(myReader.nextLine());
-			}
-			myReader.close();
-		} catch (FileNotFoundException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+
+	public void sendUpdates() {
+		gameRequest.setRoomID(observer.roomID);
+		observer.updatesListener.updatesPending(gameRequest, -1);
+		gameRequest.clearMessage();
+	}
+
+	public void getUpdates(GameResponse gameResponse) {
+		Vector<String> objects = gameResponse.getMessage();
 
 		deleteKilledObjects(objects);
 
@@ -141,8 +129,19 @@ public class GameManager extends ApplicationAdapter {
 				newObjects.add(object);
 			}
 		}
-		addNewObjects(newObjects);
+		objectsToAdd = newObjects; //store objects to add so that the main thread can actually add them
 	}
+
+
+
+	private void addNewObjectsFromAnotherThread() {
+		if(objectsToAdd != null) {
+			addNewObjects(objectsToAdd);
+			objectsToAdd.clear();
+		}
+	}
+
+
 
 	public void deleteKilledObjects(Vector<String> objects) {
 		Vector<Unit> unitsToRemove = new Vector<>();
@@ -191,17 +190,17 @@ public class GameManager extends ApplicationAdapter {
 	public void addNewObjects(Vector<String> objects){
 		for(String object : objects) {
 			if(object.charAt(0) == 'U') {
-				Unit unit = new Unit(object, map);
+				Unit unit = new Unit(object, map, true);
 				units.add(unit);
 				passiveStage.addActor(unit.getObjectGroup());
 			}
 			else if(object.charAt(0) == 'T') {
-				Tower tower = new Tower(object);
+				Tower tower = new Tower(object, true);
 				towers.add(tower);
 				passiveStage.addActor(tower.getObjectGroup());
 			}
 			else if(object.charAt(0) == 'M') {
-				Missile missile = new Missile(object);
+				Missile missile = new Missile(object, true);
 				missiles.add(missile);
 				passiveStage.addActor(missile);
 			}
@@ -291,6 +290,8 @@ public class GameManager extends ApplicationAdapter {
 		map.setMode(mode);
 	}
 
+	public void setPlayerId(int newPlayerId) { myPlayerId = newPlayerId; }
+
 	public int getPlayerId() {
 		return myPlayerId;
 	}
@@ -320,13 +321,6 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 	public void sendRequest(String request) {
-		try {
-			FileWriter myWriter = new FileWriter("requests.txt", true);
-			myWriter.append(request);
-			myWriter.close();
-		} catch (IOException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+		gameRequest.appendMessage(request);
 	}
 }

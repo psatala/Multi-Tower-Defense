@@ -1,20 +1,24 @@
 package com.main.desktop;
 
-import com.badlogic.gdx.backends.headless.HeadlessApplication;
-import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.main.GameManager;
-import com.main.SuperManager;
+import com.main.Networking.GameClient;
+
+import java.io.IOException;
 
 public class PlayerLauncher {
     public static void main (String[] arg) {
-        GameManager gameMan = new GameManager(0);
-        final LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
-        cfg.title = "Multi Tower Defense";
-        cfg.height = 720;
-        cfg.width = 1080;
-        cfg.resizable = false;
-        new LwjglApplication(gameMan, cfg);
+        try {
+            GameClient gameClient = new GameClient(54545, 54545, 54546, 54546, 500);
+            final LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
+            cfg.title = "Multi Tower Defense";
+            cfg.height = 720;
+            cfg.width = 1080;
+            cfg.resizable = false;
+            new LwjglApplication(gameClient.gameManager, cfg);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 }

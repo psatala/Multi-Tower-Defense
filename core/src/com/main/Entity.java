@@ -32,11 +32,19 @@ public class Entity extends Actor {
     protected float reloadTimeLeft;
     protected Healthbar healthbar;
     protected String type;
+    protected boolean isDrawable;
 
 
-    public Entity(String type, int playerId) {
-        textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.representativeTexture.get(type))));
-        setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
+    public Entity(String type, int playerId, boolean drawable) {
+        isDrawable = drawable;
+        if(isDrawable) {
+            textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.representativeTexture.get(type))));
+            setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
+        }
+        else {
+            setBounds(0, 0, Config.width.get(type), Config.height.get(type));
+        }
+
         this.playerId = playerId;
         id = idCounter;
         idCounter++;
@@ -48,21 +56,27 @@ public class Entity extends Actor {
         cost = Config.objectCost.get(type);
         reward = Config.objectReward.get(type);
 
-        healthbar = new Healthbar(Config.hp.get(type), getWidth());
+        healthbar = new Healthbar(Config.hp.get(type), getWidth(), isDrawable);
         healthbar.setPosition(0, getHeight());
         objectGroup = new Group();
         objectGroup.addActor(this);
         objectGroup.addActor(healthbar);
     }
 
-    public Entity(String stateString) {
+    public Entity(String stateString, boolean drawable) {
+        isDrawable = drawable;
         String[] data = stateString.split(" ");
         id = Integer.parseInt(data[1]);
         type = data[2];
-        textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.representativeTexture.get(type))));
-        setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
+        if(isDrawable) {
+            textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.representativeTexture.get(type))));
+            setBounds(0, 0, textureRegion.getRegionWidth(), textureRegion.getRegionHeight());
+        }
+        else {
+            setBounds(0, 0, Config.width.get(type), Config.height.get(type));
+        }
 
-        healthbar = new Healthbar(Config.hp.get(type), getWidth());
+        healthbar = new Healthbar(Config.hp.get(type), getWidth(), isDrawable);
         healthbar.setPosition(0, getHeight());
         objectGroup = new Group();
         objectGroup.addActor(this);
@@ -118,7 +132,8 @@ public class Entity extends Actor {
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        batch.draw(textureRegion, getX(), getY());
+        if(isDrawable)
+            batch.draw(textureRegion, getX(), getY());
     }
 
     public boolean damage(float healthPoints) {

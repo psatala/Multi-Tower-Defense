@@ -31,21 +31,23 @@ public class Unit extends Entity {
     private Vector3 currentTarget;
 
 
-    public Unit(String unitType, int playerId, MapActor map) {
-        super(unitType, playerId);
+    public Unit(String unitType, int playerId, MapActor map, boolean drawable) {
+        super(unitType, playerId, drawable);
         this.map = map;
         entityType = Type.UNIT;
         mapW = map.getWidth();
         mapH = map.getHeight();
-        textureAtlas = new TextureAtlas(Gdx.files.internal(Config.fullTexture.get(type)+String.valueOf(playerId)+".atlas"));
-        animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
+        if(isDrawable) {
+            textureAtlas = new TextureAtlas(Gdx.files.internal(Config.fullTexture.get(type)+String.valueOf(playerId)+".atlas"));
+            animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
+        }
         healthbar.setWidth(getWidth());
         currentTarget = new Vector3(getCenter());
         velocity = Config.speed.get(type);
     }
 
-    public Unit(String stateString, MapActor map) {
-        super(stateString);
+    public Unit(String stateString, MapActor map, boolean drawable) {
+        super(stateString, drawable);
         String[] data = stateString.split(" ");
         currentTarget = new Vector3();
         currentTarget.x = Float.parseFloat(data[8]);
@@ -55,8 +57,10 @@ public class Unit extends Entity {
         entityType = Type.UNIT;
         mapW = map.getWidth();
         mapH = map.getHeight();
-        textureAtlas = new TextureAtlas(Gdx.files.internal(Config.fullTexture.get(type)+String.valueOf(playerId)+".atlas"));
-        animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
+        if(isDrawable) {
+            textureAtlas = new TextureAtlas(Gdx.files.internal(Config.fullTexture.get(type)+String.valueOf(playerId)+".atlas"));
+            animation = new Animation<TextureRegion>(1/8f, textureAtlas.getRegions());
+        }
         healthbar.setWidth(getWidth());
         velocity = Config.speed.get(type);
         reconsiderMovement();
@@ -128,6 +132,8 @@ public class Unit extends Entity {
 
     @Override
     public void draw(Batch batch, float alpha) {
+        if(!isDrawable)
+            return;
         if(unitMoving) {
             elapsedTime += Gdx.graphics.getDeltaTime();
             batch.draw(animation.getKeyFrame(elapsedTime, true), getX(), getY());

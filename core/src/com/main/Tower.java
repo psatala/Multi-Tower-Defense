@@ -8,15 +8,19 @@ import com.badlogic.gdx.utils.Align;
 
 public class Tower extends Entity {
 
-    public Tower(String type, int playerId) {
-        super(type, playerId);
-        textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.fullTexture.get(type)+playerId+".png")));
+    public Tower(String type, int playerId, boolean drawable) {
+        super(type, playerId, drawable);
+        if(isDrawable) {
+            textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.fullTexture.get(type)+playerId+".png")));
+        }
         entityType = Type.TOWER;
     }
 
-    public Tower(String stateString) {
-        super(stateString);
-        textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.fullTexture.get(type)+playerId+".png")));
+    public Tower(String stateString, boolean drawable) {
+        super(stateString, drawable);
+        if(isDrawable) {
+            textureRegion = new TextureRegion(new Texture(Gdx.files.internal(Config.fullTexture.get(type)+playerId+".png")));
+        }
         entityType = Type.TOWER;
     }
 
