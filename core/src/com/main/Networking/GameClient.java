@@ -25,11 +25,14 @@ public class GameClient {
     private Client client;
     private Client localClient;
     private Client activeClient;
-    private Scanner inputScanner = null;
+    private LocalServer localServer;
+    private Scanner inputScanner;
     public String playerName;
     public int roomID;
-    private RoomList roomList = null;
-    private GameManager observer;
+    private RoomList roomList;
+    public GameManager gameManager;
+    public UpdatesListener updatesListener;
+    private boolean isGameOwner = false;
 
     private int tcpSecondPortNumber;
     private int udpSecondPortNumber;
@@ -58,6 +61,16 @@ public class GameClient {
         Network.register(client);
         Network.register(localClient);
 
+        gameManager = new GameManager(0);
+        gameManager.addObserver(this);
+
+        updatesListener = new UpdatesListener() {
+            @Override
+            public void updatesPending(Object object, int roomID) {
+                send(object);
+            }
+        };
+
 
 
         // listener for client connected to the global server
@@ -65,13 +78,13 @@ public class GameClient {
             public void received(Connection connection, Object object) {
                 if (object instanceof GameResponse) { //response with game data
                     GameResponse gameResponse = (GameResponse) object;
-                    if(gameResponse != null & observer != null)
-                        observer.updatesListener.updatesReceived(gameResponse);
+                    if(gameManager != null)
+                        gameManager.getUpdates(gameResponse);
 
                 } else if(object instanceof RewardResponse) { //response with rewards
                     RewardResponse rewardResponse = (RewardResponse)object;
-                    if(rewardResponse != null & observer != null)
-                        observer.updatesListener.updatesReceived(rewardResponse);
+                    if(gameManager != null)
+                        gameManager.getRewards(rewardResponse);
 
                 } else if (object instanceof ControlResponse) { //control response
                     ControlResponse controlResponse = (ControlResponse) object;
@@ -105,7 +118,13 @@ public class GameClient {
             public void received(Connection connection, Object object) {
                 if (object instanceof GameResponse) { //response with game data
                     GameResponse gameResponse = (GameResponse) object;
-                    System.out.println(gameResponse.getMessage());
+                    if(gameManager != null)
+                        gameManager.getUpdates(gameResponse);
+
+                } else if(object instanceof RewardResponse) { //response with rewards
+                    RewardResponse rewardResponse = (RewardResponse)object;
+                    if(gameManager != null)
+                        gameManager.getRewards(rewardResponse);
 
                 } else if (object instanceof ControlResponse) { //control response
                     ControlResponse controlResponse = (ControlResponse) object;
@@ -171,6 +190,8 @@ public class GameClient {
         playerName = inputScanner.nextLine();
         
         menu(); //run menu
+
+
 
     }
 
@@ -307,7 +328,8 @@ public class GameClient {
         int maxPlayers;
         System.out.println("Enter how many players can enter the room");
         maxPlayers = inputScanner.nextInt();
-        new LocalGameServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, inputScanner);
+        localServer = new LocalServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, inputScanner, gameManager);
+        isGameOwner = true;
     }
 
 
@@ -320,21 +342,25 @@ public class GameClient {
         client.stop();
         localClient.close();
         localClient.stop();
+        isGameOwner = false;
     }
 
 
-    public void addObserver(GameManager observer) {
-        this.observer = observer;
-    }
+
 
 
     /**
      * After joining or creating a room, send request with client updates
      */
-    public void send(GameRequest gameRequest) {
+    public void send(Object object) {
 
-        if(activeClient.isConnected())
-            activeClient.sendTCP(gameRequest);
+        if(!isGameOwner) {
+            if(activeClient.isConnected())
+                activeClient.sendTCP(object);
+        }
+        else
+            localServer.superManager.getUpdates((GameRequest)object);
+
 
         /*System.out.println("Press 'q' to quit");
         GameRequest gameRequest = new GameRequest(roomID); //new request with game data

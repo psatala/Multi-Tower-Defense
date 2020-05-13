@@ -32,48 +32,23 @@ public class GameManager extends ApplicationAdapter {
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
-	private GameClient gameClient;
+	private GameClient observer;
 	private GameRequest gameRequest;
-	public UpdatesListener updatesListener;
 	private Vector<String> objectsToAdd;
 
 	public GameManager(int playerId) {
-		//networking stuff
-		updatesListener = new UpdatesListener() {
-			@Override
-			public void updatesReceived(Object object) {
-				if(object instanceof RewardResponse) {
-					RewardResponse rewardResponse = (RewardResponse)object;
-					getRewards(rewardResponse);
-				}
-				else if (object instanceof GameResponse) {
-					GameResponse gameResponse = (GameResponse)object;
-					getUpdates(gameResponse);
-				}
-			}
 
-			@Override
-			public void updatesPending(Object object, int roomID) {
-
-			}
-		};
-
-		try {
-			gameClient = new GameClient(54545, 54545, 54546, 54546, 500);
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-		}
-		gameClient.addObserver(this);
 		gameRequest = new GameRequest();
 
 
-
-
-		//other stuff
 		myPlayerId = playerId;
 		units = new Vector<>();
 		towers = new Vector<>();
 		missiles = new Vector<>();
+	}
+
+	public void addObserver(GameClient observer) {
+		this.observer = observer;
 	}
 
 	@Override
@@ -128,8 +103,8 @@ public class GameManager extends ApplicationAdapter {
 
 
 	public void sendUpdates() {
-		gameRequest.setRoomID(gameClient.roomID);
-		gameClient.send(gameRequest);
+		gameRequest.setRoomID(observer.roomID);
+		observer.updatesListener.updatesPending(gameRequest, -1);
 		gameRequest.clearMessage();
 	}
 

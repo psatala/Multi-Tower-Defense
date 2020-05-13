@@ -1,19 +1,12 @@
 package com.main;
 
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
-import com.main.Networking.GameRoom;
 import com.main.Networking.GameServer;
-import com.main.Networking.UpdatesListener;
 import com.main.Networking.requests.GameRequest;
 import com.main.Networking.responses.GameResponse;
 import com.main.Networking.responses.RewardResponse;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 
