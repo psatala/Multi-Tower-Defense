@@ -17,7 +17,7 @@ import com.main.SuperManager;
  * @author Piotr Satała
  */
 public class MainServer extends GameServer {
-    private RoomList roomList = new RoomList();
+    private final RoomList roomList = new RoomList();
     private HashMap<Integer, SuperManager> managerHashMap;
     /**
      * Public empty constructor necessary for KryoNet to send instances of this class properly
@@ -48,8 +48,7 @@ public class MainServer extends GameServer {
                 if(object instanceof GameRequest) { //request with game data
                     
                     GameRequest gameRequest = (GameRequest)object;
-                    if(gameRequest != null)
-                        managerHashMap.get(gameRequest.getRoomID()).getUpdates(gameRequest); //apply updates
+                    managerHashMap.get(gameRequest.getRoomID()).getUpdates(gameRequest); //apply updates
 
                 }
                 else if(object instanceof CreateRoomRequest) { //client wants to create a room
@@ -70,7 +69,7 @@ public class MainServer extends GameServer {
                     GameRoom currentRoom = roomList.get(joinRoomRequest.roomID); //get id
                     try {
                         currentRoom.addPlayer(connection.getID());
-                        RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse();
+                        RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse(currentRoom.currentPlayers - 1);
                         sendToTCP(connection.getID(), roomJoinedResponse); //room successfully joined
                     }
                     catch(Exception e) { //room already full

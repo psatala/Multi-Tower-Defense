@@ -16,8 +16,8 @@ public class SuperManager{
     private Vector<Missile> missiles;
     private MapActor map;
 
-    private GameResponse gameResponse;
-    private RewardResponse rewardResponse;
+    private final GameResponse gameResponse;
+    private final RewardResponse rewardResponse;
     public int roomID;
     public GameServer observer;
 
@@ -73,25 +73,6 @@ public class SuperManager{
 
     public void getUpdates(GameRequest gameRequest) {
         Vector<String> requests = gameRequest.getMessage();
-        /*try {
-            File myObj = new File("requests.txt");
-            Scanner myReader = new Scanner(myObj);
-            while (myReader.hasNextLine()) {
-                requests.add(myReader.nextLine());
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-        try {
-            FileWriter myWriter = new FileWriter("requests.txt");
-            myWriter.write("");
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }*/
 
         for(String request : requests) {
             String[] data = request.split(" ");

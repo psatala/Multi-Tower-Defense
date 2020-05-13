@@ -13,7 +13,7 @@ import java.util.HashMap;
  * @author Piotr Satała
  */
 public class RoomList {
-    private HashMap<Integer, GameRoom> list;
+    private final HashMap<Integer, GameRoom> list;
 
     /**
      * Public constructor for RoomList class
@@ -79,7 +79,7 @@ public class RoomList {
      * @return ArrayList with all keys currently present in the HashMap
      */
     public ArrayList<Integer> getArrayOfKeys() {
-        return new ArrayList<Integer>(list.keySet());
+        return new ArrayList<>(list.keySet());
     }
 
 

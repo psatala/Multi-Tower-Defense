@@ -11,12 +11,10 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.main.Networking.GameClient;
-import com.main.Networking.UpdatesListener;
 import com.main.Networking.requests.GameRequest;
 import com.main.Networking.responses.GameResponse;
 import com.main.Networking.responses.RewardResponse;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -33,7 +31,7 @@ public class GameManager extends ApplicationAdapter {
 	private ShapeRenderer renderer;
 
 	private GameClient observer;
-	private GameRequest gameRequest;
+	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
 
 	public GameManager(int playerId) {
@@ -75,25 +73,6 @@ public class GameManager extends ApplicationAdapter {
 
 	public void getRewards(RewardResponse rewardResponse) {
 		Vector<String> rewards = rewardResponse.getMessage();
-		/*try {
-			File myObj = new File("rewards"+myPlayerId+".txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				rewards.add(myReader.nextLine());
-			}
-			myReader.close();
-		} catch (FileNotFoundException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
-		try {
-			FileWriter myWriter = new FileWriter("rewards"+myPlayerId+".txt");
-			myWriter.write("");
-			myWriter.close();
-		} catch (IOException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}*/
 
 		for(String reward : rewards) {
 			String r = reward.split(" ")[0];
@@ -110,17 +89,6 @@ public class GameManager extends ApplicationAdapter {
 
 	public void getUpdates(GameResponse gameResponse) {
 		Vector<String> objects = gameResponse.getMessage();
-		/*try {
-			File myObj = new File("gamestate.txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				objects.add(myReader.nextLine());
-			}
-			myReader.close();
-		} catch (FileNotFoundException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}*/
 
 		deleteKilledObjects(objects);
 
@@ -321,6 +289,8 @@ public class GameManager extends ApplicationAdapter {
 	public void setMode(MapActor.Mode mode) {
 		map.setMode(mode);
 	}
+
+	public void setPlayerId(int newPlayerId) { myPlayerId = newPlayerId; }
 
 	public int getPlayerId() {
 		return myPlayerId;

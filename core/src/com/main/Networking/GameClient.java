@@ -1,8 +1,3 @@
-/**
-  The GameClient class is the main class to be run by the user. It handles connecting with main server,
-  creating global games and hosting local games by starting a local server.
-  @author Piotr Satała
- */
 
 package com.main.Networking;
 
@@ -20,23 +15,29 @@ import com.main.GameManager;
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
 
+
+/**
+ The GameClient class is the main class to be run by the user. It handles connecting with main server,
+ creating global games and hosting local games by starting a local server.
+ @author Piotr Satała
+ */
 public class GameClient {
 
-    private Client client;
-    private Client localClient;
+    private final Client client;
+    private final Client localClient;
     private Client activeClient;
     private LocalServer localServer;
-    private Scanner inputScanner;
+    private final Scanner inputScanner;
     public String playerName;
     public int roomID;
-    private RoomList roomList;
+    private final RoomList roomList;
     public GameManager gameManager;
     public UpdatesListener updatesListener;
     private boolean isGameOwner = false;
 
-    private int tcpSecondPortNumber;
-    private int udpSecondPortNumber;
-    private int maxDelay;
+    private final int tcpSecondPortNumber;
+    private final int udpSecondPortNumber;
+    private final int maxDelay;
 
     /**
      * Public constructor for GameClient class
@@ -100,10 +101,13 @@ public class GameClient {
                 } else if (object instanceof RoomCreatedResponse) { //room successfully created
                     RoomCreatedResponse roomCreatedResponse = (RoomCreatedResponse) object;
                     roomID = roomCreatedResponse.roomID;
+                    gameManager.setPlayerId(0);
                     synchronized(client) {
                         client.notify();
                     }
                 } else if (object instanceof RoomJoinedResponse) { //room successfully joined
+                    RoomJoinedResponse roomJoinedResponse = (RoomJoinedResponse)object;
+                    gameManager.setPlayerId(roomJoinedResponse.getIdWithinRoom());
                     synchronized(client) {
                         client.notify();
                     }
@@ -142,6 +146,8 @@ public class GameClient {
                     }
 
                 } else if (object instanceof RoomJoinedResponse) { //room successfully joined
+                    RoomJoinedResponse roomJoinedResponse = (RoomJoinedResponse)object;
+                    gameManager.setPlayerId(roomJoinedResponse.getIdWithinRoom());
                     synchronized(localClient) {
                         localClient.notify();
                     }
@@ -213,16 +219,21 @@ public class GameClient {
         {
             System.out.println("Enter 'j' to join a room, 'c' to create a global room, 'h' to host a local room, 'q' to quit");
             input = inputScanner.nextLine();
-    
-            if(input.equals("j"))
-                joinGame();
-            else if(input.equals("c"))
-                createGlobalGame();
-            else if(input.equals("h"))
-                hostLocalGame();
-            else if(input.equals("q")) {
-                quit();
-                //break;
+
+            switch (input) {
+                case "j":
+                    joinGame();
+                    break;
+                case "c":
+                    createGlobalGame();
+                    break;
+                case "h":
+                    hostLocalGame();
+                    break;
+                case "q":
+                    quit();
+                    //break;
+                    break;
             }
         }
         
@@ -237,7 +248,7 @@ public class GameClient {
      */
     private void joinGame() throws InterruptedException, IOException {
         
-        List<InetAddress> hostList = null;
+        List<InetAddress> hostList;
         ArrayList<Integer> arrayOfKeys;
         int roomNumber;
         
@@ -281,7 +292,7 @@ public class GameClient {
                 localClient.connect(maxDelay, roomList.get(roomID).ipOfHost, tcpSecondPortNumber, udpSecondPortNumber);
                 localClient.sendTCP(new JoinRoomRequest());
             }
-            //run(); //run the game
+
         }
         else //-1 chosen
             menu(); //go back to menu
@@ -295,9 +306,8 @@ public class GameClient {
     /**
      * Allow user to create global games hosted by the main server
      * @throws InterruptedException
-     * @throws IOException
      */
-    private void createGlobalGame() throws InterruptedException, IOException {
+    private void createGlobalGame() throws InterruptedException {
         int maxPlayers;
 
             if(client.isConnected()) { //connection to the main server must be established
@@ -311,7 +321,7 @@ public class GameClient {
                     client.sendTCP(createRoomRequest);
                     client.wait();
                 }
-                //run();
+
             }
             else //no connection
                 System.out.println("This option requires connection to the main server");
@@ -324,11 +334,12 @@ public class GameClient {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void hostLocalGame() throws IOException, InterruptedException {
+    private void hostLocalGame() throws IOException {
         int maxPlayers;
         System.out.println("Enter how many players can enter the room");
         maxPlayers = inputScanner.nextInt();
-        localServer = new LocalServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, inputScanner, gameManager);
+        gameManager.setPlayerId(0);
+        localServer = new LocalServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, gameManager);
         isGameOwner = true;
     }
 
@@ -361,21 +372,6 @@ public class GameClient {
         else
             localServer.superManager.getUpdates((GameRequest)object);
 
-
-        /*System.out.println("Press 'q' to quit");
-        GameRequest gameRequest = new GameRequest(roomID); //new request with game data
-        while(true) {
-            gameRequest.setMessage(inputScanner.nextLine()); //get data here
-            if(gameRequest.getMessage().equals("q")) { //quitting
-                LeaveRoomRequest leaveRoomRequest = new LeaveRoomRequest(roomID); //request leaving
-                activeClient.sendTCP(leaveRoomRequest);
-                break; //connection terminated by client
-            }
-            if(activeClient.isConnected())
-                activeClient.sendTCP(gameRequest); //send data
-            else
-                break; //connection terminated by host (local only)
-        }*/
     }
     
 }

@@ -3,12 +3,9 @@ package com.main.Networking;
 
 import java.io.IOException;
 import java.net.BindException;
-import java.util.Scanner;
 
-import com.badlogic.gdx.Game;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
-import com.esotericsoftware.kryonet.Server;
 
 import com.main.GameManager;
 import com.main.Networking.requests.*;
@@ -21,11 +18,10 @@ import com.main.SuperManager;
  * @author Piotr Satała
  */
 public class LocalServer extends GameServer {
-    private GameRoom gameRoom;
-    private Scanner inputScanner;
+    private final GameRoom gameRoom;
 
     public SuperManager superManager;
-    private GameManager gameOwner;
+    private final GameManager gameOwner;
 
     /**
      * Public constructor for LocalServer class
@@ -33,12 +29,10 @@ public class LocalServer extends GameServer {
      * @param udpSecondPortNumber udp port for local server
      * @param hostName name of user who is hosting the local server
      * @param maxPlayers max number of players on server
-     * @param inputScanner input scanner for host
      * @throws IOException
-     * @throws InterruptedException
      */
     public LocalServer(int tcpSecondPortNumber, int udpSecondPortNumber, String hostName,
-                       int maxPlayers, Scanner inputScanner, GameManager gameOwner) throws IOException, InterruptedException {
+                       int maxPlayers, GameManager gameOwner) throws IOException {
 
         super();
 
@@ -47,7 +41,6 @@ public class LocalServer extends GameServer {
 
         gameRoom = new GameRoom(hostName, maxPlayers, GameRoom.LOCAL, -1); //add host to game room
 
-        this.inputScanner = inputScanner;
         this.gameOwner = gameOwner;
 
         //register classes
@@ -65,7 +58,7 @@ public class LocalServer extends GameServer {
 
                     try {
                         gameRoom.addPlayer(connection.getID());
-                        RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse();
+                        RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse(gameRoom.currentPlayers - 1);
                         sendToTCP(connection.getID(), roomJoinedResponse);
                     }
                     catch(Exception e) { //room full
@@ -116,33 +109,4 @@ public class LocalServer extends GameServer {
         }
     }
 
-
-    /**
-     * After creating the room, run the game in it
-     * @throws InterruptedException
-     * @throws IOException
-     */
-    /*public void run() throws InterruptedException, IOException {
-        
-        System.out.println("Press 'q' to quit");
-
-        GameResponse gameResponse = new GameResponse(); //new response to other clients
-        while(true) {
-            gameResponse.setMessage(inputScanner.nextLine());
-            if(gameResponse.getMessage().equals("q")) { //quitting
-                for(Integer connectionID: gameRoom.connectionSet) //to all connected inform about room closing
-                    if(connectionID != -1)
-                        localServer.sendToTCP(connectionID, new RoomClosedResponse());
-                localServer.close(); //close the room
-                localServer.stop();
-                break;
-            }
-            else {
-                for(Integer connectionID: gameRoom.connectionSet) //send data to everyone connected apart from host
-                    if(connectionID != -1)
-                        localServer.sendToTCP(connectionID, gameResponse);
-            }
-        }
-    }*/
-    
 }

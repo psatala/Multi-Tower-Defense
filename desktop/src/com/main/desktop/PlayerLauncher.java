@@ -2,9 +2,7 @@ package com.main.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.main.GameManager;
 import com.main.Networking.GameClient;
-import com.main.SuperManager;
 
 import java.io.IOException;
 
