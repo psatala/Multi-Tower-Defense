@@ -15,6 +15,7 @@ import com.main.Networking.requests.GameRequest;
 import com.main.Networking.responses.GameResponse;
 import com.main.Networking.responses.RewardResponse;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -30,6 +31,7 @@ public class GameManager extends ApplicationAdapter {
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
+	private MenuManager menuManager;
 	private GameClient observer;
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
@@ -53,19 +55,29 @@ public class GameManager extends ApplicationAdapter {
 	public void create () {
 		activeStage = new Stage(new ScreenViewport());
 		passiveStage = new Stage(new ScreenViewport());
+		menuManager = new MenuManager(observer, activeStage);
+		Gdx.input.setInputProcessor(activeStage);
+		renderer = new ShapeRenderer();
+
+		//call menu
+		/*try {
+			observer.menu();
+		} catch (InterruptedException | IOException e) {
+			e.printStackTrace();
+		}*/
+	}
+
+	public void addOtherActors() {
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
 		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
 		activeStage.addActor(map.getMapGroup());
-		Gdx.input.setInputProcessor(activeStage);
-		renderer = new ShapeRenderer();
-
 		Timer.schedule(new Timer.Task(){
 						   @Override
 						   public void run() {
-						   	   updateGrid();
-						   	   sendUpdates();
-						   	   addNewObjectsFromAnotherThread();
+							   updateGrid();
+							   sendUpdates();
+							   addNewObjectsFromAnotherThread();
 						   }
 					   }
 				,0,1/Config.refreshRate);

@@ -23,6 +23,7 @@ import com.main.Networking.responses.*;
  */
 public class GameClient {
 
+
     private final Client client;
     private final Client localClient;
     private Client activeClient;
@@ -30,6 +31,7 @@ public class GameClient {
     private final Scanner inputScanner;
     public String playerName;
     public int roomID;
+    public int maxPlayers;
     private final RoomList roomList;
     public GameManager gameManager;
     public UpdatesListener updatesListener;
@@ -194,8 +196,7 @@ public class GameClient {
         //get name
         System.out.println("Enter your name");
         playerName = inputScanner.nextLine();
-        
-        menu(); //run menu
+
 
 
 
@@ -246,7 +247,7 @@ public class GameClient {
      * @throws InterruptedException
      * @throws IOException
      */
-    private void joinGame() throws InterruptedException, IOException {
+    public void joinGame() throws InterruptedException, IOException {
         
         List<InetAddress> hostList;
         ArrayList<Integer> arrayOfKeys;
@@ -307,7 +308,7 @@ public class GameClient {
      * Allow user to create global games hosted by the main server
      * @throws InterruptedException
      */
-    private void createGlobalGame() throws InterruptedException {
+    public void createGlobalGame() throws InterruptedException {
         int maxPlayers;
 
             if(client.isConnected()) { //connection to the main server must be established
@@ -334,10 +335,8 @@ public class GameClient {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void hostLocalGame() throws IOException {
-        int maxPlayers;
-        System.out.println("Enter how many players can enter the room");
-        maxPlayers = inputScanner.nextInt();
+    public void hostLocalGame() throws IOException {
+
         gameManager.setPlayerId(0);
         localServer = new LocalServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, gameManager);
         isGameOwner = true;
@@ -348,7 +347,7 @@ public class GameClient {
     /**
      * Quit from the game
      */
-    private void quit() {
+    public void quit() {
         client.close();
         client.stop();
         localClient.close();

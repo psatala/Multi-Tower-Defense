@@ -15,6 +15,7 @@ public class PlayerLauncher {
             cfg.height = 720;
             cfg.width = 1080;
             cfg.resizable = false;
+            gameClient.gameManager.addObserver(gameClient);
             new LwjglApplication(gameClient.gameManager, cfg);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
