@@ -13,6 +13,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
+/**
+ * This class represents objects on the map that has HP and can deal damage - Towers and Units that extend this class.
+ * It contains attributes and methods for calculating everything regarding HP, damage, cost and reward.
+ */
 public class Entity extends Actor {
     public enum Type{UNIT, TOWER};
     static int idCounter = 0;
