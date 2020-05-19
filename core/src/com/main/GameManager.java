@@ -171,11 +171,12 @@ public class GameManager extends ApplicationAdapter {
 			missiles.remove(missile);
 			missile.remove();
 		}
-		//if(towersToRemove.size() > 0) {
-		//	for(Unit unit : units) {
-		//		unit.reconsiderMovement();
-		//	}
-		//}
+		if(towersToRemove.size() > 0) {
+			updateGrid();
+			for(Unit unit : units) {
+				unit.reconsiderMovement();
+			}
+		}
 	}
 
 	public boolean objectExists(Vector<String> objects, int id, char objectType) {
