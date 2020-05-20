@@ -101,8 +101,13 @@ public class Unit extends Entity {
     }
 
     /**
-     * Creates a string representation
+     * Creates a string representation by taking the representation created by Entity.toString(), changing the first char and adding current target.
+     * Unit is represented as 'U' as the first char of the string.
+     * Added parameters:
+     * - float targetX - x coordinate of the current target
+     * - float targetY - y coordinate of the current target
      * @return String representation of a unit
+     * @see Entity.toString()
      */
     @Override
     public String toString() {

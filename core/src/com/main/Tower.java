@@ -17,7 +17,7 @@ public class Tower extends Entity {
      * Public constructor of Tower
      * @param type Name of tower type as defined in the config file
      * @param playerId ID of this Tower's owner
-     * @param drawable True if the unit will be drawn (as in player's client). Set to false for main server's simulation
+     * @param drawable True if the tower will be drawn (as in player's client). Set to false for main server's simulation
      */
     public Tower(String type, int playerId, boolean drawable) {
         super(type, playerId, drawable);
@@ -30,7 +30,7 @@ public class Tower extends Entity {
     /**
      * Public constructor for creating Tower object from a string representation
      * @param stateString String representation of a tower
-     * @param drawable True if the unit will be drawn (as in player's client). Set to false for main server's simulation
+     * @param drawable True if the tower will be drawn (as in player's client). Set to false for main server's simulation
      */
     public Tower(String stateString, boolean drawable) {
         super(stateString, drawable);
@@ -41,8 +41,10 @@ public class Tower extends Entity {
     }
 
     /**
-     * Creates a string representation
+     * Creates a string representation by taking the representation created by Entity.toString() and changing the first char.
+     * Tower is represented as 'T' as the first char of the string.
      * @return String representation of a tower
+     * @see Entity.toString()
      */
     @Override
     public String toString() {
