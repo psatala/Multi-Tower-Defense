@@ -67,7 +67,7 @@ public class RoomList {
         int i = 0;
         for(int roomID: list.keySet()) {
             System.out.print(i + ": ");
-            list.get(roomID).printRoomInfo();
+            System.out.println(list.get(roomID).printRoomInfo());
             ++i;
         }
             

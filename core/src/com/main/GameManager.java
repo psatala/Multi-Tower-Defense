@@ -31,7 +31,7 @@ public class GameManager extends ApplicationAdapter {
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
-	private MenuManager menuManager;
+	public MenuManager menuManager;
 	private GameClient observer;
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
@@ -59,12 +59,6 @@ public class GameManager extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
 
-		//call menu
-		/*try {
-			observer.menu();
-		} catch (InterruptedException | IOException e) {
-			e.printStackTrace();
-		}*/
 	}
 
 	public void addOtherActors() {

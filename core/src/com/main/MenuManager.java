@@ -8,16 +8,21 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.main.Networking.GameClient;
+import com.main.Networking.GameRoom;
 
 import java.io.IOException;
 
 public class MenuManager {
 
     private final GameClient gameClient;
-    private final Stage stage;
-    private final Skin skin;
+    public final Stage stage;
+    public final Skin skin;
+
     public final Table mainTable;
     public final Table playerCountTable;
+    public Table joinGameTable;
+
+    private int gameType = GameRoom.GLOBAL;
 
     public MenuManager(final GameClient gameClient, final Stage stage) {
 
@@ -48,7 +53,10 @@ public class MenuManager {
            @Override
            public void clicked(InputEvent inputEvent, float x, float y) {
                try {
-                   gameClient.joinGame();
+                   mainTable.remove();
+                   joinGameTable = new Table(skin);
+                   stage.addActor(joinGameTable);
+                   gameClient.chooseGame();
                } catch (InterruptedException | IOException e) {
                    e.printStackTrace();
                }
@@ -58,11 +66,9 @@ public class MenuManager {
         createGlobalGameButton.addListener( new ClickListener() {
            @Override
            public void clicked(InputEvent inputEvent, float x, float y) {
-               try {
-                   gameClient.createGlobalGame();
-               } catch (InterruptedException e) {
-                   e.printStackTrace();
-               }
+               mainTable.remove();
+               stage.addActor(playerCountTable);
+               gameType = GameRoom.GLOBAL;
            }
         });
 
@@ -71,6 +77,7 @@ public class MenuManager {
            public void clicked(InputEvent inputEvent, float x, float y) {
                mainTable.remove();
                stage.addActor(playerCountTable);
+               gameType = GameRoom.LOCAL;
            }
         });
 
@@ -107,11 +114,19 @@ public class MenuManager {
             @Override
             public void clicked(InputEvent inputEvent, float x, float y) {
                 gameClient.maxPlayers = countPlayers;
-                playerCountTable.remove();
-                gameClient.gameManager.addOtherActors();
                 try {
-                    gameClient.hostLocalGame();
-                } catch (IOException e) {
+                    if(gameType == GameRoom.LOCAL) { //local game
+                        gameClient.hostLocalGame();
+                        playerCountTable.remove();
+                        gameClient.gameManager.addOtherActors();
+                    }
+                    else { //global game
+                        if(gameClient.createGlobalGame()) {
+                            playerCountTable.remove();
+                            gameClient.gameManager.addOtherActors();
+                        }
+                    }
+                } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }

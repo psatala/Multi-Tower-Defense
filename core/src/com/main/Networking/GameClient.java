@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Client;
@@ -36,6 +39,7 @@ public class GameClient {
     public GameManager gameManager;
     public UpdatesListener updatesListener;
     private boolean isGameOwner = false;
+
 
     private final int tcpSecondPortNumber;
     private final int udpSecondPortNumber;
@@ -223,7 +227,7 @@ public class GameClient {
 
             switch (input) {
                 case "j":
-                    joinGame();
+                    chooseGame();
                     break;
                 case "c":
                     createGlobalGame();
@@ -247,12 +251,14 @@ public class GameClient {
      * @throws InterruptedException
      * @throws IOException
      */
-    public void joinGame() throws InterruptedException, IOException {
+    public void chooseGame() throws InterruptedException, IOException {
         
         List<InetAddress> hostList;
-        ArrayList<Integer> arrayOfKeys;
-        int roomNumber;
-        
+        final ArrayList<Integer> arrayOfKeys;
+        final int[] roomNumber = new int[1];
+        TextButton textButton;
+        int roomIndex = 0;
+
         if(client.isConnected()) { //if connection to global server is established
             synchronized(client) {
                 client.sendTCP(new GetRoomListRequest());
@@ -260,7 +266,7 @@ public class GameClient {
             }
         }
 
-        //TODO: limit interfaces to wireless
+        //TODO: limit interfaces to one, use MAC address?
         //search for hosts on LAN
         hostList = localClient.discoverHosts(udpSecondPortNumber, maxDelay);
         for(InetAddress host: hostList) {
@@ -272,34 +278,66 @@ public class GameClient {
             localClient.close();
         }
 
-        roomList.print(); //print available rooms
+
         arrayOfKeys = roomList.getArrayOfKeys();
 
 
-        System.out.println("Type number of the room you want to join, or -1 to go back");
-        roomNumber = inputScanner.nextInt(); //choose which room to join
-        inputScanner.nextLine();
-        if(-1 != roomNumber) {
-            roomID = arrayOfKeys.get(roomNumber);
-            if(roomList.get(roomID).gameType == GameRoom.GLOBAL) { //if room is global
-                activeClient = client;
-                synchronized(client) {
-                    client.sendTCP(new JoinRoomRequest(roomID));
-                    client.wait();
-                }
-            }
-            else { //if room is local
-                activeClient = localClient;
-                localClient.connect(maxDelay, roomList.get(roomID).ipOfHost, tcpSecondPortNumber, udpSecondPortNumber);
-                localClient.sendTCP(new JoinRoomRequest());
-            }
-
+        //add buttons for each room
+        for(int roomItemID: arrayOfKeys) {
+            textButton = new TextButton(roomList.get(roomItemID).printRoomInfo(), gameManager.menuManager.skin);
+            final int finalRoomIndex = roomIndex;
+            textButton.addListener(new ClickListener() {
+               @Override
+               public void clicked(InputEvent inputEvent, float x, float y) {
+                   roomNumber[0] = finalRoomIndex;
+                   gameManager.menuManager.joinGameTable.remove();
+                   gameManager.addOtherActors();
+                   try {
+                       joinGame(roomNumber[0], arrayOfKeys);
+                   } catch (InterruptedException | IOException e) {
+                       e.printStackTrace();
+                   }
+               }
+            });
+            gameManager.menuManager.joinGameTable.add(textButton).fillX().row();
+            ++roomIndex;
         }
-        else //-1 chosen
-            menu(); //go back to menu
-        roomList.clear();
 
+
+        //add go back button
+        textButton = new TextButton("Back", gameManager.menuManager.skin);
+        textButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent inputEvent, float x, float y) {
+                roomNumber[0] = -1;
+                roomList.clear();
+                gameManager.menuManager.joinGameTable.remove();
+                gameManager.menuManager.stage.addActor(gameManager.menuManager.mainTable);
+            }
+        });
+        gameManager.menuManager.joinGameTable.add(textButton).fillX().row();
+
+        //fill stage with table
+        gameManager.menuManager.joinGameTable.setFillParent(true);
         
+    }
+
+    public void joinGame(int roomNumber, ArrayList<Integer> arrayOfKeys) throws InterruptedException, IOException {
+        roomID = arrayOfKeys.get(roomNumber);
+        if(roomList.get(roomID).gameType == GameRoom.GLOBAL) { //if room is global
+            activeClient = client;
+            synchronized(client) {
+                client.sendTCP(new JoinRoomRequest(roomID));
+                client.wait();
+            }
+        }
+        else { //if room is local
+            activeClient = localClient;
+            localClient.connect(maxDelay, roomList.get(roomID).ipOfHost, tcpSecondPortNumber, udpSecondPortNumber);
+            localClient.sendTCP(new JoinRoomRequest());
+        }
+
+        roomList.clear();
     }
 
 
@@ -308,13 +346,10 @@ public class GameClient {
      * Allow user to create global games hosted by the main server
      * @throws InterruptedException
      */
-    public void createGlobalGame() throws InterruptedException {
-        int maxPlayers;
+    public boolean createGlobalGame() throws InterruptedException {
 
             if(client.isConnected()) { //connection to the main server must be established
                 activeClient = client;
-                System.out.println("Enter how many players can enter the room");
-                maxPlayers = inputScanner.nextInt();
                 //request to create a room
                 CreateRoomRequest createRoomRequest = new CreateRoomRequest(playerName, maxPlayers, GameRoom.GLOBAL);
                 synchronized(client) {
@@ -322,10 +357,10 @@ public class GameClient {
                     client.sendTCP(createRoomRequest);
                     client.wait();
                 }
-
+                return true;
             }
-            else //no connection
-                System.out.println("This option requires connection to the main server");
+            System.out.println("This option requires connection to the main server");
+            return false;
     }
 
 

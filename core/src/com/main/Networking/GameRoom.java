@@ -100,12 +100,15 @@ public class GameRoom {
     /**
      * Print information about the room
      */
-    public void printRoomInfo() {
-        System.out.print("Room id: " + roomID + " IP address: " + ipOfHost + " host name: " + hostName + " players: " + currentPlayers + "/" + maxPlayers + " game type: ");
+    public String printRoomInfo() {
+        String infoString = "Room id: " + roomID + " IP address: " + ipOfHost + " host name: " + hostName + " players: " + currentPlayers + "/" + maxPlayers + " game type: ";
+
         if(gameType == GLOBAL)
-            System.out.println("Global");
+            infoString = infoString + "Global";
         else
-            System.out.println("Local");
+            infoString = infoString + "Local";
+        
+        return infoString;
     }
 
     public static int getLastRoomID() {
