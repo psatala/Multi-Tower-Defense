@@ -31,6 +31,7 @@ public class Tower extends Entity {
      * Public constructor for creating Tower object from a string representation
      * @param stateString String representation of a tower
      * @param drawable <code>true</code> if the tower will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
+     * @see Tower#toString()
      */
     public Tower(String stateString, boolean drawable) {
         super(stateString, drawable);

@@ -62,6 +62,7 @@ public class Unit extends Entity {
      * @param stateString String representation of a unit
      * @param map Reference to the map actor
      * @param drawable <code>true</code> if the unit will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
+     * @see Unit#toString()
      */
     public Unit(String stateString, MapActor map, boolean drawable) {
         super(stateString, drawable);
@@ -86,6 +87,7 @@ public class Unit extends Entity {
     /**
      * Updates the state of the Unit based on the string representation
      * @param stateString String representation of a unit
+     * @see Unit#toString()
      */
     @Override
     public void setState(String stateString) {
@@ -122,7 +124,9 @@ public class Unit extends Entity {
 
     /**
      * Changes the movement target of the Unit.<p>
-     * Target can only be channged if the target can be changed (unit was selected by the player; changeTarget is <code>true</code>)
+     * Target can only be channged if the target can be changed (unit was selected by the player; changeTarget is <code>true</code>)<p>
+     * The target is also randomized inside an area close to the chosen target. It is necessary for the units to stay separable during the game,
+     * as multiple units are often sent to the same target.
      * @param pos Position to change the target to.
      */
     public void goToPosition(Vector3 pos) {

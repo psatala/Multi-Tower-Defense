@@ -75,6 +75,7 @@ public class Entity extends Actor {
      * Public constructor for creating Entity object from a string representation
      * @param stateString String representation of an entity
      * @param drawable <code>true</code> if the entity will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
+     * @see Entity#toString()
      */
     public Entity(String stateString, boolean drawable) {
         isDrawable = drawable;
@@ -112,6 +113,7 @@ public class Entity extends Actor {
     /**
      * Updates the state of the Entity based on the string representation
      * @param stateString String representation of an entity
+     * @see Entity#toString()
      */
     public void setState(String stateString) {
         String[] data = stateString.split(" ");
