@@ -8,6 +8,43 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Vector;
 
+/**
+ * This class contains Maps with values loaded from the config file. The config file (config.txt)
+ * contains the information about available types of units, towers, missiles and maps. Entities and missiles load some of
+ * their basic attributes and textures using this class based on the provided type (as defined in the config file.
+ * This class also stores paths to map textures and their occupancy grid (boolean array containing information
+ * which grid cells are blocked by default on a certain map).<p>
+ *
+ * The code in this class loads all the information from the config file to static maps. The key
+ * in every map is the type name (as defined in the config file).<br>
+ * Comments are possible in the config file - they must start with '#' as the first char in the line.<p>
+ * Sample syntax of a type defined in the config file:<br>
+ *     type_name:<br>
+ *         cost: 1<br>
+ *         reward: 1<br>
+ *         width: 1<br>
+ *         height: 1<br>
+ *         damage: 1<br>
+ *         range: 1<br>
+ *         reload: 1<br>
+ *         hp: 1<br>
+ *         speed: 1<br>
+ *         representativeTexture: relative/path/to/texture.png<br>
+ *         fullTexture: relative/path/to/texture<br>
+ *<br>
+ * Sample syntax of a map defined in the config file:<br>
+ *     map_name:<br>
+ *         representativeTexture: relative/path/to/texture.png<br>
+ *     grid:<br>
+ *         010001000<br>
+ *         010101010<br>
+ *         010101010<br>
+ *         000100010<br>
+ *             <br>
+ * Every attribute is optional for a given type_name or map_name (grid only makes sense for maps, speed only makes
+ * sense for moving objects - units and missiles)
+ * @author Piotr Libera
+ */
 public class Config {
     public static final Map<String, Integer> objectCost;
     public static final Map<String, Integer> objectReward;
@@ -25,6 +62,12 @@ public class Config {
     public static final int startingCoins = 5000;
     public static final float refreshRate = 2f;
 
+    /**
+     * Creates occupancy grid array from Vector of rows represented as Strings - these Strings consist
+     * of 0s and 1s and are read from the config file.
+     * @param gridRows Rows of the grid stored in Strings
+     * @return 2D Boolean array containing the grid (<code>true</code> means that a cell is blocked by default)
+     */
     static Boolean[][] createGrid(Vector<String> gridRows) {
         if(gridRows.size() > 0) {
             Boolean[][] grid = new Boolean[gridRows.size()][gridRows.elementAt(0).length()];
@@ -42,6 +85,7 @@ public class Config {
         }
         return new Boolean[0][0];
     }
+
 
     static {
         Map<String, Integer> tempObjectCost = new HashMap<>();
