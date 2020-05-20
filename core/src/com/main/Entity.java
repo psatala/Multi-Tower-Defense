@@ -14,24 +14,21 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 /**
- * This class represents objects on the map that have HP and can deal damage - Towers and Units that extend this class.
+ * This class represents objects on the map that have HP and can deal damage - Towers and Units that extend this class.<p>
  * It contains attributes and methods for calculating everything regarding HP, shooting and damage, cost and reward.
  * @author Piotr Libera
  */
 public class Entity extends Actor {
     public enum Type{UNIT, TOWER};
     static int idCounter = 0;
-
     public Type entityType;
     private float reloadTime;
     private float range;
     private float damage;
     private int cost;
     private int reward;
-
     protected TextureRegion textureRegion;
     private Group objectGroup;
-
     protected int id;
     protected int playerId;
     protected float reloadTimeLeft;
@@ -44,7 +41,7 @@ public class Entity extends Actor {
      * Public constructor of Entity
      * @param type Name of entity type as defined in the config file
      * @param playerId ID of this Entity's owner
-     * @param drawable True if the entity will be drawn (as in player's client). Set to false for main server's simulation
+     * @param drawable <code>true</code> if the entity will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
      */
     public Entity(String type, int playerId, boolean drawable) {
         isDrawable = drawable;
@@ -77,7 +74,7 @@ public class Entity extends Actor {
     /**
      * Public constructor for creating Entity object from a string representation
      * @param stateString String representation of an entity
-     * @param drawable True if the entity will be drawn (as in player's client). Set to false for main server's simulation
+     * @param drawable <code>true</code> if the entity will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
      */
     public Entity(String stateString, boolean drawable) {
         isDrawable = drawable;
@@ -126,15 +123,15 @@ public class Entity extends Actor {
     }
 
     /**
-     * Creates a string representation of an entity. The string consists of converted attributes separated by single white spaces in the following order:
-     * - char c - a first single char represents the type of an object - 'E' for Entity, 'U' for Unit, 'T' for Tower
-     * - int id - id of this object
-     * - String type - the type of this entity as defined in the config file
-     * - int playerId - id of the player owning this entity
-     * - float x - x coordinate of the center
-     * - float y - y coordinate of the center
-     * - float reloadTimeLeft - time that needs to pass before taking the next shot
-     * - float hp - cuurent hp
+     * Creates a string representation of an entity. The string consists of converted attributes separated by single white spaces in the following order:<br>
+     * - char c - a first single char represents the type of an object - 'E' for Entity, 'U' for Unit, 'T' for Tower<br>
+     * - int id - id of this object<br>
+     * - String type - the type of this entity as defined in the config file<br>
+     * - int playerId - id of the player owning this entity<br>
+     * - float x - x coordinate of the center<br>
+     * - float y - y coordinate of the center<br>
+     * - float reloadTimeLeft - time that needs to pass before taking the next shot<br>
+     * - float hp - current hp
      * @return String representation of an entity
      */
     public String toString() {
@@ -188,7 +185,7 @@ public class Entity extends Actor {
     /**
      * Deals damage to the Entity
      * @param healthPoints Amount of HP taken
-     * @return <code>true</code> If the entity was killed by that damage (HP <= 0 after dealing damage);
+     * @return <code>true</code> If the entity was killed by that damage (HP {@literal <}= 0 after dealing damage);
      *         <code>false</code> otherwise.
      */
     public boolean damage(float healthPoints) {
@@ -220,7 +217,7 @@ public class Entity extends Actor {
 
     /**
      * Checks if entity is alive
-     * @return <code>true</code> If HP > 0;
+     * @return <code>true</code> If HP {@literal >} 0;
      *         <code>false</code> otherwise.
      */
     public boolean isAlive() {

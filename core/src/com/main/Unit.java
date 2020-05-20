@@ -40,7 +40,7 @@ public class Unit extends Entity {
      * @param unitType Name of unit type as defined in the config file
      * @param playerId ID of this unit's owner
      * @param map Reference to the map actor
-     * @param drawable True if the unit will be drawn (as in player's client). Set to false for main server's simulation
+     * @param drawable <code>true</code> if the unit will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
      */
     public Unit(String unitType, int playerId, MapActor map, boolean drawable) {
         super(unitType, playerId, drawable);
@@ -61,7 +61,7 @@ public class Unit extends Entity {
      * Public constructor for creating Unit object from a string representation
      * @param stateString String representation of a unit
      * @param map Reference to the map actor
-     * @param drawable True if the unit will be drawn (as in player's client). Set to false for main server's simulation
+     * @param drawable <code>true</code> if the unit will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
      */
     public Unit(String stateString, MapActor map, boolean drawable) {
         super(stateString, drawable);
@@ -101,13 +101,13 @@ public class Unit extends Entity {
     }
 
     /**
-     * Creates a string representation by taking the representation created by Entity.toString(), changing the first char and adding current target.
-     * Unit is represented as 'U' as the first char of the string.
-     * Added parameters:
-     * - float targetX - x coordinate of the current target
+     * Creates a string representation by taking the representation created by Entity.toString(), changing the first char and adding current target.<p>
+     * Unit is represented as 'U' as the first char of the string.<p>
+     * Added parameters:<br>
+     * - float targetX - x coordinate of the current target<br>
      * - float targetY - y coordinate of the current target
      * @return String representation of a unit
-     * @see Entity.toString()
+     * @see Entity#toString()
      */
     @Override
     public String toString() {
@@ -121,8 +121,8 @@ public class Unit extends Entity {
     }
 
     /**
-     * Changes the movement target of the Unit.
-     * Target can only be channged if the target can be changed (unit was selected by the player; changeTarget is true)
+     * Changes the movement target of the Unit.<p>
+     * Target can only be channged if the target can be changed (unit was selected by the player; changeTarget is <code>true</code>)
      * @param pos Position to change the target to.
      */
     public void goToPosition(Vector3 pos) {
@@ -141,6 +141,7 @@ public class Unit extends Entity {
     /**
      * Recalculates the path of the movement. If the target cannot be achieved
      * the Unit moves towards an achievable point closest to target as calculated by MapActor.findPath()
+     * @see MapActor#findPath(Vector3, Vector3)
      */
     public void reconsiderMovement() {
         if(!targetAchieved()) {
@@ -220,7 +221,8 @@ public class Unit extends Entity {
 
     /**
      * Allows or forbids the Unit to change its target according to the value of the parameter
-     * @param x True - allow target changing; False - Forbid target changing
+     * @param x <code>true</code> If the entity was killed by that damage (HP {@literal <}= 0 after dealing damage);
+     *          <code>false</code> otherwise.
      */
     public void allowTargetChanging(boolean x) {
         changeTarget = x;
@@ -244,7 +246,7 @@ public class Unit extends Entity {
 
     /**
      * Checks if the target was achieved (position of the center is exactly on target)
-     * @return True if target is achieved, False otherwise
+     * @return <code>true</code> if target is achieved; <code>false</code> otherwise
      */
     public boolean targetAchieved() {
         Vector3 pos = getCenter();
@@ -254,7 +256,7 @@ public class Unit extends Entity {
     /**
      * Checks if a given position is equal to unit's current target
      * @param pos Position to check against
-     * @return True if pos and current target are equal, False otherwise
+     * @return <code>true</code> if pos and current target are equal, <code>false</code> otherwise
      */
     public boolean equalsTarget(Vector3 pos) {
         return pos.x == currentTarget.x && pos.y == currentTarget.y;
