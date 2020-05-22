@@ -12,6 +12,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 
 
+/**
+ * This class represents a single grid cell on the map. It contains information if the given cell is empty or blocked,
+ * as well as highlights the grid cell if the mouse hovers above it in BUILD or SPAWN modes.
+ * @author Piotr Libera
+ * @see MapActor.Mode
+ */
 public class GridCell extends Actor {
     private boolean isEmpty = true;
     private boolean isBlocked = false;
@@ -20,6 +26,15 @@ public class GridCell extends Actor {
     private ShapeRenderer renderer;
     private boolean isDrawable;
 
+    /**
+     * Public constructor of the grid cell
+     * @param x X coordinate of the bottom left corner of the grid cell
+     * @param y Y coordinate of the bottom left corner of the grid cell
+     * @param w Width of the grid cell
+     * @param h Height of the grid cell
+     * @param m mapActor that created this grid cell - it contains information about currently chosen mode
+     * @param drawable <code>true</code> if the map will be drawn (as in player's client). Set to <code>false</code> for main server's simulation
+     */
     public GridCell(float x, float y, float w, float h, MapActor m, boolean drawable) {
         isDrawable = drawable;
         map = m;
@@ -30,6 +45,15 @@ public class GridCell extends Actor {
         }
     }
 
+    /**
+     * In BUILD mode: draws the red highlight on the entire cell if it is not empty,
+     * and the green highlight if it isn't and is currently hovered on,<br>
+     * In SPAWN mode: draws the red highlight on the entire cell if it is blocked,
+     * and the green highlight if it isn't and is currently hovered on,<br>
+     * If the grid cell is not drawable, or in any other mode, nothing will be drawn.
+     * @param batch
+     * @param alpha
+     */
     @Override
     public void draw(Batch batch, float alpha) {
         if(!isDrawable)
@@ -53,6 +77,10 @@ public class GridCell extends Actor {
         }
     }
 
+    /**
+     * Creates the listener that listens for the cursor entering and leaving the grid cell
+     * @return Created listener
+     */
     private ClickListener createHoverListener() {
         return new ClickListener() {
             @Override
@@ -67,26 +95,46 @@ public class GridCell extends Actor {
         };
     }
 
+    /**
+     * Checks if the cell is empty
+     * @return <code>true</code> if the cell is empty; <code>false</code> otherwise
+     */
     public boolean isEmpty() {
         return isEmpty;
     }
 
+    /**
+     * Checks if the cell is blocked
+     * @return <code>true</code> if the cell is blocked; <code>false</code> otherwise
+     */
     public boolean isBlocked() {
         return isBlocked;
     }
 
+    /**
+     * Sets the cell blocked state
+     * @param x <code>true</code> to set the blocked state to <code>true</code> (and empty state to <code>false</code>); <code>false</code> to set the blocked state to <code>false</code>
+     */
     public void setBlocked(boolean x) {
         isBlocked = x;
         if(isBlocked)
             isEmpty = false;
     }
 
+    /**
+     * Sets the cell empty state
+     * @param x <code>true</code> to set the empty state to <code>true</code> (and blocked state to <code>false</code>); <code>false</code> to set the empty state to <code>false</code>
+     */
     public void setEmpty(boolean x) {
         isEmpty = x;
         if(isEmpty)
             isBlocked = false;
     }
 
+    /**
+     * Getter method
+     * @return Position of the center of this grid cell
+     */
     public Vector3 getCenter() {
         return new Vector3(getX(Align.center), getY(Align.center), 0);
     }
