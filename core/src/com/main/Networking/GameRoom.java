@@ -4,6 +4,7 @@ package com.main.Networking;
 
 import java.net.InetAddress;
 import java.util.HashSet;
+import java.util.Vector;
 
 /**
  * The GameRoom class simulates a room on the network level in which a game can be played.
@@ -18,11 +19,11 @@ public class GameRoom {
     private static int nextRoomID = 0;
 
     //public members
-    public int roomID;
+    public Integer roomID;
     public String hostName;
-    public int currentPlayers;
-    public int maxPlayers;
-    public int gameType;
+    public Integer currentPlayers;
+    public Integer maxPlayers;
+    public Integer gameType;
     public HashSet<Integer> connectionSet;
     public InetAddress ipOfHost; //ip for client to determine room host
 
@@ -109,6 +110,21 @@ public class GameRoom {
             infoString = infoString + "Local";
         
         return infoString;
+    }
+
+    public Vector<String> getRoomInfo() {
+
+        Vector<String> infoVector = new Vector<>();
+        infoVector.add(roomID.toString());
+        infoVector.add(ipOfHost.toString());
+        infoVector.add(hostName);
+        infoVector.add(currentPlayers.toString() + "/" + maxPlayers.toString());
+        if(gameType == GLOBAL)
+            infoVector.add("Global");
+        else
+            infoVector.add("Local");
+
+        return infoVector;
     }
 
     public static int getLastRoomID() {

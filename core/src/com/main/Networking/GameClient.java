@@ -6,8 +6,10 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Vector;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.esotericsoftware.kryonet.Connection;
@@ -15,6 +17,7 @@ import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Client;
 
 import com.main.GameManager;
+import com.main.MenuManager;
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
 
@@ -31,7 +34,6 @@ public class GameClient {
     private final Client localClient;
     private Client activeClient;
     private LocalServer localServer;
-    private final Scanner inputScanner;
     public String playerName;
     public int roomID;
     public int maxPlayers;
@@ -194,55 +196,8 @@ public class GameClient {
         localClient.start();
 
 
-        //scanner for input
-        inputScanner = new Scanner (System.in);
-
-        //get name
-        System.out.println("Enter your name");
-        playerName = inputScanner.nextLine();
-
-
-
-
     }
 
-
-    /**
-     * Menu for client which allows for:
-     * * searching and joining global and local rooms(games)
-     * * creating global rooms(games) hosted by the main server
-     * * hosting local rooms(games)
-     * * quitting
-     * @throws InterruptedException
-     * @throws IOException
-     */
-    public void menu() throws InterruptedException, IOException {
-
-        String input;
-        inputScanner.reset();
-        //while(true)
-        {
-            System.out.println("Enter 'j' to join a room, 'c' to create a global room, 'h' to host a local room, 'q' to quit");
-            input = inputScanner.nextLine();
-
-            switch (input) {
-                case "j":
-                    chooseGame();
-                    break;
-                case "c":
-                    createGlobalGame();
-                    break;
-                case "h":
-                    hostLocalGame();
-                    break;
-                case "q":
-                    quit();
-                    //break;
-                    break;
-            }
-        }
-        
-    }
 
 
 
@@ -257,6 +212,8 @@ public class GameClient {
         final ArrayList<Integer> arrayOfKeys;
         final int[] roomNumber = new int[1];
         TextButton textButton;
+        Label label;
+        Vector<String> infoVector;
         int roomIndex = 0;
 
         if(client.isConnected()) { //if connection to global server is established
@@ -281,25 +238,37 @@ public class GameClient {
 
         arrayOfKeys = roomList.getArrayOfKeys();
 
+        //add default labels
+        gameManager.menuManager.addLabel("Room ID", gameManager.menuManager.joinGameTable);
+        gameManager.menuManager.addLabel("Host IP", gameManager.menuManager.joinGameTable);
+        gameManager.menuManager.addLabel("Hostname", gameManager.menuManager.joinGameTable);
+        gameManager.menuManager.addLabel("Players", gameManager.menuManager.joinGameTable);
+        gameManager.menuManager.addLabel("Game Type", gameManager.menuManager.joinGameTable);
+        gameManager.menuManager.joinGameTable.row();
 
         //add buttons for each room
         for(int roomItemID: arrayOfKeys) {
-            textButton = new TextButton(roomList.get(roomItemID).printRoomInfo(), gameManager.menuManager.skin);
+            infoVector = roomList.get(roomItemID).getRoomInfo();
+            for(String info: infoVector)
+                gameManager.menuManager.addLabel(info, gameManager.menuManager.joinGameTable);
+
+
+            textButton = new TextButton("Join", gameManager.menuManager.skin);
             final int finalRoomIndex = roomIndex;
             textButton.addListener(new ClickListener() {
-               @Override
-               public void clicked(InputEvent inputEvent, float x, float y) {
-                   roomNumber[0] = finalRoomIndex;
-                   gameManager.menuManager.joinGameTable.remove();
-                   gameManager.addOtherActors();
-                   try {
-                       joinGame(roomNumber[0], arrayOfKeys);
-                   } catch (InterruptedException | IOException e) {
-                       e.printStackTrace();
-                   }
-               }
+                @Override
+                public void clicked(InputEvent inputEvent, float x, float y) {
+                    roomNumber[0] = finalRoomIndex;
+                    gameManager.menuManager.joinGameTable.remove();
+                    gameManager.addOtherActors();
+                    try {
+                        joinGame(roomNumber[0], arrayOfKeys);
+                    } catch (InterruptedException | IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             });
-            gameManager.menuManager.joinGameTable.add(textButton).fillX().row();
+            gameManager.menuManager.joinGameTable.add(textButton).fillX().prefWidth(MenuManager.PREF_SMALL_BUTTON_WIDTH).prefHeight(MenuManager.PREF_SMALL_BUTTON_HEIGHT).row();
             ++roomIndex;
         }
 
@@ -315,7 +284,7 @@ public class GameClient {
                 gameManager.menuManager.stage.addActor(gameManager.menuManager.mainTable);
             }
         });
-        gameManager.menuManager.joinGameTable.add(textButton).fillX().row();
+        gameManager.menuManager.joinGameTable.add(textButton).fillX().prefWidth(MenuManager.PREF_SMALL_BUTTON_WIDTH).prefHeight(MenuManager.PREF_SMALL_BUTTON_HEIGHT).row();
 
         //fill stage with table
         gameManager.menuManager.joinGameTable.setFillParent(true);
