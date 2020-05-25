@@ -16,6 +16,7 @@ import com.main.Networking.requests.GameRequest;
 import com.main.Networking.responses.GameResponse;
 import com.main.Networking.responses.RewardResponse;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -25,7 +26,7 @@ import java.util.Vector;
  * of the game is that on the main server. It is therefore updating its state of the game according to
  * updates received from the server. There are two stages in this class - activeStage contains Actors that
  * contain click or hover listeners, passiveStage contains the rest of the Actors<p>
- * The gameManeger has only the power to control actions of its player - it controls the coins of this player
+ * The gameManager has only the power to control actions of its player - it controls the coins of this player
  * and checks if their actions are possible based on the local simulation.
  * @author Piotr Libera
  */
@@ -40,6 +41,7 @@ public class GameManager extends ApplicationAdapter {
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;
 
+	public MenuManager menuManager;
 	private GameClient observer;
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
@@ -77,19 +79,23 @@ public class GameManager extends ApplicationAdapter {
 	public void create () {
 		activeStage = new Stage(new ScreenViewport());
 		passiveStage = new Stage(new ScreenViewport());
+		menuManager = new MenuManager(observer, activeStage);
+		Gdx.input.setInputProcessor(activeStage);
+		renderer = new ShapeRenderer();
+
+	}
+
+	public void addOtherActors() {
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
 		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
 		activeStage.addActor(map.getMapGroup());
-		Gdx.input.setInputProcessor(activeStage);
-		renderer = new ShapeRenderer();
-
 		Timer.schedule(new Timer.Task(){
 						   @Override
 						   public void run() {
-						   	   updateGrid();
-						   	   sendUpdates();
-						   	   addNewObjectsFromAnotherThread();
+							   updateGrid();
+							   sendUpdates();
+							   addNewObjectsFromAnotherThread();
 						   }
 					   }
 				,0,1/Config.refreshRate);
