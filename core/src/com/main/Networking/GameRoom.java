@@ -112,11 +112,19 @@ public class GameRoom {
         return infoString;
     }
 
+
+    /**
+     * Get general information about the room so the user can see it
+     * @return vector of strings containing info about the room
+     */
     public Vector<String> getRoomInfo() {
 
         Vector<String> infoVector = new Vector<>();
         infoVector.add(roomID.toString());
-        infoVector.add(ipOfHost.toString());
+        if(ipOfHost != null)
+            infoVector.add(ipOfHost.toString());
+        else
+            infoVector.add("Unknown");
         infoVector.add(hostName);
         infoVector.add(currentPlayers.toString() + "/" + maxPlayers.toString());
         if(gameType == GLOBAL)
@@ -127,6 +135,11 @@ public class GameRoom {
         return infoVector;
     }
 
+
+    /**
+     * Get ID of the last created room
+     * @return ID of the last created room
+     */
     public static int getLastRoomID() {
         return nextRoomID - 1;
     }

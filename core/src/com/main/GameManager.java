@@ -26,7 +26,7 @@ import java.util.Vector;
  * of the game is that on the main server. It is therefore updating its state of the game according to
  * updates received from the server. There are two stages in this class - activeStage contains Actors that
  * contain click or hover listeners, passiveStage contains the rest of the Actors<p>
- * The gameManeger has only the power to control actions of its player - it controls the coins of this player
+ * The gameManager has only the power to control actions of its player - it controls the coins of this player
  * and checks if their actions are possible based on the local simulation.
  * @author Piotr Libera
  */
