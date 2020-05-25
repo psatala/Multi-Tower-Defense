@@ -9,7 +9,7 @@ import java.util.HashMap;
 /**
  * The RoomList class is responsible for handling a list of rooms stored by the main server, but also for
  * receiving it from main server and all locals server on the client side. The class wraps
- * HashMap<Integer, GameRoom> in order to provide additional utility for the program.
+ * HashMap{@literal <}Integer, GameRoom{@literal >} in order to provide additional utility for the program.
  * @author Piotr Satała
  */
 public class RoomList {

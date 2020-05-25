@@ -14,6 +14,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
+/**
+ * This class is responsible for managing and displaying the interface for the player consisting of command buttons and gameplay information.
+ * It covers everything in the game window outside the map.<br>
+ * This class is only used by clients with GUIs, and not by the main server.
+ * @author Piotr Libera
+ */
 public class InfoActor extends Actor {
     final public static float topBarHeight = 34;
     private GameManager gameManager;
@@ -26,6 +32,13 @@ public class InfoActor extends Actor {
     private int coins;
     private int playerId;
 
+    /**
+     * Public constructor of InfoActor
+     * @param w width of the entire window
+     * @param h height of the entire window
+     * @param gameManager gameManager that created this object and manages the game
+     * @param playerId ID of the player
+     */
     public InfoActor(float w, float h, GameManager gameManager, int playerId) {
         coins = Config.startingCoins;
         setBounds(0, h-topBarHeight, w, topBarHeight);
@@ -48,6 +61,11 @@ public class InfoActor extends Actor {
         addButton(380, getY()+4, 100, topBarHeight-8, "Spawn unit", MapActor.Mode.SPAWN);
     }
 
+    /**
+     * Overrides Actor's draw() method
+     * @param batch
+     * @param alpha
+     */
     @Override
     public void draw(Batch batch, float alpha) {
         bigFont.draw(batch, "Player "+playerId, 530, 710);
@@ -56,16 +74,28 @@ public class InfoActor extends Actor {
         lineSprite.draw(batch);
     }
 
+    /**
+     * Overrides Actor's act(float) method - updates the Actor's actions
+     * @param delta amount of time passed since the last call of this method
+     */
     @Override
     public void act(float delta) {
         super.act(delta);
     }
 
+    /**
+     * Disposes libgdx's objects
+     */
     public void dispose() {
         bigFont.dispose();
         line.dispose();
     }
 
+    /**
+     * Subtracts a given number of coins from the player's account
+     * @param n Number of coins to subtract
+     * @return <code>true</code> if there was at least n coins before this action; <code>false</code> otherwise
+     */
     public boolean spendCoins(int n) {
         if(coins < n)
             return false;
@@ -73,10 +103,24 @@ public class InfoActor extends Actor {
         return true;
     }
 
+    /**
+     * Adds a given number of coins to the player's account
+     * @param n Number of coins to add
+     */
     public void addCoins(int n) {
         coins += n;
     }
 
+    /**
+     * Creates and adds a new button to the interface. When clicked the button will set a mode to the whole interface on the gameManager's level.
+     * @param x X coordinate of the bottom left corner of the button
+     * @param y Y coordinate of the bottom left corner of the button
+     * @param w Width of the button
+     * @param h Height of the button
+     * @param text Text on the button
+     * @param mode Mode that the button will activate
+     * @see MapActor.Mode
+     */
     private void addButton(float x, float y, float w, float h, String text, final MapActor.Mode mode) {
         final TextButton button = new TextButton(text, skin, "default");
         button.setBounds(x, y, w, h);
@@ -90,6 +134,10 @@ public class InfoActor extends Actor {
         });
     }
 
+    /**
+     * Getter method
+     * @return Group object containing all the actors of the interface (PlayerInterface and Buttons)
+     */
     public Group getInfoGroup() {
         return infoGroup;
     }

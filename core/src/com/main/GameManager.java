@@ -3,6 +3,7 @@ package com.main;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -19,7 +20,16 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
-
+/**
+ * This class manages the game on the player's side - it is responsible for receiving commands from the player
+ * and creating proper requests for the server. It also simulates the game - although the only valid state
+ * of the game is that on the main server. It is therefore updating its state of the game according to
+ * updates received from the server. There are two stages in this class - activeStage contains Actors that
+ * contain click or hover listeners, passiveStage contains the rest of the Actors<p>
+ * The gameManeger has only the power to control actions of its player - it controls the coins of this player
+ * and checks if their actions are possible based on the local simulation.
+ * @author Piotr Libera
+ */
 public class GameManager extends ApplicationAdapter {
 	private int myPlayerId;
 	private List<Unit> units;
@@ -36,21 +46,35 @@ public class GameManager extends ApplicationAdapter {
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
 
+
+	/**
+	 * Public constructor of GameManager
+	 * @param playerId ID of the player
+	 */
 	public GameManager(int playerId) {
-
 		gameRequest = new GameRequest();
-
-
 		myPlayerId = playerId;
 		units = new Vector<>();
 		towers = new Vector<>();
 		missiles = new Vector<>();
 	}
 
+	/**
+	 * Adds an observer
+	 * @param observer Given observer
+	 * @see GameClient
+	 */
 	public void addObserver(GameClient observer) {
 		this.observer = observer;
 	}
 
+	/**
+	 * Creates all of libgdx's objects, including the stage that contains every Actor of the client (Interface, Map, Entities on the Map)<br>
+	 * Initializes the Timer that fires updates (listed in See Also section) with a frequency specified in Config.
+	 * @see GameManager#updateGrid()
+	 * @see GameManager#sendUpdates()
+	 * @see GameManager#addNewObjectsFromAnotherThread()
+	 */
 	@Override
 	public void create () {
 		activeStage = new Stage(new ScreenViewport());
@@ -77,6 +101,11 @@ public class GameManager extends ApplicationAdapter {
 				,0,1/Config.refreshRate);
 	}
 
+	/**
+	 * Receives rewards from the server and adds them to the player's account
+	 * @param rewardResponse Response from the server
+	 * @see GameManager#addCoins(int)
+	 */
 	public void getRewards(RewardResponse rewardResponse) {
 		Vector<String> rewards = rewardResponse.getMessage();
 
@@ -87,12 +116,21 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 
+	/**
+	 * Sends updates to the server
+	 */
 	public void sendUpdates() {
 		gameRequest.setRoomID(observer.roomID);
 		observer.updatesListener.updatesPending(gameRequest, -1);
 		gameRequest.clearMessage();
 	}
 
+	/**
+	 * Updates the state of the game based on updates from the server.<br>
+	 * It deletes killed objects, updates Units, Towers and Missiles, and adds new Entities and Missiles
+	 * @param gameResponse Response from the server
+	 * @see GameManager#deleteKilledObjects(Vector)
+	 */
 	public void getUpdates(GameResponse gameResponse) {
 		Vector<String> objects = gameResponse.getMessage();
 
@@ -139,7 +177,9 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 
-
+	/**
+	 * Adds new objects from another thread
+	 */
 	private void addNewObjectsFromAnotherThread() {
 		if(objectsToAdd != null) {
 			addNewObjects(objectsToAdd);
@@ -148,7 +188,13 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 
-
+	/**
+	 * Deletes objects that were killed (or fulfilled their purpose in case of Missiles)<br>
+	 * After removal, if any towers were destroyed, it also updates the grid and the movement of every Unit.
+	 * @param objects Vector containing all of the currently alive objects
+	 * @see GameManager#updateGrid()
+	 * @see Unit#reconsiderMovement()
+	 */
 	public void deleteKilledObjects(Vector<String> objects) {
 		Vector<Unit> unitsToRemove = new Vector<>();
 		Vector<Tower> towersToRemove = new Vector<>();
@@ -177,13 +223,21 @@ public class GameManager extends ApplicationAdapter {
 			missiles.remove(missile);
 			missile.remove();
 		}
-		//if(towersToRemove.size() > 0) {
-		//	for(Unit unit : units) {
-		//		unit.reconsiderMovement();
-		//	}
-		//}
+		if(towersToRemove.size() > 0) {
+			updateGrid();
+			for(Unit unit : units) {
+				unit.reconsiderMovement();
+			}
+		}
 	}
 
+	/**
+	 * Checks if object is in the given lists of objects
+	 * @param objects Vector of the objects
+	 * @param id id of the object in question
+	 * @param objectType type of the object in question
+	 * @return <code>true</code> if the object was found; <code>false</code> otherwise
+	 */
 	public boolean objectExists(Vector<String> objects, int id, char objectType) {
 		for(String object : objects) {
 			if(object.charAt(0) == objectType && id == Integer.parseInt(object.split(" ")[1])) {
@@ -193,6 +247,10 @@ public class GameManager extends ApplicationAdapter {
 		return false;
 	}
 
+	/**
+	 * Creates and adds new objects, as they were created on the server and now received
+	 * @param objects List of new objects to add
+	 */
 	public void addNewObjects(Vector<String> objects){
 		for(String object : objects) {
 			if(object.charAt(0) == 'U') {
@@ -214,9 +272,12 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 
-
-
-
+	/**
+	 * Collects grid updates from units and towers and updates the grid
+	 * @see Unit#gridUpdate()
+	 * @see Tower#gridUpdate()
+	 * @see MapActor#updateGrid(Vector)
+	 */
 	public void updateGrid() {
 	    Vector<Vector3> updates = new Vector<Vector3>();
 	    for(Tower tower : towers) {
@@ -228,6 +289,11 @@ public class GameManager extends ApplicationAdapter {
 	    map.updateGrid(updates);
     }
 
+	/**
+	 * Updates towers and units and draws every actor in the game.
+	 * @see Unit#update(float)
+	 * @see Tower#update(float)
+	 */
 	@Override
 	public void render () {
 		Gdx.gl.glClearColor(0, 0, 0, 0);
@@ -244,11 +310,19 @@ public class GameManager extends ApplicationAdapter {
 		passiveStage.draw();
 	}
 
+	/**
+	 * Method for resizing the window (currently turned off)
+	 * @param width New Width of the window
+	 * @param height New Height of the window
+	 */
 	public void resize (int width, int height) {
 		activeStage.getViewport().update(width, height, true);
 		passiveStage.getViewport().update(width, height, true);
 	}
-	
+
+	/**
+	 * Overrides libgdx's dispose() method and calls dispose() on renderer and both stages.
+	 */
 	@Override
 	public void dispose () {
 		renderer.dispose();
@@ -256,12 +330,25 @@ public class GameManager extends ApplicationAdapter {
 		passiveStage.dispose();
 	}
 
+	/**
+	 * Calls the unit spawn request creator
+	 * @param x X coordinate of the center of a new unit
+	 * @param y Y coordinate of the center of a new unit
+	 * @param type type of the new unit as defined in the config file
+	 * @see GameManager#sendSpawnRequest(float, float, char, String)
+	 */
 	public void spawnUnit(float x, float y, String type) {
 		if(!info.spendCoins(Config.objectCost.get(type)))
 			return;
 		sendSpawnRequest(x, y, 'U', type);
 	}
 
+	/**
+	 * Calls the move request creator
+	 * @param pos Position to send units to
+	 * @see GameManager#sendMoveRequest(int, Vector3)
+	 * @see SuperManager#sendUnitTo(int, Vector3)
+	 */
 	public void sendUnitsTo(Vector3 pos) {
 		for(Unit unit : units) {
 			if(unit.isTargetChangeable()) {
@@ -270,12 +357,25 @@ public class GameManager extends ApplicationAdapter {
 		}
 	}
 
+	/**
+	 * Calls the tower spawn request creator
+	 * @param x X coordinate of the center of a new tower
+	 * @param y Y coordinate of the center of a new tower
+	 * @param type type of the new tower as defined in the config file
+	 * @see GameManager#sendSpawnRequest(float, float, char, String)
+	 */
 	public void spawnTower(float x, float y, String type) {
 		if(!info.spendCoins(Config.objectCost.get(type)))
 			return;
 		sendSpawnRequest(x, y, 'T', type);
 	}
 
+	/**
+	 * Selects player's units based on their selection and allows them to change their target, while forbiding every
+	 * other unit to do so.
+	 * @param rect Player's selection
+	 * @see Unit#allowTargetChanging(boolean)
+	 */
 	public void selectUnits(Rectangle rect) {
 		float unitX, unitY;
 		for(Unit unit : units) {
@@ -292,21 +392,46 @@ public class GameManager extends ApplicationAdapter {
 		}
 	}
 
+	/**
+	 * Sets the Mode of the Map
+	 * @param mode Mode to change to
+	 * @see MapActor#setMode(MapActor.Mode)
+	 */
 	public void setMode(MapActor.Mode mode) {
 		map.setMode(mode);
 	}
 
+	/**
+	 * Setter method
+	 * @param newPlayerId Player's ID
+	 */
 	public void setPlayerId(int newPlayerId) { myPlayerId = newPlayerId; }
 
+	/**
+	 * Getter method
+	 * @return Player's ID
+	 */
 	public int getPlayerId() {
 		return myPlayerId;
 	}
 
-	public void addCoins(int amount) {
-		info.addCoins(amount);
+	/**
+	 * Adds the given number of coins to the player's account
+	 * @param number Number of coins to add
+	 * @see InfoActor#addCoins(int)
+	 */
+	public void addCoins(int number) {
+		info.addCoins(number);
 	}
 
-
+	/**
+	 * Creates the request and calls sendRequest()
+	 * @param x X coordinate of the center of the new entity
+	 * @param y Y coordinate of the center of the new entity
+	 * @param entityType 'U' for Unit, 'T' for Tower
+	 * @param type type of the new Entity as defined in the config file
+	 * @see GameManager#sendRequest(String)
+	 */
 	public void sendSpawnRequest(float x, float y, char entityType, String type) {
 		String request = "S" + entityType + " ";
 		request += type + " ";
@@ -317,6 +442,12 @@ public class GameManager extends ApplicationAdapter {
 		sendRequest(request);
 	}
 
+	/**
+	 * Creates the request and calls sendRequest()
+	 * @param id ID of the unit to move
+	 * @param pos Target position of the unit
+	 * @see GameManager#sendRequest(String)
+	 */
 	public void sendMoveRequest(int id, Vector3 pos) {
 		String request = "M ";
 		request += id + " ";
@@ -326,6 +457,11 @@ public class GameManager extends ApplicationAdapter {
 		sendRequest(request);
 	}
 
+	/**
+	 * Passes the request to GameRequest object
+	 * @param request Given request
+	 * @see GameRequest#appendMessage(String)
+	 */
 	public void sendRequest(String request) {
 		gameRequest.appendMessage(request);
 	}
