@@ -5,9 +5,7 @@ package com.main.Networking;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.main.Networking.requests.*;
-import com.main.Networking.responses.ControlResponse;
-import com.main.Networking.responses.RoomCreatedResponse;
-import com.main.Networking.responses.RoomJoinedResponse;
+import com.main.Networking.responses.*;
 import com.main.SuperManager;
 
 import java.io.IOException;
@@ -99,6 +97,10 @@ public class MainServer extends GameServer {
                 else if(object instanceof GetRoomListRequest) { //client wants to get a list of available rooms
                     sendToTCP(connection.getID(), roomList);
                 }
+                else if(object instanceof StartGameRequest) { //client (game creator) wants to start the game
+                    StartGameRequest startGameRequest = (StartGameRequest) object;
+                    startGame(startGameRequest.getRoomID());
+                }
             }
         });
 
@@ -111,6 +113,7 @@ public class MainServer extends GameServer {
             @Override
             public void run() {
                 updatePlayerCount();
+                sendListOfNames();
             }
         }
             , 0, CHECK_CONNECTION_RATE);
@@ -140,6 +143,30 @@ public class MainServer extends GameServer {
                 if(connection.isConnected() && tempSet.contains(connection.getID()))
                     ++gameRoom.currentPlayers;
             }
+        }
+    }
+
+    private void sendListOfNames() {
+        ArrayList<Integer> arrayList = roomList.getArrayOfKeys();
+        for(Integer key: arrayList) {
+            GameRoom gameRoom = roomList.get(key);
+            if(!gameRoom.isRunning) {
+                NameListResponse nameListResponse = new NameListResponse();
+                for(NamePair namePair : gameRoom.connectionSet) {
+                    nameListResponse.arrayList.add(namePair.getValue());
+                }
+                for(NamePair connectionID: gameRoom.connectionSet) {
+                        sendToTCP(connectionID.getKey(), nameListResponse);
+                }
+            }
+        }
+    }
+
+    public void startGame(int roomID) {
+        GameRoom gameRoom = roomList.get(roomID);
+        gameRoom.isRunning = true;
+        for(NamePair namePair: gameRoom.connectionSet) {
+            sendToTCP(namePair.getKey(), new StartGameResponse());
         }
     }
 }

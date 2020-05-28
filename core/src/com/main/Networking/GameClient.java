@@ -41,7 +41,7 @@ public class GameClient {
     public UpdatesListener updatesListener;
     private final HashSet<String> macAddressHashSet;
     private boolean isGameOwner = false;
-    public boolean isWaiting = false;
+    private boolean isGameCreator = false;
 
     private final int tcpSecondPortNumber;
     private final int udpSecondPortNumber;
@@ -121,6 +121,12 @@ public class GameClient {
                     synchronized(client) {
                         client.notify();
                     }
+                } else if (object instanceof NameListResponse) { //list of names
+                    NameListResponse nameListResponse = (NameListResponse) object;
+                    updateWaitingRoom(nameListResponse);
+                } else if (object instanceof StartGameResponse) { //game started
+                    gameManager.menuManager.waitingRoomTable.remove();
+                    gameManager.needToAddOtherActors = true;
                 }
             }
         });
@@ -262,27 +268,29 @@ public class GameClient {
 
         //add buttons for each room
         for(int roomItemID: arrayOfKeys) {
-            infoVector = roomList.get(roomItemID).getRoomInfo();
-            for(String info: infoVector)
-                gameManager.menuManager.addLabel(info, gameManager.menuManager.joinGameTable);
+            if(!roomList.get(roomItemID).isRunning) { //client can only join games that have not been started
+                infoVector = roomList.get(roomItemID).getRoomInfo();
+                for(String info: infoVector)
+                    gameManager.menuManager.addLabel(info, gameManager.menuManager.joinGameTable);
 
 
-            textButton = new TextButton("Join", gameManager.menuManager.skin);
-            final int finalRoomIndex = roomIndex;
-            textButton.addListener(new ClickListener() {
-                @Override
-                public void clicked(InputEvent inputEvent, float x, float y) {
-                    roomNumber[0] = finalRoomIndex;
-                    gameManager.menuManager.joinGameTable.remove();
-                    gameManager.menuManager.stage.addActor(gameManager.menuManager.waitingRoomTable);
-                    try {
-                        joinGame(roomNumber[0], arrayOfKeys);
-                    } catch (InterruptedException | IOException e) {
-                        e.printStackTrace();
+                textButton = new TextButton("Join", gameManager.menuManager.skin);
+                final int finalRoomIndex = roomIndex;
+                textButton.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent inputEvent, float x, float y) {
+                        roomNumber[0] = finalRoomIndex;
+                        gameManager.menuManager.joinGameTable.remove();
+                        gameManager.menuManager.stage.addActor(gameManager.menuManager.waitingRoomTable);
+                        try {
+                            joinGame(roomNumber[0], arrayOfKeys);
+                        } catch (InterruptedException | IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            });
-            gameManager.menuManager.joinGameTable.add(textButton).fillX().prefWidth(MenuManager.PREF_SMALL_BUTTON_WIDTH).prefHeight(MenuManager.PREF_SMALL_BUTTON_HEIGHT).row();
+                });
+                gameManager.menuManager.joinGameTable.add(textButton).fillX().prefWidth(MenuManager.PREF_SMALL_BUTTON_WIDTH).prefHeight(MenuManager.PREF_SMALL_BUTTON_HEIGHT).row();
+            }
             ++roomIndex;
         }
 
@@ -339,6 +347,7 @@ public class GameClient {
                     //send and wait for response
                     client.sendTCP(createRoomRequest);
                     client.wait();
+                    isGameCreator = true;
                 }
                 return true;
             }
@@ -358,6 +367,7 @@ public class GameClient {
         gameManager.setPlayerId(0);
         localServer = new LocalServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, gameManager);
         isGameOwner = true;
+        isGameCreator = true;
     }
 
 
@@ -400,7 +410,7 @@ public class GameClient {
             gameManager.menuManager.addLabel(name, gameManager.menuManager.waitingRoomTable, MenuManager.PREF_BUTTON_WIDTH, MenuManager.PREF_BUTTON_HEIGHT, true);
             gameManager.menuManager.waitingRoomTable.row();
         }
-        if(isGameOwner) {
+        if(isGameCreator) {
             TextButton textButton = new TextButton("Start Game", gameManager.menuManager.skin);
             gameManager.menuManager.waitingRoomTable.add(textButton).fillX().prefWidth(MenuManager.PREF_BUTTON_WIDTH).prefHeight(MenuManager.PREF_BUTTON_HEIGHT).row();
             textButton.addListener( new ClickListener() {
@@ -412,7 +422,7 @@ public class GameClient {
                        gameManager.isRunning = true;
                    }
                    else {
-                       activeClient.sendTCP(new StartGameRequest());
+                       activeClient.sendTCP(new StartGameRequest(roomID));
                    }
                }
             });
