@@ -3,7 +3,6 @@ package com.main;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -16,7 +15,6 @@ import com.main.Networking.requests.GameRequest;
 import com.main.Networking.responses.GameResponse;
 import com.main.Networking.responses.RewardResponse;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -42,7 +40,7 @@ public class GameManager extends ApplicationAdapter {
 	private ShapeRenderer renderer;
 
 	public MenuManager menuManager;
-	private GameClient observer;
+	public GameClient observer;
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
 

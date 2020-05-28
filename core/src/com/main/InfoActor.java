@@ -68,7 +68,7 @@ public class InfoActor extends Actor {
      */
     @Override
     public void draw(Batch batch, float alpha) {
-        bigFont.draw(batch, "Player "+playerId, 530, 710);
+        bigFont.draw(batch, gameManager.observer.playerName, 530, 710);
         bigFont.draw(batch, "Coins: "+coins, 940, 710);
         lineSprite.setPosition(0, 686);
         lineSprite.draw(batch);

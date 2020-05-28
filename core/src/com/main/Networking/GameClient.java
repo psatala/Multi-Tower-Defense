@@ -1,25 +1,20 @@
 
 package com.main.Networking;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Vector;
-
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
-import com.esotericsoftware.kryonet.Client;
-
 import com.main.GameManager;
 import com.main.MenuManager;
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.*;
 
 
 /**
@@ -40,6 +35,7 @@ public class GameClient {
     private final RoomList roomList;
     public GameManager gameManager;
     public UpdatesListener updatesListener;
+    private HashSet<String> macAddressHashSet;
     private boolean isGameOwner = false;
 
 
@@ -65,11 +61,13 @@ public class GameClient {
         client = new Client();
         localClient = new Client();
         roomList = new RoomList();
+        macAddressHashSet = new HashSet<>();
 
         // register classes
         Network.register(client);
         Network.register(localClient);
 
+        //observer
         gameManager = new GameManager(0);
         gameManager.addObserver(this);
 
@@ -101,7 +99,7 @@ public class GameClient {
 
                 } else if (object instanceof RoomList) { //list of available rooms on global server
                     RoomList mainServerRoomList = (RoomList) object;
-                    roomList.putALL(mainServerRoomList);
+                    roomList.putALL(mainServerRoomList.filterRoomList());
                     synchronized(client) {
                         client.notify();
                     }
@@ -145,10 +143,16 @@ public class GameClient {
                 } else if (object instanceof GameRoom) { //room available on local server
                     GameRoom gameRoom = (GameRoom) object;
                     gameRoom.ipOfHost = connection.getRemoteAddressTCP().getAddress();
-                    if(roomList.containsKey(gameRoom.roomID)) //if key already in list
-                        gameRoom.roomID = roomList.getMaxKey() + 1; //change key so it is unique - keys are not important to local servers 
-                    
-                    roomList.add(gameRoom);
+                    if((!macAddressHashSet.contains(gameRoom.macAddress)
+                            || gameRoom.macAddress.equals("null"))
+                            && gameRoom.currentPlayers != gameRoom.maxPlayers) {
+                        if(roomList.containsKey(gameRoom.roomID)) //if key already in list
+                            gameRoom.roomID = roomList.getMaxKey() + 1; //change key so it is unique - keys are not important to local servers
+
+                        roomList.add(gameRoom);
+                        macAddressHashSet.add(gameRoom.macAddress);
+                    }
+
                     synchronized(localClient) {
                         localClient.notify();
                     }
@@ -212,7 +216,6 @@ public class GameClient {
         final ArrayList<Integer> arrayOfKeys;
         final int[] roomNumber = new int[1];
         TextButton textButton;
-        Label label;
         Vector<String> infoVector;
         int roomIndex = 0;
 
@@ -223,8 +226,9 @@ public class GameClient {
             }
         }
 
-        //TODO: limit interfaces to one, use MAC address?
+
         //search for hosts on LAN
+        macAddressHashSet.clear();
         hostList = localClient.discoverHosts(udpSecondPortNumber, maxDelay);
         for(InetAddress host: hostList) {
             localClient.connect(maxDelay, host, tcpSecondPortNumber, udpSecondPortNumber);

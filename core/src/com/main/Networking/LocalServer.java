@@ -1,16 +1,23 @@
 
 package com.main.Networking;
 
-import java.io.IOException;
-import java.net.BindException;
-
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
-
 import com.main.GameManager;
-import com.main.Networking.requests.*;
-import com.main.Networking.responses.*;
+import com.main.Networking.requests.GameRequest;
+import com.main.Networking.requests.GetRoomInfoRequest;
+import com.main.Networking.requests.JoinRoomRequest;
+import com.main.Networking.requests.LeaveRoomRequest;
+import com.main.Networking.responses.ControlResponse;
+import com.main.Networking.responses.GameResponse;
+import com.main.Networking.responses.RewardResponse;
+import com.main.Networking.responses.RoomJoinedResponse;
 import com.main.SuperManager;
+
+import java.io.IOException;
+import java.net.BindException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * The LocalServer class allows user to host a server accessible on his LAN. The local server uses a port
@@ -19,9 +26,10 @@ import com.main.SuperManager;
  */
 public class LocalServer extends GameServer {
     private final GameRoom gameRoom;
-
+    private static final int CHECK_CONNECTION_RATE = 1000;
     public SuperManager superManager;
     private final GameManager gameOwner;
+
 
     /**
      * Public constructor for LocalServer class
@@ -94,19 +102,37 @@ public class LocalServer extends GameServer {
             //TODO: fix incorrect quitting after this exception
         }
 
+        new Timer().schedule(new TimerTask() {
+                                 @Override
+                                 public void run() {
+                                     updatePlayerCount();
+                                 }
+                             }
+                , 0, CHECK_CONNECTION_RATE);
         
     }
 
     @Override
     protected void send(Object object, int roomID) {
-        for(Integer connectionID: gameRoom.connectionSet) {
-            if(connectionID != -1)
-                sendToTCP(connectionID, object);
-            else if(object instanceof GameResponse)
-                gameOwner.getUpdates((GameResponse)object);
-            else
-                gameOwner.getRewards((RewardResponse)object);
+        if(gameRoom != null) {
+            for(Integer connectionID: gameRoom.connectionSet) {
+                if(connectionID != -1)
+                    sendToTCP(connectionID, object);
+                else if(object instanceof GameResponse)
+                    gameOwner.getUpdates((GameResponse)object);
+                else
+                    gameOwner.getRewards((RewardResponse)object);
+            }
         }
+    }
+
+    private void updatePlayerCount() {
+            gameRoom.currentPlayers = 1;
+            Connection[] connections = getConnections();
+            for(Connection connection: connections) {
+                if(connection.isConnected() && connection.getID() != -1)
+                    ++gameRoom.currentPlayers;
+            }
     }
 
 }

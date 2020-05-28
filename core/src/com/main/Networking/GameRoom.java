@@ -3,6 +3,10 @@ package com.main.Networking;
 
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
@@ -26,7 +30,7 @@ public class GameRoom {
     public Integer gameType;
     public HashSet<Integer> connectionSet;
     public InetAddress ipOfHost; //ip for client to determine room host
-
+    public String macAddress;
 
     /**
      * Public empty constructor necessary for KryoNet to send instances of this class properly
@@ -67,6 +71,19 @@ public class GameRoom {
         roomID = nextRoomID;
         ++nextRoomID;
 
+        try {
+            macAddress = "null"; //make sure MAC address is null at first
+            Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces();
+            while(networks.hasMoreElements() && macAddress.equals("null")) {
+                NetworkInterface network = networks.nextElement();
+                byte[] mac = network.getHardwareAddress();
+                macAddress = Arrays.toString(mac);
+            }
+
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        
     }
 
 

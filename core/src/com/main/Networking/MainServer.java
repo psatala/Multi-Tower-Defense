@@ -1,15 +1,20 @@
 
 package com.main.Networking;
 
-import java.io.IOException;
-import java.util.HashMap;
 
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
-
 import com.main.Networking.requests.*;
-import com.main.Networking.responses.*;
+import com.main.Networking.responses.ControlResponse;
+import com.main.Networking.responses.RoomCreatedResponse;
+import com.main.Networking.responses.RoomJoinedResponse;
 import com.main.SuperManager;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * The GameServer class is the core class controlling the main server. There should be at most one main server
@@ -17,12 +22,16 @@ import com.main.SuperManager;
  * @author Piotr Satała
  */
 public class MainServer extends GameServer {
+
     private final RoomList roomList = new RoomList();
     private HashMap<Integer, SuperManager> managerHashMap;
+    private static final int CHECK_CONNECTION_RATE = 1000;
+
     /**
      * Public empty constructor necessary for KryoNet to send instances of this class properly
      */
     public MainServer() {}
+
 
     /**
      * Public constructor for GameServer class
@@ -95,12 +104,19 @@ public class MainServer extends GameServer {
                 }
             }
         });
-        
+
 
         //start
         start();
         bind(tcpPortNumber, udpPortNumber);
 
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                updatePlayerCount();
+            }
+        }
+            , 0, CHECK_CONNECTION_RATE);
     }
 
 
@@ -109,5 +125,19 @@ public class MainServer extends GameServer {
     public void send(Object object, int roomID) {
         for(Integer connectionID: roomList.get(roomID).connectionSet)
             sendToTCP(connectionID, object);
+    }
+
+
+    private void updatePlayerCount() {
+        ArrayList<Integer> arrayOfKeys = roomList.getArrayOfKeys();
+        for(Integer key: arrayOfKeys) {
+            GameRoom gameRoom = roomList.get(key);
+            gameRoom.currentPlayers = 0;
+            Connection[] connections = getConnections();
+            for(Connection connection: connections) {
+                if(connection.isConnected() && gameRoom.connectionSet.contains(connection.getID()))
+                    ++gameRoom.currentPlayers;
+            }
+        }
     }
 }
