@@ -35,7 +35,7 @@ public class GameClient {
     private final RoomList roomList;
     public GameManager gameManager;
     public UpdatesListener updatesListener;
-    private HashSet<String> macAddressHashSet;
+    private final HashSet<String> macAddressHashSet;
     private boolean isGameOwner = false;
 
 
@@ -165,6 +165,9 @@ public class GameClient {
                     }
                 } else if (object instanceof RoomClosedResponse) { //room closed
                     localClient.close();
+                } else if (object instanceof NameListResponse) { //list of names
+                    NameListResponse nameListResponse = (NameListResponse) object;
+                    updateWaitingRoom(nameListResponse);
                 }
                 
             }
@@ -300,14 +303,14 @@ public class GameClient {
         if(roomList.get(roomID).gameType == GameRoom.GLOBAL) { //if room is global
             activeClient = client;
             synchronized(client) {
-                client.sendTCP(new JoinRoomRequest(roomID));
+                client.sendTCP(new JoinRoomRequest(roomID, playerName));
                 client.wait();
             }
         }
         else { //if room is local
             activeClient = localClient;
             localClient.connect(maxDelay, roomList.get(roomID).ipOfHost, tcpSecondPortNumber, udpSecondPortNumber);
-            localClient.sendTCP(new JoinRoomRequest());
+            localClient.sendTCP(new JoinRoomRequest(playerName));
         }
 
         roomList.clear();
@@ -380,5 +383,10 @@ public class GameClient {
             localServer.superManager.getUpdates((GameRequest)object);
 
     }
-    
+
+    public void updateWaitingRoom(NameListResponse nameListResponse) {
+        for(String name: nameListResponse.arrayList) {
+            System.out.println(name);
+        }
+    }
 }

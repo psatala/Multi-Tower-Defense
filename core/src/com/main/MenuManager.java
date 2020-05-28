@@ -27,6 +27,7 @@ public class MenuManager {
     public final Table mainTable;
     public final Table playerCountTable;
     public Table joinGameTable;
+    public Table waitingRoomTable;
 
     private int gameType = GameRoom.GLOBAL;
 

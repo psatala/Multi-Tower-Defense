@@ -63,7 +63,7 @@ public class MainServer extends GameServer {
                 else if(object instanceof CreateRoomRequest) { //client wants to create a room
                     
                     CreateRoomRequest createRoomRequest = (CreateRoomRequest)object;
-                    GameRoom newRoom = new GameRoom(createRoomRequest.hostName, createRoomRequest.maxPlayers, createRoomRequest.gameType, connection.getID());
+                    GameRoom newRoom = new GameRoom(createRoomRequest.hostName, createRoomRequest.maxPlayers, createRoomRequest.gameType, connection.getID(), createRoomRequest.hostName);
                     managerHashMap.put(GameRoom.getLastRoomID(), new SuperManager());
                     managerHashMap.get(GameRoom.getLastRoomID()).roomID = GameRoom.getLastRoomID(); //specify id of room
                     managerHashMap.get(GameRoom.getLastRoomID()).addObserver(MainServer.this); //add observer to newly created manager
@@ -77,7 +77,7 @@ public class MainServer extends GameServer {
                     JoinRoomRequest joinRoomRequest = (JoinRoomRequest)object;
                     GameRoom currentRoom = roomList.get(joinRoomRequest.roomID); //get id
                     try {
-                        currentRoom.addPlayer(connection.getID());
+                        currentRoom.addPlayer(connection.getID(), joinRoomRequest.playerName);
                         RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse(currentRoom.currentPlayers - 1);
                         sendToTCP(connection.getID(), roomJoinedResponse); //room successfully joined
                     }
@@ -123,8 +123,8 @@ public class MainServer extends GameServer {
 
     @Override
     public void send(Object object, int roomID) {
-        for(Integer connectionID: roomList.get(roomID).connectionSet)
-            sendToTCP(connectionID, object);
+        for(NamePair connectionID: roomList.get(roomID).connectionSet)
+            sendToTCP(connectionID.getKey(), object);
     }
 
 

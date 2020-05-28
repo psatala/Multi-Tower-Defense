@@ -1,16 +1,16 @@
 
 package com.main.Networking;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryonet.EndPoint;
+import com.main.Networking.requests.*;
+import com.main.Networking.responses.*;
+
 import java.net.Inet4Address;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryonet.EndPoint;
-
-import com.main.Networking.requests.*;
-import com.main.Networking.responses.*;
 
 /**
  * The Network class handles all network related things common across all end points. This mainly includes
@@ -46,6 +46,9 @@ public class Network {
         kryo.register(RoomCreatedResponse.class);
         kryo.register(RoomJoinedResponse.class);
         kryo.register(RoomClosedResponse.class);
-        kryo.register(Inet4Address.class);    
+        kryo.register(Inet4Address.class);
+        kryo.register(ArrayList.class);
+        kryo.register(NameListResponse.class);
+        kryo.register(NamePair.class);
     }
 }

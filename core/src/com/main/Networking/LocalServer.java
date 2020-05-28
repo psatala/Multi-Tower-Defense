@@ -8,10 +8,7 @@ import com.main.Networking.requests.GameRequest;
 import com.main.Networking.requests.GetRoomInfoRequest;
 import com.main.Networking.requests.JoinRoomRequest;
 import com.main.Networking.requests.LeaveRoomRequest;
-import com.main.Networking.responses.ControlResponse;
-import com.main.Networking.responses.GameResponse;
-import com.main.Networking.responses.RewardResponse;
-import com.main.Networking.responses.RoomJoinedResponse;
+import com.main.Networking.responses.*;
 import com.main.SuperManager;
 
 import java.io.IOException;
@@ -47,7 +44,7 @@ public class LocalServer extends GameServer {
         superManager = new SuperManager();
         superManager.addObserver(this);
 
-        gameRoom = new GameRoom(hostName, maxPlayers, GameRoom.LOCAL, -1); //add host to game room
+        gameRoom = new GameRoom(hostName, maxPlayers, GameRoom.LOCAL, -1, gameOwner.observer.playerName); //add host to game room
 
         this.gameOwner = gameOwner;
 
@@ -63,9 +60,9 @@ public class LocalServer extends GameServer {
                     superManager.getUpdates(gameRequest);
                 }
                 else if(object instanceof JoinRoomRequest) { //client wants to join a room
-
+                    JoinRoomRequest joinRoomRequest = (JoinRoomRequest)object;
                     try {
-                        gameRoom.addPlayer(connection.getID());
+                        gameRoom.addPlayer(connection.getID(), joinRoomRequest.playerName);
                         RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse(gameRoom.currentPlayers - 1);
                         sendToTCP(connection.getID(), roomJoinedResponse);
                     }
@@ -106,6 +103,7 @@ public class LocalServer extends GameServer {
                                  @Override
                                  public void run() {
                                      updatePlayerCount();
+                                     sendListOfNames();
                                  }
                              }
                 , 0, CHECK_CONNECTION_RATE);
@@ -115,9 +113,9 @@ public class LocalServer extends GameServer {
     @Override
     protected void send(Object object, int roomID) {
         if(gameRoom != null) {
-            for(Integer connectionID: gameRoom.connectionSet) {
-                if(connectionID != -1)
-                    sendToTCP(connectionID, object);
+            for(NamePair connectionID: gameRoom.connectionSet) {
+                if(connectionID.getKey() != -1)
+                    sendToTCP(connectionID.getKey(), object);
                 else if(object instanceof GameResponse)
                     gameOwner.getUpdates((GameResponse)object);
                 else
@@ -135,4 +133,18 @@ public class LocalServer extends GameServer {
             }
     }
 
+    private void sendListOfNames() {
+        if(!gameRoom.isRunning) {
+            NameListResponse nameListResponse = new NameListResponse();
+            for(NamePair namePair : gameRoom.connectionSet) {
+                nameListResponse.arrayList.add(namePair.getValue());
+            }
+            for(NamePair connectionID: gameRoom.connectionSet) {
+                if(connectionID.getKey() != -1)
+                    sendToTCP(connectionID.getKey(), nameListResponse);
+                else
+                    gameOwner.observer.updateWaitingRoom(nameListResponse);
+            }
+        }
+    }
 }
