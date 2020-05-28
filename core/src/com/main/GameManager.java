@@ -43,6 +43,8 @@ public class GameManager extends ApplicationAdapter {
 	public GameClient observer;
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
+	public boolean isRunning = false;
+	public boolean needToAddOtherActors = false;
 
 
 	/**
@@ -80,7 +82,22 @@ public class GameManager extends ApplicationAdapter {
 		menuManager = new MenuManager(observer, activeStage);
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
-
+		Timer.schedule(new Timer.Task(){
+						   @Override
+						   public void run() {
+						   	   if(isRunning) {
+								   updateGrid();
+								   sendUpdates();
+								   addNewObjectsFromAnotherThread();
+							   }
+						   	   else if(needToAddOtherActors) {
+						   	   	   addOtherActors();
+						   	   	   isRunning = true;
+						   	   	   needToAddOtherActors = false;
+							   }
+						   }
+					   }
+				,0,1/Config.refreshRate);
 	}
 
 	public void addOtherActors() {
@@ -88,16 +105,10 @@ public class GameManager extends ApplicationAdapter {
 		activeStage.addActor(info.getInfoGroup());
 		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
 		activeStage.addActor(map.getMapGroup());
-		Timer.schedule(new Timer.Task(){
-						   @Override
-						   public void run() {
-							   updateGrid();
-							   sendUpdates();
-							   addNewObjectsFromAnotherThread();
-						   }
-					   }
-				,0,1/Config.refreshRate);
+
 	}
+
+
 
 	/**
 	 * Receives rewards from the server and adds them to the player's account

@@ -11,10 +11,7 @@ import com.main.Networking.responses.RoomJoinedResponse;
 import com.main.SuperManager;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * The GameServer class is the core class controlling the main server. There should be at most one main server
@@ -130,12 +127,17 @@ public class MainServer extends GameServer {
 
     private void updatePlayerCount() {
         ArrayList<Integer> arrayOfKeys = roomList.getArrayOfKeys();
+        HashSet<Integer> tempSet;
         for(Integer key: arrayOfKeys) {
             GameRoom gameRoom = roomList.get(key);
             gameRoom.currentPlayers = 0;
+            tempSet = new HashSet<>();
+            for(NamePair namePair: gameRoom.connectionSet) {
+                tempSet.add(namePair.getKey());
+            }
             Connection[] connections = getConnections();
             for(Connection connection: connections) {
-                if(connection.isConnected() && gameRoom.connectionSet.contains(connection.getID()))
+                if(connection.isConnected() && tempSet.contains(connection.getID()))
                     ++gameRoom.currentPlayers;
             }
         }

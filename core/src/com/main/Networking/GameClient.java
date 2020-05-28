@@ -2,6 +2,7 @@
 package com.main.Networking;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.esotericsoftware.kryonet.Client;
@@ -14,7 +15,10 @@ import com.main.Networking.responses.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Vector;
 
 
 /**
@@ -37,7 +41,7 @@ public class GameClient {
     public UpdatesListener updatesListener;
     private final HashSet<String> macAddressHashSet;
     private boolean isGameOwner = false;
-
+    public boolean isWaiting = false;
 
     private final int tcpSecondPortNumber;
     private final int udpSecondPortNumber;
@@ -168,6 +172,9 @@ public class GameClient {
                 } else if (object instanceof NameListResponse) { //list of names
                     NameListResponse nameListResponse = (NameListResponse) object;
                     updateWaitingRoom(nameListResponse);
+                } else if (object instanceof StartGameResponse) { //game started
+                    gameManager.menuManager.waitingRoomTable.remove();
+                    gameManager.needToAddOtherActors = true;
                 }
                 
             }
@@ -267,7 +274,7 @@ public class GameClient {
                 public void clicked(InputEvent inputEvent, float x, float y) {
                     roomNumber[0] = finalRoomIndex;
                     gameManager.menuManager.joinGameTable.remove();
-                    gameManager.addOtherActors();
+                    gameManager.menuManager.stage.addActor(gameManager.menuManager.waitingRoomTable);
                     try {
                         joinGame(roomNumber[0], arrayOfKeys);
                     } catch (InterruptedException | IOException e) {
@@ -347,7 +354,7 @@ public class GameClient {
      * @throws InterruptedException
      */
     public void hostLocalGame() throws IOException {
-
+        activeClient = localClient;
         gameManager.setPlayerId(0);
         localServer = new LocalServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, gameManager);
         isGameOwner = true;
@@ -385,8 +392,34 @@ public class GameClient {
     }
 
     public void updateWaitingRoom(NameListResponse nameListResponse) {
+        gameManager.menuManager.waitingRoomTable.remove();
+        gameManager.menuManager.waitingRoomTable = new Table(gameManager.menuManager.skin);
+        gameManager.menuManager.addLabel("Players:", gameManager.menuManager.waitingRoomTable, MenuManager.PREF_BUTTON_WIDTH, MenuManager.PREF_BUTTON_HEIGHT, true);
+        gameManager.menuManager.waitingRoomTable.row();
         for(String name: nameListResponse.arrayList) {
-            System.out.println(name);
+            gameManager.menuManager.addLabel(name, gameManager.menuManager.waitingRoomTable, MenuManager.PREF_BUTTON_WIDTH, MenuManager.PREF_BUTTON_HEIGHT, true);
+            gameManager.menuManager.waitingRoomTable.row();
         }
+        if(isGameOwner) {
+            TextButton textButton = new TextButton("Start Game", gameManager.menuManager.skin);
+            gameManager.menuManager.waitingRoomTable.add(textButton).fillX().prefWidth(MenuManager.PREF_BUTTON_WIDTH).prefHeight(MenuManager.PREF_BUTTON_HEIGHT).row();
+            textButton.addListener( new ClickListener() {
+               public void clicked(InputEvent inputEvent, float x, float y) {
+                   if(activeClient == localClient) {
+                       localServer.startGame();
+                       gameManager.menuManager.waitingRoomTable.remove();
+                       gameManager.addOtherActors();
+                       gameManager.isRunning = true;
+                   }
+                   else {
+                       activeClient.sendTCP(new StartGameRequest());
+                   }
+               }
+            });
+        } else {
+            gameManager.menuManager.addLabel("Wait for game creator to start the game", gameManager.menuManager.waitingRoomTable, MenuManager.PREF_BUTTON_WIDTH, MenuManager.PREF_BUTTON_HEIGHT, true);
+        }
+        gameManager.menuManager.waitingRoomTable.setFillParent(true);
+        gameManager.menuManager.stage.addActor(gameManager.menuManager.waitingRoomTable);
     }
 }

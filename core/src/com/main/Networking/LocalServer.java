@@ -4,10 +4,7 @@ package com.main.Networking;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.main.GameManager;
-import com.main.Networking.requests.GameRequest;
-import com.main.Networking.requests.GetRoomInfoRequest;
-import com.main.Networking.requests.JoinRoomRequest;
-import com.main.Networking.requests.LeaveRoomRequest;
+import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
 import com.main.SuperManager;
 
@@ -37,7 +34,7 @@ public class LocalServer extends GameServer {
      * @throws IOException
      */
     public LocalServer(int tcpSecondPortNumber, int udpSecondPortNumber, String hostName,
-                       int maxPlayers, GameManager gameOwner) throws IOException {
+                       int maxPlayers, final GameManager gameOwner) throws IOException {
 
         super();
 
@@ -124,6 +121,7 @@ public class LocalServer extends GameServer {
         }
     }
 
+
     private void updatePlayerCount() {
             gameRoom.currentPlayers = 1;
             Connection[] connections = getConnections();
@@ -132,6 +130,7 @@ public class LocalServer extends GameServer {
                     ++gameRoom.currentPlayers;
             }
     }
+
 
     private void sendListOfNames() {
         if(!gameRoom.isRunning) {
@@ -145,6 +144,14 @@ public class LocalServer extends GameServer {
                 else
                     gameOwner.observer.updateWaitingRoom(nameListResponse);
             }
+        }
+    }
+
+    public void startGame() {
+        gameRoom.isRunning = true;
+        for(NamePair namePair: gameRoom.connectionSet) {
+            if(namePair.getKey() != -1)
+                sendToTCP(namePair.getKey(), new StartGameResponse());
         }
     }
 }

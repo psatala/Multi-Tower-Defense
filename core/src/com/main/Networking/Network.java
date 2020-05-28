@@ -34,6 +34,7 @@ public class Network {
         kryo.register(LeaveRoomRequest.class);
         kryo.register(GetRoomListRequest.class);
         kryo.register(GetRoomInfoRequest.class);
+        kryo.register(StartGameRequest.class);
         //responses
         kryo.register(GameResponse.class);
         kryo.register(RewardResponse.class);
@@ -50,5 +51,6 @@ public class Network {
         kryo.register(ArrayList.class);
         kryo.register(NameListResponse.class);
         kryo.register(NamePair.class);
+        kryo.register(StartGameResponse.class);
     }
 }

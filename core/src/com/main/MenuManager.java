@@ -13,8 +13,8 @@ import java.io.IOException;
 
 public class MenuManager {
 
-    private final static int PREF_BUTTON_WIDTH = 300;
-    private final static int PREF_BUTTON_HEIGHT = 50;
+    public final static int PREF_BUTTON_WIDTH = 300;
+    public final static int PREF_BUTTON_HEIGHT = 50;
     public final static int PREF_SMALL_BUTTON_WIDTH = 100;
     public final static int PREF_SMALL_BUTTON_HEIGHT = 30;
     private final static int PADDING = 20;
@@ -42,6 +42,7 @@ public class MenuManager {
         enterNameTable = new Table(skin);
         mainTable = new Table(skin);
         playerCountTable = new Table(skin);
+        waitingRoomTable = new Table(skin);
 
         stage.addActor(enterNameTable);
 
@@ -164,12 +165,12 @@ public class MenuManager {
                     if(gameType == GameRoom.LOCAL) { //local game
                         gameClient.hostLocalGame();
                         playerCountTable.remove();
-                        gameClient.gameManager.addOtherActors();
+                        stage.addActor(waitingRoomTable);
                     }
                     else { //global game
                         if(gameClient.createGlobalGame()) {
                             playerCountTable.remove();
-                            gameClient.gameManager.addOtherActors();
+                            stage.addActor(waitingRoomTable);
                         }
                     }
                 } catch (IOException | InterruptedException e) {
@@ -180,7 +181,13 @@ public class MenuManager {
     }
 
     public void addLabel(String text, Table table) {
+        addLabel(text, table, PREF_SMALL_BUTTON_WIDTH, PREF_SMALL_BUTTON_HEIGHT, false);
+    }
+
+    public void addLabel(String text, Table table, int width, int height, boolean isCentred) {
         Label label = new Label(text, skin);
-        table.add(label).fillX().prefWidth(PREF_SMALL_BUTTON_WIDTH).prefHeight(PREF_SMALL_BUTTON_HEIGHT);
+        if(isCentred)
+            label.setAlignment(Align.center);
+        table.add(label).fillX().prefWidth(width).prefHeight(height);
     }
 }
