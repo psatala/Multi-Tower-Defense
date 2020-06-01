@@ -60,7 +60,7 @@ public class Config {
     public static final Map<String, Boolean[][]> mapGrid;
 
     public static final int startingCoins = 5000;
-    public static final float refreshRate = 2f;
+    public static final float refreshRate = 10f;
 
     /**
      * Creates occupancy grid array from Vector of rows represented as Strings - these Strings consist

@@ -373,7 +373,6 @@ public class GameClient {
     /**
      * Allow user to host local games - only one game can be hosted on each computer
      * @throws IOException
-     * @throws InterruptedException
      */
     public void hostLocalGame() throws IOException {
         activeClient = localClient;
