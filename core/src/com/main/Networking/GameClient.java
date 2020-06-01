@@ -29,10 +29,10 @@ import java.util.Vector;
 public class GameClient {
 
 
-    private final Client client;
+    private final Client globalClient;
     private final Client localClient;
-    private Client activeClient;
-    private LocalServer localServer;
+    public Client activeClient;
+    public LocalServer localServer;
     public String playerName;
     public int roomID;
     public int maxPlayers;
@@ -40,8 +40,9 @@ public class GameClient {
     public GameManager gameManager;
     public UpdatesListener updatesListener;
     private final HashSet<String> macAddressHashSet;
-    private boolean isGameOwner = false;
-    private boolean isGameCreator = false;
+    public boolean isGameOwner = false;
+    public boolean isGameCreator = false;
+    public boolean isInTheGame = false;
 
     private final int tcpSecondPortNumber;
     private final int udpSecondPortNumber;
@@ -62,13 +63,13 @@ public class GameClient {
         this.udpSecondPortNumber = udpSecondPortNumber;
         this.maxDelay = maxDelay;
 
-        client = new Client();
+        globalClient = new Client();
         localClient = new Client();
         roomList = new RoomList();
         macAddressHashSet = new HashSet<>();
 
         // register classes
-        Network.register(client);
+        Network.register(globalClient);
         Network.register(localClient);
 
         //observer
@@ -85,16 +86,16 @@ public class GameClient {
 
 
         // listener for client connected to the global server
-        client.addListener(new Listener() {
+        globalClient.addListener(new Listener() {
             public void received(Connection connection, Object object) {
                 if (object instanceof GameResponse) { //response with game data
                     GameResponse gameResponse = (GameResponse) object;
-                    if(gameManager != null)
+                    if(gameManager != null && isInTheGame)
                         gameManager.getUpdates(gameResponse);
 
                 } else if(object instanceof RewardResponse) { //response with rewards
                     RewardResponse rewardResponse = (RewardResponse)object;
-                    if(gameManager != null)
+                    if(gameManager != null && isInTheGame)
                         gameManager.getRewards(rewardResponse);
 
                 } else if (object instanceof ControlResponse) { //control response
@@ -104,22 +105,22 @@ public class GameClient {
                 } else if (object instanceof RoomList) { //list of available rooms on global server
                     RoomList mainServerRoomList = (RoomList) object;
                     roomList.putALL(mainServerRoomList.filterRoomList());
-                    synchronized(client) {
-                        client.notify();
+                    synchronized(globalClient) {
+                        globalClient.notify();
                     }
 
                 } else if (object instanceof RoomCreatedResponse) { //room successfully created
                     RoomCreatedResponse roomCreatedResponse = (RoomCreatedResponse) object;
                     roomID = roomCreatedResponse.roomID;
                     gameManager.setPlayerId(0);
-                    synchronized(client) {
-                        client.notify();
+                    synchronized(globalClient) {
+                        globalClient.notify();
                     }
                 } else if (object instanceof RoomJoinedResponse) { //room successfully joined
                     RoomJoinedResponse roomJoinedResponse = (RoomJoinedResponse)object;
                     gameManager.setPlayerId(roomJoinedResponse.getIdWithinRoom());
-                    synchronized(client) {
-                        client.notify();
+                    synchronized(globalClient) {
+                        globalClient.notify();
                     }
                 } else if (object instanceof NameListResponse) { //list of names
                     NameListResponse nameListResponse = (NameListResponse) object;
@@ -138,12 +139,12 @@ public class GameClient {
             public void received(Connection connection, Object object) {
                 if (object instanceof GameResponse) { //response with game data
                     GameResponse gameResponse = (GameResponse) object;
-                    if(gameManager != null)
+                    if(gameManager != null && isInTheGame)
                         gameManager.getUpdates(gameResponse);
 
                 } else if(object instanceof RewardResponse) { //response with rewards
                     RewardResponse rewardResponse = (RewardResponse)object;
-                    if(gameManager != null)
+                    if(gameManager != null && isInTheGame)
                         gameManager.getRewards(rewardResponse);
 
                 } else if (object instanceof ControlResponse) { //control response
@@ -175,6 +176,16 @@ public class GameClient {
                     }
                 } else if (object instanceof RoomClosedResponse) { //room closed
                     localClient.close();
+
+                    //close connection
+                    gameManager.observer.isInTheGame = false;
+                    gameManager.observer.isGameOwner = false;
+                    gameManager.observer.isGameCreator = false;
+                    gameManager.isRunning = false;
+
+
+                    gameManager.removeOtherActors();
+                    gameManager.menuManager.stage.addActor(gameManager.menuManager.mainTable);
                 } else if (object instanceof NameListResponse) { //list of names
                     NameListResponse nameListResponse = (NameListResponse) object;
                     updateWaitingRoom(nameListResponse);
@@ -188,23 +199,23 @@ public class GameClient {
 
 
         //start connection to main server
-        client.start();
+        globalClient.start();
 
         try { //to connect with main server from the outside
 
             //to change the address of the main server, simply change the second argument of the following
             //function into whatever domain name or IP address you desire
-            client.connect(maxDelay, "multitowerdefense.hopto.org", tcpPortNumber, udpPortNumber);
+            globalClient.connect(maxDelay, "multitowerdefense.hopto.org", tcpPortNumber, udpPortNumber);
             //TODO: fix incorrect timeout
         }
         catch(IOException e1) {
             String cannotConnectError = "Connection to main server could not be established";
-            InetAddress mainServerAddress = client.discoverHost(udpPortNumber, maxDelay); //discover host on LAN
+            InetAddress mainServerAddress = globalClient.discoverHost(udpPortNumber, maxDelay); //discover host on LAN
             if(mainServerAddress == null)
                 System.out.println(cannotConnectError);
             else {
                 try { //to connect with main server from the inside
-                    client.connect(maxDelay, mainServerAddress, tcpPortNumber, udpPortNumber);
+                    globalClient.connect(maxDelay, mainServerAddress, tcpPortNumber, udpPortNumber);
                 }
                 catch(IOException e2){ //could not connect
                     System.out.println(cannotConnectError);
@@ -235,10 +246,10 @@ public class GameClient {
         Vector<String> infoVector;
         int roomIndex = 0;
 
-        if(client.isConnected()) { //if connection to global server is established
-            synchronized(client) {
-                client.sendTCP(new GetRoomListRequest());
-                client.wait();
+        if(globalClient.isConnected()) { //if connection to global server is established
+            synchronized(globalClient) {
+                globalClient.sendTCP(new GetRoomListRequest());
+                globalClient.wait();
             }
         }
 
@@ -316,10 +327,10 @@ public class GameClient {
     public void joinGame(int roomNumber, ArrayList<Integer> arrayOfKeys) throws InterruptedException, IOException {
         roomID = arrayOfKeys.get(roomNumber);
         if(roomList.get(roomID).gameType == GameRoom.GLOBAL) { //if room is global
-            activeClient = client;
-            synchronized(client) {
-                client.sendTCP(new JoinRoomRequest(roomID, playerName));
-                client.wait();
+            activeClient = globalClient;
+            synchronized(globalClient) {
+                globalClient.sendTCP(new JoinRoomRequest(roomID, playerName));
+                globalClient.wait();
             }
         }
         else { //if room is local
@@ -327,6 +338,7 @@ public class GameClient {
             localClient.connect(maxDelay, roomList.get(roomID).ipOfHost, tcpSecondPortNumber, udpSecondPortNumber);
             localClient.sendTCP(new JoinRoomRequest(playerName));
         }
+        isInTheGame = true;
 
         roomList.clear();
     }
@@ -339,15 +351,16 @@ public class GameClient {
      */
     public boolean createGlobalGame() throws InterruptedException {
 
-            if(client.isConnected()) { //connection to the main server must be established
-                activeClient = client;
+            if(globalClient.isConnected()) { //connection to the main server must be established
+                activeClient = globalClient;
                 //request to create a room
                 CreateRoomRequest createRoomRequest = new CreateRoomRequest(playerName, maxPlayers, GameRoom.GLOBAL);
-                synchronized(client) {
+                synchronized(globalClient) {
                     //send and wait for response
-                    client.sendTCP(createRoomRequest);
-                    client.wait();
+                    globalClient.sendTCP(createRoomRequest);
+                    globalClient.wait();
                     isGameCreator = true;
+                    isInTheGame = true;
                 }
                 return true;
             }
@@ -368,6 +381,7 @@ public class GameClient {
         localServer = new LocalServer(tcpSecondPortNumber, udpSecondPortNumber, playerName, maxPlayers, gameManager);
         isGameOwner = true;
         isGameCreator = true;
+        isInTheGame = true;
     }
 
 
@@ -376,8 +390,8 @@ public class GameClient {
      * Quit from the game
      */
     public void quit() {
-        client.close();
-        client.stop();
+        globalClient.close();
+        globalClient.stop();
         localClient.close();
         localClient.stop();
         isGameOwner = false;

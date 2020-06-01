@@ -91,7 +91,6 @@ public class MainServer extends GameServer {
                     catch(Exception e) { //room now empty
                         ControlResponse controlResponse = new ControlResponse(e.getMessage());
                         sendToTCP(connection.getID(), controlResponse);
-                        roomList.remove(currentRoom.roomID);
                     }
                 }
                 else if(object instanceof GetRoomListRequest) { //client wants to get a list of available rooms

@@ -138,20 +138,32 @@ public class LocalServer extends GameServer {
             for(NamePair namePair : gameRoom.connectionSet) {
                 nameListResponse.arrayList.add(namePair.getValue());
             }
-            for(NamePair connectionID: gameRoom.connectionSet) {
-                if(connectionID.getKey() != -1)
-                    sendToTCP(connectionID.getKey(), nameListResponse);
-                else
-                    gameOwner.observer.updateWaitingRoom(nameListResponse);
-            }
+            sendObjectToAllButHost(nameListResponse);
+            gameOwner.observer.updateWaitingRoom(nameListResponse);
         }
     }
 
     public void startGame() {
         gameRoom.isRunning = true;
+        sendObjectToAllButHost(new StartGameResponse());
+    }
+
+
+    public void closeGame() {
+        sendObjectToAllButHost(new RoomClosedResponse());
+        try {
+            gameRoom.removePlayer(-1);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        close();
+        stop();
+    }
+
+    private void sendObjectToAllButHost(Object object) {
         for(NamePair namePair: gameRoom.connectionSet) {
             if(namePair.getKey() != -1)
-                sendToTCP(namePair.getKey(), new StartGameResponse());
+                sendToTCP(namePair.getKey(), object);
         }
     }
 }

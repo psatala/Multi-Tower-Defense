@@ -114,7 +114,9 @@ public class GameRoom {
      */
     public void removePlayer(int connectionID) throws Exception {
         --currentPlayers;
-        connectionSet.remove(connectionID);
+        for(NamePair namePair: connectionSet)
+            if(namePair.getKey() == connectionID)
+                connectionSet.remove(namePair);
         if(0 == currentPlayers)
             throw new Exception("This room has been closed");
     }

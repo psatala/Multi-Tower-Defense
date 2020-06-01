@@ -109,6 +109,21 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 
+	public void removeOtherActors() {
+		info.getInfoGroup().remove();
+		map.getMapGroup().remove();
+		for(Unit unit: units)
+			unit.remove();
+		for(Tower tower: towers)
+			tower.remove();
+		for(Missile missile: missiles)
+			missile.remove();
+		units = new Vector<>();
+		towers = new Vector<>();
+		missiles = new Vector<>();
+	}
+
+
 
 	/**
 	 * Receives rewards from the server and adds them to the player's account
