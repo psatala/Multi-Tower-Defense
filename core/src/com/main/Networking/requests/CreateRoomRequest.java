@@ -25,7 +25,7 @@ public class CreateRoomRequest {
 
     /**
      * Public constructor for CreateRoomRequest class
-     * @param hostName name of player sendind the request
+     * @param hostName name of player sending the request
      * @param maxPlayers max number of players in this room
      * @param gameType type of game, here mostly global
      */

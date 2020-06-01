@@ -3,6 +3,10 @@ package com.main.Networking;
 
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
@@ -24,9 +28,10 @@ public class GameRoom {
     public Integer currentPlayers;
     public Integer maxPlayers;
     public Integer gameType;
-    public HashSet<Integer> connectionSet;
+    public HashSet<NamePair> connectionSet;
     public InetAddress ipOfHost; //ip for client to determine room host
-
+    public String macAddress;
+    public boolean isRunning;
 
     /**
      * Public empty constructor necessary for KryoNet to send instances of this class properly
@@ -38,6 +43,7 @@ public class GameRoom {
         maxPlayers = 1;
         gameType = GLOBAL;
         connectionSet = new HashSet<>();
+        isRunning = false;
     }
 
 
@@ -49,11 +55,11 @@ public class GameRoom {
      * @param connectionID either ID of the connection between the client who requested this game and the main
      * server or -1 if the game is LOCAL
      */
-    public GameRoom(String hostName, int maxPlayers, int gameType, int connectionID) {
+    public GameRoom(String hostName, int maxPlayers, int gameType, int connectionID, String name) {
 
         //set init
         connectionSet = new HashSet<>();
-        
+
         //copy parameters
         this.hostName = hostName;
         this.maxPlayers = maxPlayers;
@@ -61,12 +67,28 @@ public class GameRoom {
 
         //only one player at the beginning
         currentPlayers = 1;
-        connectionSet.add(connectionID);
+        connectionSet.add(new NamePair(connectionID, name));
         
         //set room id
         roomID = nextRoomID;
         ++nextRoomID;
 
+        //game starts in the waiting room
+        isRunning = false;
+
+        try {
+            macAddress = "null"; //make sure MAC address is null at first
+            Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces();
+            while(networks.hasMoreElements() && macAddress.equals("null")) {
+                NetworkInterface network = networks.nextElement();
+                byte[] mac = network.getHardwareAddress();
+                macAddress = Arrays.toString(mac);
+            }
+
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        
     }
 
 
@@ -75,12 +97,12 @@ public class GameRoom {
      * @param connectionID ID of connection between client and server (main/local)
      * @throws Exception room already full
      */
-    public void addPlayer(int connectionID) throws Exception {
+    public void addPlayer(int connectionID, String name) throws Exception {
         if(currentPlayers == maxPlayers)
             throw new Exception("Game already full!");
         else{
             ++currentPlayers;
-            connectionSet.add(connectionID);
+            connectionSet.add(new NamePair(connectionID, name));
         }
     }
 
@@ -92,7 +114,9 @@ public class GameRoom {
      */
     public void removePlayer(int connectionID) throws Exception {
         --currentPlayers;
-        connectionSet.remove(connectionID);
+        for(NamePair namePair: connectionSet)
+            if(namePair.getKey() == connectionID)
+                connectionSet.remove(namePair);
         if(0 == currentPlayers)
             throw new Exception("This room has been closed");
     }

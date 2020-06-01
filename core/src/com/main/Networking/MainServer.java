@@ -1,15 +1,15 @@
 
 package com.main.Networking;
 
-import java.io.IOException;
-import java.util.HashMap;
 
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
-
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
 import com.main.SuperManager;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * The GameServer class is the core class controlling the main server. There should be at most one main server
@@ -17,12 +17,16 @@ import com.main.SuperManager;
  * @author Piotr Satała
  */
 public class MainServer extends GameServer {
+
     private final RoomList roomList = new RoomList();
     private HashMap<Integer, SuperManager> managerHashMap;
+    private static final int CHECK_CONNECTION_RATE = 1000;
+
     /**
      * Public empty constructor necessary for KryoNet to send instances of this class properly
      */
     public MainServer() {}
+
 
     /**
      * Public constructor for GameServer class
@@ -54,7 +58,7 @@ public class MainServer extends GameServer {
                 else if(object instanceof CreateRoomRequest) { //client wants to create a room
                     
                     CreateRoomRequest createRoomRequest = (CreateRoomRequest)object;
-                    GameRoom newRoom = new GameRoom(createRoomRequest.hostName, createRoomRequest.maxPlayers, createRoomRequest.gameType, connection.getID());
+                    GameRoom newRoom = new GameRoom(createRoomRequest.hostName, createRoomRequest.maxPlayers, createRoomRequest.gameType, connection.getID(), createRoomRequest.hostName);
                     managerHashMap.put(GameRoom.getLastRoomID(), new SuperManager());
                     managerHashMap.get(GameRoom.getLastRoomID()).roomID = GameRoom.getLastRoomID(); //specify id of room
                     managerHashMap.get(GameRoom.getLastRoomID()).addObserver(MainServer.this); //add observer to newly created manager
@@ -68,7 +72,7 @@ public class MainServer extends GameServer {
                     JoinRoomRequest joinRoomRequest = (JoinRoomRequest)object;
                     GameRoom currentRoom = roomList.get(joinRoomRequest.roomID); //get id
                     try {
-                        currentRoom.addPlayer(connection.getID());
+                        currentRoom.addPlayer(connection.getID(), joinRoomRequest.playerName);
                         RoomJoinedResponse roomJoinedResponse = new RoomJoinedResponse(currentRoom.currentPlayers - 1);
                         sendToTCP(connection.getID(), roomJoinedResponse); //room successfully joined
                     }
@@ -87,27 +91,81 @@ public class MainServer extends GameServer {
                     catch(Exception e) { //room now empty
                         ControlResponse controlResponse = new ControlResponse(e.getMessage());
                         sendToTCP(connection.getID(), controlResponse);
-                        roomList.remove(currentRoom.roomID);
                     }
                 }
                 else if(object instanceof GetRoomListRequest) { //client wants to get a list of available rooms
                     sendToTCP(connection.getID(), roomList);
                 }
+                else if(object instanceof StartGameRequest) { //client (game creator) wants to start the game
+                    StartGameRequest startGameRequest = (StartGameRequest) object;
+                    startGame(startGameRequest.getRoomID());
+                }
             }
         });
-        
+
 
         //start
         start();
         bind(tcpPortNumber, udpPortNumber);
 
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                updatePlayerCount();
+                sendListOfNames();
+            }
+        }
+            , 0, CHECK_CONNECTION_RATE);
     }
 
 
 
     @Override
     public void send(Object object, int roomID) {
-        for(Integer connectionID: roomList.get(roomID).connectionSet)
-            sendToTCP(connectionID, object);
+        for(NamePair connectionID: roomList.get(roomID).connectionSet)
+            sendToTCP(connectionID.getKey(), object);
+    }
+
+
+    private void updatePlayerCount() {
+        ArrayList<Integer> arrayOfKeys = roomList.getArrayOfKeys();
+        HashSet<Integer> tempSet;
+        for(Integer key: arrayOfKeys) {
+            GameRoom gameRoom = roomList.get(key);
+            gameRoom.currentPlayers = 0;
+            tempSet = new HashSet<>();
+            for(NamePair namePair: gameRoom.connectionSet) {
+                tempSet.add(namePair.getKey());
+            }
+            Connection[] connections = getConnections();
+            for(Connection connection: connections) {
+                if(connection.isConnected() && tempSet.contains(connection.getID()))
+                    ++gameRoom.currentPlayers;
+            }
+        }
+    }
+
+    private void sendListOfNames() {
+        ArrayList<Integer> arrayList = roomList.getArrayOfKeys();
+        for(Integer key: arrayList) {
+            GameRoom gameRoom = roomList.get(key);
+            if(!gameRoom.isRunning) {
+                NameListResponse nameListResponse = new NameListResponse();
+                for(NamePair namePair : gameRoom.connectionSet) {
+                    nameListResponse.arrayList.add(namePair.getValue());
+                }
+                for(NamePair connectionID: gameRoom.connectionSet) {
+                        sendToTCP(connectionID.getKey(), nameListResponse);
+                }
+            }
+        }
+    }
+
+    public void startGame(int roomID) {
+        GameRoom gameRoom = roomList.get(roomID);
+        gameRoom.isRunning = true;
+        for(NamePair namePair: gameRoom.connectionSet) {
+            sendToTCP(namePair.getKey(), new StartGameResponse());
+        }
     }
 }

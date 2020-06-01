@@ -2,9 +2,7 @@
 package com.main.Networking;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * The RoomList class is responsible for handling a list of rooms stored by the main server, but also for
@@ -13,13 +11,13 @@ import java.util.HashMap;
  * @author Piotr Satała
  */
 public class RoomList {
-    private final HashMap<Integer, GameRoom> list;
+    private final HashMap<Integer, GameRoom> roomHashMap;
 
     /**
      * Public constructor for RoomList class
      */
     public RoomList() {
-        list = new HashMap<>();
+        roomHashMap = new HashMap<>();
     }
 
 
@@ -28,7 +26,7 @@ public class RoomList {
      * @param gameRoom room to add
      */
     public void add(GameRoom gameRoom) {
-        list.put(gameRoom.roomID, gameRoom);
+        roomHashMap.put(gameRoom.roomID, gameRoom);
     }
 
 
@@ -37,7 +35,7 @@ public class RoomList {
      * @param anotherRoomList different room list
      */
     public void putALL(RoomList anotherRoomList) {
-        list.putAll(anotherRoomList.list);
+        roomHashMap.putAll(anotherRoomList.roomHashMap);
     }
 
 
@@ -47,7 +45,7 @@ public class RoomList {
      * @return game room of a given id
      */
     public GameRoom get(int roomID) {
-        return list.get(roomID);
+        return roomHashMap.get(roomID);
     }
 
 
@@ -56,7 +54,7 @@ public class RoomList {
      * @param roomID id of room to remove
      */
     public void remove(int roomID) {
-        list.remove(roomID);
+        roomHashMap.remove(roomID);
     }
 
 
@@ -65,9 +63,9 @@ public class RoomList {
      */
     public void print() {
         int i = 0;
-        for(int roomID: list.keySet()) {
+        for(int roomID: roomHashMap.keySet()) {
             System.out.print(i + ": ");
-            System.out.println(list.get(roomID).printRoomInfo());
+            System.out.println(roomHashMap.get(roomID).printRoomInfo());
             ++i;
         }
             
@@ -79,7 +77,7 @@ public class RoomList {
      * @return ArrayList with all keys currently present in the HashMap
      */
     public ArrayList<Integer> getArrayOfKeys() {
-        return new ArrayList<>(list.keySet());
+        return new ArrayList<>(roomHashMap.keySet());
     }
 
 
@@ -89,7 +87,7 @@ public class RoomList {
      * @return true if key was found, false otherwise
      */
     public boolean containsKey(Integer key) {
-        return list.containsKey(key);
+        return roomHashMap.containsKey(key);
     }
 
 
@@ -98,7 +96,7 @@ public class RoomList {
      * @return key with the greatest value
      */
     public int getMaxKey() {
-        return Collections.max(list.keySet());
+        return Collections.max(roomHashMap.keySet());
     }
 
 
@@ -106,6 +104,20 @@ public class RoomList {
      * Clear the contents of the HashMap
      */
     public void clear() {
-        list.clear();
+        roomHashMap.clear();
+    }
+
+
+    /**
+     * Filter out full rooms from the list of rooms
+     * @return hash map with only non full rooms
+     */
+    public RoomList filterRoomList() {
+        RoomList roomListToReturn = new RoomList();
+        for(Map.Entry<Integer, GameRoom> entry: roomHashMap.entrySet()) {
+            if(entry.getValue().currentPlayers != entry.getValue().maxPlayers)
+                roomListToReturn.add(entry.getValue());
+        }
+        return roomListToReturn;
     }
 }

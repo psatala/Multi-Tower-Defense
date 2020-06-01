@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.main.Networking.requests.LeaveRoomRequest;
 
 /**
  * This class is responsible for managing and displaying the interface for the player consisting of command buttons and gameplay information.
@@ -39,7 +40,7 @@ public class InfoActor extends Actor {
      * @param gameManager gameManager that created this object and manages the game
      * @param playerId ID of the player
      */
-    public InfoActor(float w, float h, GameManager gameManager, int playerId) {
+    public InfoActor(float w, float h, final GameManager gameManager, int playerId) {
         coins = Config.startingCoins;
         setBounds(0, h-topBarHeight, w, topBarHeight);
         this.gameManager = gameManager;
@@ -59,6 +60,29 @@ public class InfoActor extends Actor {
         addButton(140, getY()+4, 100, topBarHeight-8, "Move Units", MapActor.Mode.MOVE);
         addButton(260, getY()+4, 100, topBarHeight-8, "Build tower", MapActor.Mode.BUILD);
         addButton(380, getY()+4, 100, topBarHeight-8, "Spawn unit", MapActor.Mode.SPAWN);
+        final TextButton button = new TextButton("Exit", skin, "default");
+        button.setBounds(960, getY()+4, 100, topBarHeight-8);
+        infoGroup.addActor(button);
+
+        button.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                if(!gameManager.observer.isGameOwner)
+                    gameManager.observer.send(new LeaveRoomRequest(gameManager.observer.roomID));
+                else
+                    gameManager.observer.localServer.closeGame();
+
+                //close connection
+                gameManager.observer.isInTheGame = false;
+                gameManager.observer.isGameOwner = false;
+                gameManager.observer.isGameCreator = false;
+                gameManager.isRunning = false;
+
+                //set up main menu again
+                gameManager.removeOtherActors();
+                gameManager.menuManager.stage.addActor(gameManager.menuManager.mainTable);
+            }
+        });
     }
 
     /**
@@ -68,8 +92,8 @@ public class InfoActor extends Actor {
      */
     @Override
     public void draw(Batch batch, float alpha) {
-        bigFont.draw(batch, "Player "+playerId, 530, 710);
-        bigFont.draw(batch, "Coins: "+coins, 940, 710);
+        bigFont.draw(batch, gameManager.observer.playerName, 530, 710);
+        bigFont.draw(batch, "Coins: "+coins, 730, 710);
         lineSprite.setPosition(0, 686);
         lineSprite.draw(batch);
     }

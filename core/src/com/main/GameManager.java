@@ -3,7 +3,6 @@ package com.main;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -16,7 +15,6 @@ import com.main.Networking.requests.GameRequest;
 import com.main.Networking.responses.GameResponse;
 import com.main.Networking.responses.RewardResponse;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
@@ -42,9 +40,11 @@ public class GameManager extends ApplicationAdapter {
 	private ShapeRenderer renderer;
 
 	public MenuManager menuManager;
-	private GameClient observer;
+	public GameClient observer;
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
+	public boolean isRunning = false;
+	public boolean needToAddOtherActors = false;
 
 
 	/**
@@ -82,7 +82,22 @@ public class GameManager extends ApplicationAdapter {
 		menuManager = new MenuManager(observer, activeStage);
 		Gdx.input.setInputProcessor(activeStage);
 		renderer = new ShapeRenderer();
-
+		Timer.schedule(new Timer.Task(){
+						   @Override
+						   public void run() {
+						   	   if(isRunning) {
+								   updateGrid();
+								   sendUpdates();
+								   addNewObjectsFromAnotherThread();
+							   }
+						   	   else if(needToAddOtherActors) {
+						   	   	   addOtherActors();
+						   	   	   isRunning = true;
+						   	   	   needToAddOtherActors = false;
+							   }
+						   }
+					   }
+				,0,1/Config.refreshRate);
 	}
 
 	public void addOtherActors() {
@@ -90,16 +105,25 @@ public class GameManager extends ApplicationAdapter {
 		activeStage.addActor(info.getInfoGroup());
 		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
 		activeStage.addActor(map.getMapGroup());
-		Timer.schedule(new Timer.Task(){
-						   @Override
-						   public void run() {
-							   updateGrid();
-							   sendUpdates();
-							   addNewObjectsFromAnotherThread();
-						   }
-					   }
-				,0,1/Config.refreshRate);
+
 	}
+
+
+	public void removeOtherActors() {
+		info.getInfoGroup().remove();
+		map.getMapGroup().remove();
+		for(Unit unit: units)
+			unit.remove();
+		for(Tower tower: towers)
+			tower.remove();
+		for(Missile missile: missiles)
+			missile.remove();
+		units = new Vector<>();
+		towers = new Vector<>();
+		missiles = new Vector<>();
+	}
+
+
 
 	/**
 	 * Receives rewards from the server and adds them to the player's account
