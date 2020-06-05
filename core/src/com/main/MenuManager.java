@@ -11,6 +11,15 @@ import com.main.Networking.GameRoom;
 
 import java.io.IOException;
 
+
+/**
+ * The MenuManager class is responsible for managing the main menu of the game. This includes several subsections of
+ * the menu, implemented as libgdx Tables, such as: table for entering player name, main table to choose between
+ * joining a game and hosting, table to specify player count of the created/hosted game and others. A reference to
+ * object of this class can be found in GameManager, class responsible for managing the gameplay side.
+ * @see GameManager
+ * @author Piotr Satała
+ */
 public class MenuManager {
 
     public final static int PREF_BUTTON_WIDTH = 300;
@@ -23,14 +32,22 @@ public class MenuManager {
     public final Stage stage;
     public final Skin skin;
 
-    public final Table enterNameTable;
-    public final Table mainTable;
-    public final Table playerCountTable;
-    public Table joinGameTable;
-    public Table waitingRoomTable;
+    public final Table enterNameTable; //table for entering player name
+    public final Table mainTable; //table for main part of the menu
+    public final Table playerCountTable; //table to specify player count of the created/hosted game
+    public Table joinGameTable; //table with available games
+    public Table waitingRoomTable; //table with current players in the game, waiting for the game to start
 
     private int gameType = GameRoom.GLOBAL;
 
+
+    /**
+     * Public constructor for MenuManager class
+     * @param gameClient reference to class handling networking side of the application
+     * @param stage active stage from GameManager class
+     * @see GameClient
+     * @see GameManager
+     */
     public MenuManager(final GameClient gameClient, final Stage stage) {
 
         this.gameClient = gameClient;
@@ -156,6 +173,12 @@ public class MenuManager {
 
     }
 
+
+    /**
+     * Method adds listener to button from playerCountTable
+     * @param textButton reference to clickable button with text on it
+     * @param countPlayers number of players to be set as maximum number of players of a room when this button is clicked
+     */
     private void addListenerToButton(TextButton textButton, final int countPlayers) {
         textButton.addListener( new ClickListener() {
             @Override
@@ -180,10 +203,25 @@ public class MenuManager {
         });
     }
 
+
+    /**
+     * Method adds label of predefined width and height to a specified table
+     * @param text text of the label
+     * @param table table to add the label to
+     */
     public void addLabel(String text, Table table) {
         addLabel(text, table, PREF_SMALL_BUTTON_WIDTH, PREF_SMALL_BUTTON_HEIGHT, false);
     }
 
+
+    /**
+     * General method for adding label to a given table
+     * @param text text of the label
+     * @param table table to add the label to
+     * @param width width of the label
+     * @param height height of the label
+     * @param isCentred boolean specifying if the label should be centred
+     */
     public void addLabel(String text, Table table, int width, int height, boolean isCentred) {
         Label label = new Label(text, skin);
         if(isCentred)

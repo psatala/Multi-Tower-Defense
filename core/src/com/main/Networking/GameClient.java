@@ -22,28 +22,36 @@ import java.util.Vector;
 
 
 /**
- The GameClient class is the main class to be run by the user. It handles connecting with main server,
- creating global games and hosting local games by starting a local server.
- @author Piotr Satała
+ * The GameClient class is the main class to be run by the user. It handles connecting with main server and
+ * local servers, creating global games and hosting local games by starting a local server. It also allows
+ * for joining global and local games.
+ * This class represents the networking side of the application. Classes that handle gameplay and menu are
+ * fields of this class
+ * @see GameManager
+ * @see MenuManager
+ * @author Piotr Satała
  */
 public class GameClient {
 
 
-    private final Client globalClient;
-    private final Client localClient;
-    public Client activeClient;
+    private final Client globalClient; //client for connecting with the main server
+    private final Client localClient; //client for connecting with local servers
+    public Client activeClient; //one of the above
     public LocalServer localServer;
     public String playerName;
     public int roomID;
     public int maxPlayers;
     private final RoomList roomList;
-    public GameManager gameManager;
-    public UpdatesListener updatesListener;
-    private final HashSet<String> macAddressHashSet;
+    public GameManager gameManager; //gameplay manager
+    public UpdatesListener updatesListener; //listener for updates from gameManager
+    private final HashSet<String> macAddressHashSet; //hashset of MAC addresses to limit local interfaces that answer to broadcast
+
+    //variables identifying relation between player and game
     public boolean isGameOwner = false;
     public boolean isGameCreator = false;
     public boolean isInTheGame = false;
 
+    //connection info
     private final int tcpSecondPortNumber;
     private final int udpSecondPortNumber;
     private final int maxDelay;
@@ -57,12 +65,14 @@ public class GameClient {
      * @param maxDelay timeout in milliseconds for connecting and host discovery
      */
     public GameClient(int tcpPortNumber, int udpPortNumber, int tcpSecondPortNumber, int udpSecondPortNumber,
-            int maxDelay) throws IOException, InterruptedException {
+            int maxDelay) {
 
+        //init connection info
         this.tcpSecondPortNumber = tcpSecondPortNumber;
         this.udpSecondPortNumber = udpSecondPortNumber;
         this.maxDelay = maxDelay;
 
+        //init other objects
         globalClient = new Client();
         localClient = new Client();
         roomList = new RoomList();
@@ -233,9 +243,13 @@ public class GameClient {
 
 
     /**
-     * Allow user to join global or local games
-     * @throws InterruptedException
-     * @throws IOException
+     * Method called when player clicks the "Join Game" button. It gets information from main server about all
+     * games that are available to join. Moreover, it connects to all local servers available on LAN and gets
+     * information about games that are run on them. It then constructs the join game table which is a subsection
+     * of the main menu responsible for showing player all games that can be joined.
+     * @see MenuManager
+     * @throws InterruptedException thrown by "wait" function within synchronized block
+     * @throws IOException thrown if connection to local server fails
      */
     public void chooseGame() throws InterruptedException, IOException {
         
@@ -281,10 +295,10 @@ public class GameClient {
         for(int roomItemID: arrayOfKeys) {
             if(!roomList.get(roomItemID).isRunning) { //client can only join games that have not been started
                 infoVector = roomList.get(roomItemID).getRoomInfo();
-                for(String info: infoVector)
+                for(String info: infoVector) //info buttons
                     gameManager.menuManager.addLabel(info, gameManager.menuManager.joinGameTable);
 
-
+                //clickable "Join" button
                 textButton = new TextButton("Join", gameManager.menuManager.skin);
                 final int finalRoomIndex = roomIndex;
                 textButton.addListener(new ClickListener() {
@@ -306,7 +320,7 @@ public class GameClient {
         }
 
 
-        //add go back button
+        //add "Back" button
         textButton = new TextButton("Back", gameManager.menuManager.skin);
         textButton.addListener(new ClickListener() {
             @Override
@@ -324,6 +338,17 @@ public class GameClient {
         
     }
 
+
+    /**
+     * Method called when players chooses the room he wants to join. It can either be a global room, in which case
+     * the client just sends the JoinRoomRequest. If it is a local game, the player must first connect to that local
+     * server and only then sends the JoinRoomRequest.
+     * @param roomNumber number of room player wants to join
+     * @param arrayOfKeys array of keys allowing room number to be transformed into room id
+     * @throws InterruptedException thrown by "wait" function within synchronized block
+     * @throws IOException thrown when connecting to local server fails
+     * @see JoinRoomRequest
+     */
     public void joinGame(int roomNumber, ArrayList<Integer> arrayOfKeys) throws InterruptedException, IOException {
         roomID = arrayOfKeys.get(roomNumber);
         if(roomList.get(roomID).gameType == GameRoom.GLOBAL) { //if room is global
@@ -346,8 +371,11 @@ public class GameClient {
 
     
     /**
-     * Allow user to create global games hosted by the main server
-     * @throws InterruptedException
+     * Allow user to create global games hosted by the main server. In order to do that, a CreateRoomRequest
+     * with information previously specified by the user is sent to the main server.
+     * @throws InterruptedException thrown by "wait" function within synchronized block
+     * @see CreateRoomRequest
+     * @see MainServer
      */
     public boolean createGlobalGame() throws InterruptedException {
 
@@ -371,8 +399,10 @@ public class GameClient {
 
 
     /**
-     * Allow user to host local games - only one game can be hosted on each computer
-     * @throws IOException
+     * Allow user to host local games - set active client to local and create local server.
+     * Due to constant port numbers only one game can be hosted on each device.
+     * @throws IOException thrown when creating local server fails
+     * @see LocalServer
      */
     public void hostLocalGame() throws IOException {
         activeClient = localClient;
@@ -401,7 +431,7 @@ public class GameClient {
 
 
     /**
-     * After joining or creating a room, send request with client updates
+     * After joining or creating a room, send request with client updates.
      */
     public void send(Object object) {
 
@@ -414,16 +444,25 @@ public class GameClient {
 
     }
 
+    /**
+     * Method called when player receives a NameListResponse from the server containing names of all players
+     * in the current room. Function can only be called when player is in the waiting room. It creates a new
+     * waiting room table that displays names of other players in the room as well as a button to start the
+     * game (only applies to game creator)
+     * @param nameListResponse response from the server containing names of all players in the current room
+     * @see NameListResponse
+     * @see MenuManager
+     */
     public void updateWaitingRoom(NameListResponse nameListResponse) {
-        gameManager.menuManager.waitingRoomTable.remove();
-        gameManager.menuManager.waitingRoomTable = new Table(gameManager.menuManager.skin);
+        gameManager.menuManager.waitingRoomTable.remove(); //remove old table
+        gameManager.menuManager.waitingRoomTable = new Table(gameManager.menuManager.skin); //create new on
         gameManager.menuManager.addLabel("Players:", gameManager.menuManager.waitingRoomTable, MenuManager.PREF_BUTTON_WIDTH, MenuManager.PREF_BUTTON_HEIGHT, true);
         gameManager.menuManager.waitingRoomTable.row();
-        for(String name: nameListResponse.arrayList) {
+        for(String name: nameListResponse.arrayList) { //add labels with player names
             gameManager.menuManager.addLabel(name, gameManager.menuManager.waitingRoomTable, MenuManager.PREF_BUTTON_WIDTH, MenuManager.PREF_BUTTON_HEIGHT, true);
             gameManager.menuManager.waitingRoomTable.row();
         }
-        if(isGameCreator) {
+        if(isGameCreator) { //if player is creator of the game, add "Start Game" button
             TextButton textButton = new TextButton("Start Game", gameManager.menuManager.skin);
             gameManager.menuManager.waitingRoomTable.add(textButton).fillX().prefWidth(MenuManager.PREF_BUTTON_WIDTH).prefHeight(MenuManager.PREF_BUTTON_HEIGHT).row();
             textButton.addListener( new ClickListener() {
@@ -443,6 +482,6 @@ public class GameClient {
             gameManager.menuManager.addLabel("Wait for game creator to start the game", gameManager.menuManager.waitingRoomTable, MenuManager.PREF_BUTTON_WIDTH, MenuManager.PREF_BUTTON_HEIGHT, true);
         }
         gameManager.menuManager.waitingRoomTable.setFillParent(true);
-        gameManager.menuManager.stage.addActor(gameManager.menuManager.waitingRoomTable);
+        gameManager.menuManager.stage.addActor(gameManager.menuManager.waitingRoomTable); //add table to stage
     }
 }

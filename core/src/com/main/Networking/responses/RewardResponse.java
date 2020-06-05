@@ -46,7 +46,7 @@ public class RewardResponse {
 
 
     /**
-     * Function appends one response
+     * Method appends one response
      * @param newMessage new response
      */
     public void appendMessage(String newMessage) {
@@ -55,7 +55,7 @@ public class RewardResponse {
 
 
     /**
-     * Function clears the message vector
+     * Method clears the message vector
      */
     public void clearMessage() {
         message.clear();

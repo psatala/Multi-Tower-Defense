@@ -60,6 +60,8 @@ public class InfoActor extends Actor {
         addButton(140, getY()+4, 100, topBarHeight-8, "Move Units", MapActor.Mode.MOVE);
         addButton(260, getY()+4, 100, topBarHeight-8, "Build tower", MapActor.Mode.BUILD);
         addButton(380, getY()+4, 100, topBarHeight-8, "Spawn unit", MapActor.Mode.SPAWN);
+
+        //add exit button
         final TextButton button = new TextButton("Exit", skin, "default");
         button.setBounds(960, getY()+4, 100, topBarHeight-8);
         infoGroup.addActor(button);

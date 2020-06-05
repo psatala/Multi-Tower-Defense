@@ -16,13 +16,21 @@ import java.util.TimerTask;
 /**
  * The LocalServer class allows user to host a server accessible on his LAN. The local server uses a port
  * different to the one used by the main server.
+ * @see GameServer
  * @author Piotr Satała
  */
 public class LocalServer extends GameServer {
-    private final GameRoom gameRoom;
+
+    /**
+     * Rate at which local server checks connection status
+     */
     private static final int CHECK_CONNECTION_RATE = 1000;
+
+
+    private final GameRoom gameRoom;
     public SuperManager superManager;
     private final GameManager gameOwner;
+
 
 
     /**
@@ -31,10 +39,11 @@ public class LocalServer extends GameServer {
      * @param udpSecondPortNumber udp port for local server
      * @param hostName name of user who is hosting the local server
      * @param maxPlayers max number of players on server
-     * @throws IOException
+     * @throws IOException thrown when local server is unable to start
      */
     public LocalServer(int tcpSecondPortNumber, int udpSecondPortNumber, String hostName,
                        int maxPlayers, final GameManager gameOwner) throws IOException {
+
 
         super();
 
@@ -96,6 +105,7 @@ public class LocalServer extends GameServer {
             //TODO: fix incorrect quitting after this exception
         }
 
+        //create new timer which updates count of players connected and sends them a list of names of connected players
         new Timer().schedule(new TimerTask() {
                                  @Override
                                  public void run() {
@@ -107,48 +117,74 @@ public class LocalServer extends GameServer {
         
     }
 
+
+    /**
+     * Method responsible for sending game updates and rewards to clients
+     * @param object object to be sent to clients
+     * @param roomID always -1 in case of local server
+     */
     @Override
     protected void send(Object object, int roomID) {
         if(gameRoom != null) {
             for(NamePair connectionID: gameRoom.connectionSet) {
-                if(connectionID.getKey() != -1)
+                if(connectionID.getKey() != -1) //client is not host
                     sendToTCP(connectionID.getKey(), object);
-                else if(object instanceof GameResponse)
+                else if(object instanceof GameResponse) //client is host and object is general game updates
                     gameOwner.getUpdates((GameResponse)object);
-                else
+                else //client is host and object is rewards
                     gameOwner.getRewards((RewardResponse)object);
             }
         }
     }
 
 
+
+    /**
+     * Method checks which players are still connected to the local server
+     * and updates number of current players. Host is always connected.
+     */
     private void updatePlayerCount() {
-            gameRoom.currentPlayers = 1;
+            gameRoom.currentPlayers = 1; //add host
             Connection[] connections = getConnections();
             for(Connection connection: connections) {
-                if(connection.isConnected() && connection.getID() != -1)
+                if(connection.isConnected() && connection.getID() != -1) //for each connection that is not a host
                     ++gameRoom.currentPlayers;
             }
     }
 
 
+
+    /**
+     * Method sends list of names of all connected players to those players.
+     * This only applies when game is in the waiting room phase.
+     */
     private void sendListOfNames() {
-        if(!gameRoom.isRunning) {
+        if(!gameRoom.isRunning) { //if in waiting room
             NameListResponse nameListResponse = new NameListResponse();
             for(NamePair namePair : gameRoom.connectionSet) {
                 nameListResponse.arrayList.add(namePair.getValue());
             }
             sendObjectToAllButHost(nameListResponse);
-            gameOwner.observer.updateWaitingRoom(nameListResponse);
+            gameOwner.observer.updateWaitingRoom(nameListResponse); //inform host
         }
     }
 
+
+
+    /**
+     * Method called when host clicks the "Start Game" button. It informs all other
+     * clients that the game has started.
+     */
     public void startGame() {
         gameRoom.isRunning = true;
         sendObjectToAllButHost(new StartGameResponse());
     }
 
 
+    /**
+     * Method called when host exits the game. His lack of presence means the game needs to be
+     * terminated. This information is sent to all other connected players.
+     */
     public void closeGame() {
         sendObjectToAllButHost(new RoomClosedResponse());
         try {
@@ -160,9 +196,16 @@ public class LocalServer extends GameServer {
         stop();
     }
 
+
+    /**
+     * Method responsible for sending an object to all players connected to the server except the host.
+     * This is useful due to the ubiquity of such need (host can get the necessary information through a function
+     * call, all others need networking to get that information)
+     * @param object object to be sent to players
+     */
     private void sendObjectToAllButHost(Object object) {
-        for(NamePair namePair: gameRoom.connectionSet) {
-            if(namePair.getKey() != -1)
+        for(NamePair namePair: gameRoom.connectionSet) { //for each connection
+            if(namePair.getKey() != -1)                  //that is not a host
                 sendToTCP(namePair.getKey(), object);
         }
     }

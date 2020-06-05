@@ -44,7 +44,7 @@ public class GameManager extends ApplicationAdapter {
 	private final GameRequest gameRequest;
 	private Vector<String> objectsToAdd;
 	public boolean isRunning = false;
-	public boolean needToAddOtherActors = false;
+	public boolean needToAddOtherActors = false; //other thread wants to add info and map actor
 
 
 	/**
@@ -59,6 +59,8 @@ public class GameManager extends ApplicationAdapter {
 		missiles = new Vector<>();
 	}
 
+
+
 	/**
 	 * Adds an observer
 	 * @param observer Given observer
@@ -67,6 +69,8 @@ public class GameManager extends ApplicationAdapter {
 	public void addObserver(GameClient observer) {
 		this.observer = observer;
 	}
+
+
 
 	/**
 	 * Creates all of libgdx's objects, including the stage that contains every Actor of the client (Interface, Map, Entities on the Map)<br>
@@ -100,6 +104,12 @@ public class GameManager extends ApplicationAdapter {
 				,0,1/Config.refreshRate);
 	}
 
+
+
+	/**
+	 * Method called when the game is started (the waiting room phase is completed).
+	 * It adds info actor and map actor.
+	 */
 	public void addOtherActors() {
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
@@ -109,6 +119,11 @@ public class GameManager extends ApplicationAdapter {
 	}
 
 
+
+	/**
+	 * Method called when player leaves the game. It removes info and map actors.
+	 * Moreover, all entities are removed and their corresponding vectors are cleared.
+	 */
 	public void removeOtherActors() {
 		info.getInfoGroup().remove();
 		map.getMapGroup().remove();
