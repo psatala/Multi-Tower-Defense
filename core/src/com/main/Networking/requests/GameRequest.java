@@ -88,7 +88,7 @@ public class GameRequest {
 
 
     /**
-     * Function appends one request
+     * Method appends one request
      * @param newMessage new request
      */
     public void appendMessage(String newMessage) {
@@ -97,7 +97,7 @@ public class GameRequest {
 
 
     /**
-     * Function clears the message vector
+     * Method clears the message vector
      */
     public void clearMessage() {
         message.clear();

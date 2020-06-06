@@ -2,7 +2,7 @@
 package com.main.Networking.requests;
 
 /**
- * The JoinRoomRequest class is request from client to server to join a given room
+ * The JoinRoomRequest class is a request from client to server to join a given room
  * that he is hosting.
  * @author Piotr Satała
  */
@@ -12,7 +12,7 @@ public class JoinRoomRequest {
     public String playerName;
 
     /**
-     * Public empty constructor used mostly for joining local servers which can only host one room
+     * Public empty constructor necessary for KryoNet to send instances of this class properly
      */
     public JoinRoomRequest() {
         roomID = -1;

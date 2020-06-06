@@ -14,13 +14,19 @@ import java.util.*;
 /**
  * The GameServer class is the core class controlling the main server. There should be at most one main server
  * running at once and its IP address should be specified in GameClient class.
+ * @see GameServer
+ * @see GameClient
  * @author Piotr Satała
  */
 public class MainServer extends GameServer {
 
-    private final RoomList roomList = new RoomList();
-    private HashMap<Integer, SuperManager> managerHashMap;
+    /**
+     * Rate at which local server checks connection status
+     */
     private static final int CHECK_CONNECTION_RATE = 1000;
+
+    private final RoomList roomList = new RoomList();
+    private HashMap<Integer, SuperManager> managerHashMap; //hashmap with super gameplay managers
 
     /**
      * Public empty constructor necessary for KryoNet to send instances of this class properly
@@ -32,7 +38,7 @@ public class MainServer extends GameServer {
      * Public constructor for GameServer class
      * @param tcpPortNumber tcp port for main server
      * @param udpPortNumber udp port for main server
-     * @throws IOException
+     * @throws IOException binding the server was not successful
      */
     public MainServer(int tcpPortNumber, int udpPortNumber) throws IOException {
         super();
@@ -108,6 +114,8 @@ public class MainServer extends GameServer {
         start();
         bind(tcpPortNumber, udpPortNumber);
 
+
+        //create new timer which updates count of players connected and sends them a list of names of connected players
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
@@ -120,6 +128,11 @@ public class MainServer extends GameServer {
 
 
 
+    /**
+     * Method responsible for sending game updates and rewards to clients
+     * @param object object to be sent to clients
+     * @param roomID id of the room the data refers to
+     */
     @Override
     public void send(Object object, int roomID) {
         for(NamePair connectionID: roomList.get(roomID).connectionSet)
@@ -127,6 +140,11 @@ public class MainServer extends GameServer {
     }
 
 
+
+    /**
+     * Method checks which players are still connected to the main server
+     * and updates number of current players.
+     */
     private void updatePlayerCount() {
         ArrayList<Integer> arrayOfKeys = roomList.getArrayOfKeys();
         HashSet<Integer> tempSet;
@@ -145,22 +163,35 @@ public class MainServer extends GameServer {
         }
     }
 
+
+
+    /**
+     * Method sends list of names of all players connected to a given game. This list is
+     * sent those connected players. This only applies when game is in the waiting room phase.
+     */
     private void sendListOfNames() {
-        ArrayList<Integer> arrayList = roomList.getArrayOfKeys();
-        for(Integer key: arrayList) {
+        ArrayList<Integer> arrayList = roomList.getArrayOfKeys(); //get array with room ids
+        for(Integer key: arrayList) { //for each room
             GameRoom gameRoom = roomList.get(key);
-            if(!gameRoom.isRunning) {
+            if(!gameRoom.isRunning) { //if in waiting room phase
                 NameListResponse nameListResponse = new NameListResponse();
-                for(NamePair namePair : gameRoom.connectionSet) {
+                for(NamePair namePair : gameRoom.connectionSet) { //construct list
                     nameListResponse.arrayList.add(namePair.getValue());
                 }
-                for(NamePair connectionID: gameRoom.connectionSet) {
+                for(NamePair connectionID: gameRoom.connectionSet) { //send list
                         sendToTCP(connectionID.getKey(), nameListResponse);
                 }
             }
         }
     }
 
+
+
+    /**
+     * Method called when creator of the game clicks the "Start Game" button. It informs all other
+     * players that the game has started.
+     * @param roomID id of the room the game creator is in
+     */
     public void startGame(int roomID) {
         GameRoom gameRoom = roomList.get(roomID);
         gameRoom.isRunning = true;

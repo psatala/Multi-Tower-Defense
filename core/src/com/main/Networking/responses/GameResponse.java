@@ -9,8 +9,7 @@ import java.util.Vector;
  */
 public class GameResponse {
 
-    //TODO: change back to private
-    public Vector<String> message;
+    private Vector<String> message;
 
     /**
      * Public empty constructor necessary for KryoNet to send instances of this class properly
@@ -47,7 +46,7 @@ public class GameResponse {
 
 
     /**
-     * Function appends one response
+     * Method appends one response
      * @param newMessage new response
      */
     public void appendMessage(String newMessage) {
@@ -56,7 +55,7 @@ public class GameResponse {
 
 
     /**
-     * Function clears the message vector
+     * Method clears the message vector
      */
     public void clearMessage() {
         message.clear();
