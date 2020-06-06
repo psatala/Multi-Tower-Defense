@@ -6,6 +6,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../core">
       <sourceFolder url="file://$MODULE_DIR$/../../../core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../core/test" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/../../../core/.gradle" />
       <excludeFolder url="file://$MODULE_DIR$/../../../core/build" />
     </content>
