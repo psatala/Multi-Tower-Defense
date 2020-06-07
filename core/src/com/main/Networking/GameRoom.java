@@ -54,6 +54,7 @@ public class GameRoom {
      * @param gameType type of game - either GLOBAL - managed by main server or LOCAL - managed by a local server
      * @param connectionID either ID of the connection between the client who requested this game and the main
      * server or -1 if the game is LOCAL
+     * @param name name of game creator
      */
     public GameRoom(String hostName, int maxPlayers, int gameType, int connectionID, String name) {
 

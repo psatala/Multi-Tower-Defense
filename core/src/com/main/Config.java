@@ -102,7 +102,11 @@ public class Config {
         Map<String, Boolean[][]> tempMapGrid = new HashMap<>();
 
         try {
-            File configFile = new File("core/assets/config/config.txt");
+            File configFile;
+            if(!TestController.isJUnitTest())
+                configFile = new File("core/assets/config/config.txt");
+            else
+                configFile = new File("assets/config/config.txt");
             Scanner reader = new Scanner(configFile);
             String type = "";
             String line;
