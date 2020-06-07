@@ -43,11 +43,14 @@ public class GameClientTest {
             gameClient.setActiveClient(GameRoom.GLOBAL);
             GameManager gameManager = new GameManager(0);
             gameManager.addObserver(gameClient);
-            new MainServer(54545, 54545);
+            MainServer mainServer = new MainServer(54545, 54545);
 
             gameClient.activeClient.connect(100, InetAddress.getLoopbackAddress(), 54545, 54545);
 
             Assert.assertTrue(gameClient.activeClient.isConnected());
+
+            mainServer.close();
+            mainServer.stop();
 
         } catch (IOException e) {
             e.printStackTrace();
