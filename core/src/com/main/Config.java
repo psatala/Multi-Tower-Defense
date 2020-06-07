@@ -103,11 +103,16 @@ public class Config {
 
         try {
             File configFile;
-            if(!TestController.isJUnitTest())
+            Scanner reader;
+            try {
                 configFile = new File("core/assets/config/config.txt");
-            else
+                reader = new Scanner(configFile);
+            }
+            catch (FileNotFoundException e) {
                 configFile = new File("assets/config/config.txt");
-            Scanner reader = new Scanner(configFile);
+                reader = new Scanner(configFile);
+            }
+
             String type = "";
             String line;
             String attribute;
