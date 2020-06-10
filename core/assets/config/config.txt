@@ -2,12 +2,12 @@
 
 
 firstUnit:
-cost: 300
+cost: 600
 reward: 100
 width: 64
 height: 64
 damage: 5
-range: 300
+range: 200
 reload: 1
 hp: 100
 speed: 100
@@ -26,6 +26,19 @@ reload: 1
 hp: 120
 representativeTexture: towers/firstTower/firstTower0.png
 fullTexture: towers/firstTower/firstTower
+
+
+mainTower:
+cost: 0
+reward: 1000
+width: 64
+height: 64
+damage: 20
+range: 260
+reload: 1
+hp: 300
+representativeTexture: towers/mainTower/mainTower0.png
+fullTexture: towers/mainTower/mainTower
 
 
 missile:
@@ -48,3 +61,19 @@ grid:
 00000000011000000000
 00000000011000000000
 00000000011000000000
+
+
+map1:
+representativeTexture: maps/map1.png
+grid:
+00000000000000000000
+00000000000000000000
+00000000000000000000
+00000000000000000000
+00000000000000000000
+11111000000000011111
+00000000000000000000
+00000000000000000000
+00000000000000000000
+00000000000000000000
+00000000000000000000

@@ -108,14 +108,35 @@ public class GameManager extends ApplicationAdapter {
 
 	/**
 	 * Method called when the game is started (the waiting room phase is completed).
-	 * It adds info actor and map actor.
+	 * It adds info actor and map actor, and then spawns the main tower.
 	 */
 	public void addOtherActors() {
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
-		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
+		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map1", true);
 		activeStage.addActor(map.getMapGroup());
 
+		int mainTowerX;
+		int mainTowerY;
+		switch(myPlayerId) {
+			case 0:
+				mainTowerX = Config.mainTowerToMapBorderX;
+				mainTowerY = Gdx.graphics.getHeight() - (int)InfoActor.topBarHeight - Config.mainTowerToMapBorderY;
+				break;
+			case 1:
+				mainTowerX = Gdx.graphics.getWidth()-Config.mainTowerToMapBorderX;
+				mainTowerY = Gdx.graphics.getHeight() - (int)InfoActor.topBarHeight - Config.mainTowerToMapBorderY;
+				break;
+			case 2:
+				mainTowerX = Gdx.graphics.getWidth()-Config.mainTowerToMapBorderX;
+				mainTowerY = Config.mainTowerToMapBorderY;
+				break;
+			default:
+				mainTowerX = Config.mainTowerToMapBorderX;
+				mainTowerY = Config.mainTowerToMapBorderY;
+				break;
+		}
+		spawnTower(mainTowerX, mainTowerY, "mainTower");
 	}
 
 

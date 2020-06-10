@@ -44,7 +44,7 @@ public class SuperManager{
         units = new Vector<>();
         towers = new Vector<>();
         missiles = new Vector<>();
-        map = new MapActor(1080, 720-InfoActor.topBarHeight, "map0", false);
+        map = new MapActor(1080, 720-InfoActor.topBarHeight, "map1", false);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
