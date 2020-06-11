@@ -110,8 +110,16 @@ public class Config {
         Map<String, Boolean[][]> tempMapGrid = new HashMap<>();
 
         try {
-            File configFile = new File("core/assets/config/config.txt");
-            Scanner reader = new Scanner(configFile);
+            File configFile;
+            Scanner reader;
+            try {
+                configFile = new File("core/assets/config/config.txt");
+                reader = new Scanner(configFile);
+            }
+            catch (FileNotFoundException e) {
+                configFile = new File("assets/config/config.txt");
+                reader = new Scanner(configFile);
+            }
             String type = "";
             String line;
             String attribute;
