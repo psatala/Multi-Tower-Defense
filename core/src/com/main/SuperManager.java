@@ -9,6 +9,8 @@ import com.main.Networking.responses.RewardResponse;
 
 import java.util.*;
 
+import static java.lang.Math.max;
+
 /**
  * This class simulates the game on the server. It contains the only valid state of the game
  * and creates game state updates for the clients. It also receives requests from the clients
@@ -178,6 +180,9 @@ public class SuperManager{
                     if(!tower.isAlive()) {
                         reward(missile.getPlayerId(), tower.getReward());
                         towersToRemove.add(tower);
+                        if(tower.getType().equals("mainTower")) {
+                            playerWins(tower.getPlayerId());
+                        }
                     }
                 }
                 if(!missile.isAlive()) {
@@ -215,6 +220,25 @@ public class SuperManager{
         for(Tower tower : towers) {
             findTargetAndShoot(tower);
         }
+    }
+
+    /**
+     * Decides which player has just won and sends a -1 reward for this player - a signal that they have won.
+     * It is important that you call this function before removing the killed tower from towers,
+     * as players' ids are counted here and the number of players is calculated based on this information.
+     * @param killedPlayerId Id of the player that lost their main tower
+     */
+    private void playerWins(int killedPlayerId) {
+        int numOfPlayers = 0;
+        for(Tower tower : towers) {
+            numOfPlayers = max(numOfPlayers, tower.getPlayerId() + 1);
+        }
+        int victorId = -1;
+        if(killedPlayerId > 0)
+            victorId = killedPlayerId - 1;
+        else
+            victorId = numOfPlayers - 1;
+        reward(victorId, -1);
     }
 
     /**

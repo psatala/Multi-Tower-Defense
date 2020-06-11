@@ -169,11 +169,18 @@ public class GameManager extends ApplicationAdapter {
 	public void getRewards(RewardResponse rewardResponse) {
 		Vector<String> rewards = rewardResponse.getMessage();
 
+		int amount = 0;
+		int playerId = -1;
 		for(String reward : rewards) {
 			String id = reward.split(" ")[0];
 			String r = reward.split(" ")[1];
-			if(myPlayerId == Integer.parseInt(id))
-				addCoins(Integer.parseInt(r));
+			amount = Integer.parseInt(r);
+			playerId = Integer.parseInt(id);
+			if(amount == -1) {
+			    info.setWinner(playerId);
+            }
+			else if(myPlayerId == playerId)
+				addCoins(amount);
 		}
 	}
 
