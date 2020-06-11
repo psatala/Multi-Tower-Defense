@@ -123,7 +123,7 @@ public class SuperManager{
      * @param amount Number of coins to reward
      */
     private void reward(int playerId, int amount) {
-        String rewardMsg = amount +" \n";
+        String rewardMsg = playerId + " " + amount +" \n";
         rewardResponse.appendMessage(rewardMsg);
     }
 

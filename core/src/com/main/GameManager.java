@@ -170,8 +170,10 @@ public class GameManager extends ApplicationAdapter {
 		Vector<String> rewards = rewardResponse.getMessage();
 
 		for(String reward : rewards) {
-			String r = reward.split(" ")[0];
-			addCoins(Integer.parseInt(r));
+			String id = reward.split(" ")[0];
+			String r = reward.split(" ")[1];
+			if(myPlayerId == Integer.parseInt(id))
+				addCoins(Integer.parseInt(r));
 		}
 	}
 
