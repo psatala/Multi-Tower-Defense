@@ -55,7 +55,7 @@ public class Missile extends Actor {
         setPosition(source.getX(Align.center), source.getY(Align.center), Align.center);
 
         MoveToAction moveAction = new MoveToAction();
-        moveAction.setPosition(target.getX(Align.center), target.getY(Align.center));
+        moveAction.setPosition(target.getX(Align.center), target.getY(Align.center), Align.center);
         float travelTime = source.distance(target) / velocity;
         moveAction.setDuration(travelTime);
         RunnableAction completionAction = new RunnableAction(){
@@ -92,7 +92,7 @@ public class Missile extends Actor {
         setX(Float.parseFloat(data[4]), Align.center);
         setY(Float.parseFloat(data[5]), Align.center);
         MoveToAction moveAction = new MoveToAction();
-        moveAction.setPosition(target.x, target.y);
+        moveAction.setPosition(target.x, target.y, Align.center);
         float travelTime = Entity.distance(getPosition(Align.center), target) / velocity;
         moveAction.setDuration(travelTime);
         RunnableAction completionAction = new RunnableAction(){
