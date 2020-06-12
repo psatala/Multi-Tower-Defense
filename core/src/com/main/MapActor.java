@@ -101,6 +101,7 @@ public class MapActor extends Actor {
 
     /**
      * Constructor of MapActor without a player assigned - used by the server.
+     * PlayerId is -1 if used by the server.
      * @param w Width of the map
      * @param h Height of the map
      * @param type Type (name) of the map as defined in the config file
@@ -109,6 +110,7 @@ public class MapActor extends Actor {
     public MapActor(float w, float h, String type, boolean drawable) {
         isDrawable = drawable;
         this.type = type;
+        playerId = -1;
         mapGroup = new Group();
         mapGroup.addActor(this);
         if(isDrawable) {
@@ -168,6 +170,51 @@ public class MapActor extends Actor {
             for(int y = 0; y < gridH; ++y) {
                 gridCells[x][y].setBlocked(Config.mapGrid.get(type)[y][x]);
                 gridCells[x][y].setEmpty(!Config.mapGrid.get(type)[y][x]);
+            }
+        }
+
+        int minX, maxX, minY, maxY;
+        int tempW, tempH;
+        tempW = gridW % 2 == 0 ? gridW : gridW - 1;
+        tempH = gridH % 2 == 0 ? gridH : gridH - 1;
+        switch(playerId) {
+            case 0:
+                minX = 0;
+                maxX = tempW / 2 - 1;
+                minY = gridH - tempH / 2;
+                maxY = gridH - 1;
+                break;
+            case 1:
+                minX = gridW - tempW / 2;
+                maxX = tempW - 1;
+                minY = gridH - tempH / 2;
+                maxY = gridH - 1;
+                break;
+            case 2:
+                minX = gridW - tempW / 2;
+                maxX = tempW - 1;
+                minY = 0;
+                maxY = tempH / 2 - 1;
+                break;
+            case 3:
+                minX = 0;
+                maxX = tempW / 2 - 1;
+                minY = 0;
+                maxY = tempH / 2 - 1;
+                break;
+            default:
+                minX = 0;
+                maxX = gridW;
+                minY = 0;
+                maxY = gridH;
+                break;
+        }
+
+        for(int x = 0; x < gridW; ++x) {
+            for(int y = 0; y < gridH; ++y) {
+                if( !(minX <= x && x <= maxX && minY <= y && y <= maxY)) {
+                    gridCells[x][y].setEmpty(false);
+                }
             }
         }
 

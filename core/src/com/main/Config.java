@@ -59,8 +59,16 @@ public class Config {
     public static final Map<String, String> fullTexture;
     public static final Map<String, Boolean[][]> mapGrid;
 
-    public static final int startingCoins = 5000;
+    public static final int startingCoins = 2000;
     public static final float refreshRate = 10f;
+    /**
+     *  These parameters set how far main towers will be from map borders. By default, main towers
+     *  are placed at different corners of the map. These parameters set the distance from the border
+     *  both in the x axis and y axis.
+      */
+    public static final int mainTowerToMapBorderX = 80;
+    public static final int mainTowerToMapBorderY = 100;
+
 
     /**
      * Creates occupancy grid array from Vector of rows represented as Strings - these Strings consist

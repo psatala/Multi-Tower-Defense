@@ -32,6 +32,7 @@ public class InfoActor extends Actor {
     private Skin skin;
     private int coins;
     private int playerId;
+    private int winnerId = -1;
 
     /**
      * Public constructor of InfoActor
@@ -94,7 +95,20 @@ public class InfoActor extends Actor {
      */
     @Override
     public void draw(Batch batch, float alpha) {
-        bigFont.draw(batch, gameManager.observer.playerName, 530, 710);
+        if(winnerId == -1)
+            bigFont.draw(batch, gameManager.observer.playerName, 530, 710);
+        else if(winnerId == playerId)
+            bigFont.draw(batch, "You won!!!", 530, 710);
+        else {
+            if(winnerId == 0)
+                bigFont.draw(batch, "Red Player won", 530, 710);
+            else if(winnerId == 1)
+                bigFont.draw(batch, "Green Player won", 530, 710);
+            else if(winnerId == 2)
+                bigFont.draw(batch, "Yellow Player won", 530, 710);
+            else if(winnerId == 3)
+                bigFont.draw(batch, "Blue Player won", 530, 710);
+        }
         bigFont.draw(batch, "Coins: "+coins, 730, 710);
         lineSprite.setPosition(0, 686);
         lineSprite.draw(batch);
@@ -166,5 +180,18 @@ public class InfoActor extends Actor {
      */
     public Group getInfoGroup() {
         return infoGroup;
+    }
+
+
+    /**
+     * Sets the winner id. If this player has won (has this id) the information about victory will
+     * be displayed instead of his name. If someone else has won, this information will also be displayed
+     * instead of this player's name.
+     * @param id Id of the winner
+     */
+    public void setWinner(int id) {
+        if(winnerId == -1) {
+            winnerId = id;
+        }
     }
 }

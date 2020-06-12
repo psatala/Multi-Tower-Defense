@@ -108,14 +108,35 @@ public class GameManager extends ApplicationAdapter {
 
 	/**
 	 * Method called when the game is started (the waiting room phase is completed).
-	 * It adds info actor and map actor.
+	 * It adds info actor and map actor, and then spawns the main tower.
 	 */
 	public void addOtherActors() {
 		info = new InfoActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), this, myPlayerId);
 		activeStage.addActor(info.getInfoGroup());
-		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map0", true);
+		map = new MapActor(Gdx.graphics.getWidth(), Gdx.graphics.getHeight() - InfoActor.topBarHeight, this, myPlayerId, "map1", true);
 		activeStage.addActor(map.getMapGroup());
 
+		int mainTowerX;
+		int mainTowerY;
+		switch(myPlayerId) {
+			case 0:
+				mainTowerX = Config.mainTowerToMapBorderX;
+				mainTowerY = Gdx.graphics.getHeight() - (int)InfoActor.topBarHeight - Config.mainTowerToMapBorderY;
+				break;
+			case 1:
+				mainTowerX = Gdx.graphics.getWidth()-Config.mainTowerToMapBorderX;
+				mainTowerY = Gdx.graphics.getHeight() - (int)InfoActor.topBarHeight - Config.mainTowerToMapBorderY;
+				break;
+			case 2:
+				mainTowerX = Gdx.graphics.getWidth()-Config.mainTowerToMapBorderX;
+				mainTowerY = Config.mainTowerToMapBorderY;
+				break;
+			default:
+				mainTowerX = Config.mainTowerToMapBorderX;
+				mainTowerY = Config.mainTowerToMapBorderY;
+				break;
+		}
+		spawnTower(mainTowerX, mainTowerY, "mainTower");
 	}
 
 
@@ -148,9 +169,18 @@ public class GameManager extends ApplicationAdapter {
 	public void getRewards(RewardResponse rewardResponse) {
 		Vector<String> rewards = rewardResponse.getMessage();
 
+		int amount = 0;
+		int playerId = -1;
 		for(String reward : rewards) {
-			String r = reward.split(" ")[0];
-			addCoins(Integer.parseInt(r));
+			String id = reward.split(" ")[0];
+			String r = reward.split(" ")[1];
+			amount = Integer.parseInt(r);
+			playerId = Integer.parseInt(id);
+			if(amount == -1) {
+			    info.setWinner(playerId);
+            }
+			else if(myPlayerId == playerId)
+				addCoins(amount);
 		}
 	}
 
