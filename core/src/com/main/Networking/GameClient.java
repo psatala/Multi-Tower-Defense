@@ -424,6 +424,8 @@ public class GameClient {
         localClient.close();
         localClient.stop();
         isGameOwner = false;
+        System.err.close();
+        System.exit(0);
     }
 
 

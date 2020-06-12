@@ -132,8 +132,8 @@ public class MenuManager {
         quitButton.addListener( new ClickListener() {
             @Override
             public void clicked(InputEvent inputEvent, float x, float y) {
-                gameClient.quit();
                 Gdx.app.exit();
+                gameClient.quit();
             }
         });
 
@@ -165,6 +165,8 @@ public class MenuManager {
         mainTable.setFillParent(true);
 
         //construct player count table
+        addLabel("Choose Number Of Players", playerCountTable, PREF_BUTTON_WIDTH, PREF_BUTTON_HEIGHT, true);
+        playerCountTable.row();
         playerCountTable.add(twoPlayersButton).fillX().prefWidth(PREF_BUTTON_WIDTH).prefHeight(PREF_BUTTON_HEIGHT).padBottom(PADDING).row();
         playerCountTable.add(threePlayersButton).fillX().prefHeight(PREF_BUTTON_HEIGHT).padBottom(PADDING).row();
         playerCountTable.add(fourPlayersButton).fillX().prefHeight(PREF_BUTTON_HEIGHT).padBottom(PADDING).row();
