@@ -7,6 +7,7 @@ import com.esotericsoftware.kryonet.Listener;
 import com.main.Networking.requests.*;
 import com.main.Networking.responses.*;
 import com.main.SuperManager;
+import com.main.TestController;
 
 import java.io.IOException;
 import java.util.*;
@@ -116,14 +117,16 @@ public class MainServer extends GameServer {
 
 
         //create new timer which updates count of players connected and sends them a list of names of connected players
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                updatePlayerCount();
-                sendListOfNames();
-            }
+        if(!TestController.isJUnitTest()) {
+            new Timer().schedule(new TimerTask() {
+                                     @Override
+                                     public void run() {
+                                         updatePlayerCount();
+                                         sendListOfNames();
+                                     }
+                                 }
+                    , 0, CHECK_CONNECTION_RATE);
         }
-            , 0, CHECK_CONNECTION_RATE);
     }
 
 

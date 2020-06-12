@@ -4,9 +4,13 @@ package com.main.Networking;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.main.GameManager;
-import com.main.Networking.requests.*;
+import com.main.Networking.requests.GameRequest;
+import com.main.Networking.requests.GetRoomInfoRequest;
+import com.main.Networking.requests.JoinRoomRequest;
+import com.main.Networking.requests.LeaveRoomRequest;
 import com.main.Networking.responses.*;
 import com.main.SuperManager;
+import com.main.TestController;
 
 import java.io.IOException;
 import java.net.BindException;
@@ -106,15 +110,17 @@ public class LocalServer extends GameServer {
         }
 
         //create new timer which updates count of players connected and sends them a list of names of connected players
-        new Timer().schedule(new TimerTask() {
-                                 @Override
-                                 public void run() {
-                                     updatePlayerCount();
-                                     sendListOfNames();
+        if(!TestController.isJUnitTest()) {
+            new Timer().schedule(new TimerTask() {
+                                     @Override
+                                     public void run() {
+                                         updatePlayerCount();
+                                         sendListOfNames();
+                                     }
                                  }
-                             }
-                , 0, CHECK_CONNECTION_RATE);
-        
+                    , 0, CHECK_CONNECTION_RATE);
+        }
+
     }
 
 

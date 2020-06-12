@@ -1,15 +1,22 @@
 package com.main;
 
-import junit.framework.TestCase;
+import com.main.Networking.GameClient;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class GameManagerTest {
 
     @Test
     public void addObserver() {
-        Assert.assertEquals(13, 6 + 7);
+        //assign
+        GameManager gameManager = new GameManager(0);
+        GameClient gameClient = new GameClient(54545, 54545, 54546, 54546, 500);
+
+        //act
+        gameManager.addObserver(gameClient);
+
+        //assert
+        Assert.assertEquals(gameClient, gameManager.observer);
     }
+
 }

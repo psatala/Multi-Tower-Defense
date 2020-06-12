@@ -424,6 +424,8 @@ public class GameClient {
         localClient.close();
         localClient.stop();
         isGameOwner = false;
+        System.err.close();
+        System.exit(0);
     }
 
 
@@ -443,6 +445,7 @@ public class GameClient {
             localServer.superManager.getUpdates((GameRequest)object);
 
     }
+
 
     /**
      * Method called when player receives a NameListResponse from the server containing names of all players
@@ -483,5 +486,20 @@ public class GameClient {
         }
         gameManager.menuManager.waitingRoomTable.setFillParent(true);
         gameManager.menuManager.stage.addActor(gameManager.menuManager.waitingRoomTable); //add table to stage
+    }
+
+
+
+    /**
+     * Method setting the active client to either local client or global client.
+     * To do that, final static fields of GameRoom class are used.
+     * @param newClientID one of GameRoom's final static fields
+     * @see GameRoom
+     */
+    public void setActiveClient(int newClientID) {
+        if(newClientID == GameRoom.GLOBAL)
+            activeClient = globalClient;
+        else
+            activeClient = localClient;
     }
 }
