@@ -17,6 +17,5 @@ public class PlayerLauncher {
         cfg.resizable = false;
         gameClient.gameManager.addObserver(gameClient);
         new LwjglApplication(gameClient.gameManager, cfg);
-
     }
 }

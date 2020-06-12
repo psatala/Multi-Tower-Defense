@@ -30,11 +30,11 @@ import java.util.Vector;
  */
 public class GameManager extends ApplicationAdapter {
 	private int myPlayerId;
-	private List<Unit> units;
-	private List<Tower> towers;
-	private List<Missile> missiles;
+	protected List<Unit> units;
+	protected List<Tower> towers;
+	protected List<Missile> missiles;
 	private InfoActor info;
-	private MapActor map;
+	protected MapActor map;
 	protected Stage activeStage;
 	protected Stage passiveStage;
 	private ShapeRenderer renderer;

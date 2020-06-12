@@ -29,7 +29,8 @@ import static java.lang.Math.random;
 /**
  * This class covers everything regarding the map. It contains listeners for clicks and replies to them according to currently set Mode.<br>
  *     It also contains the grid - an array comprised of GridCells. It is used to store information about blocked or occupied areas of the map,
- *     as well as to find paths between two given points.
+ *     as well as to find paths between two given points.<br>
+ *     Origin of the map coordinate system is at the top left corner of the map. X values grow to the right, Y values grow to the bottom.
  * @author Piotr Libera
  */
 public class MapActor extends Actor {
@@ -137,11 +138,11 @@ public class MapActor extends Actor {
     /**
      * Converts any position on the map to the position of the center of the grid cell that this position is in.
      * @param mapCoords A given position, any position on the map
-     * @return The position of the center of the grid cell that contains the given position
+     * @return Coordinates in the grid of the cell that contains the given position
      */
     public Vector3 getGridCoords(Vector3 mapCoords){
-        float x = mapCoords.x/gridCellW;
-        float y = mapCoords.y/gridCellH;
+        float x = (float)(int)(mapCoords.x/gridCellW);
+        float y = (float)(int)(mapCoords.y/gridCellH);
         return new Vector3(x, y, 0);
     }
 
@@ -149,11 +150,11 @@ public class MapActor extends Actor {
      * Converts any position on the map to the position of the center of the grid cell that this position is in.
      * @param mapX X coordinate of the given position
      * @param mapY Y coordinate of the given position
-     * @return The position of the center of the grid cell that contains the given position
+     * @return Coordinates in the grid of the cell that contains the given position
      */
     public Vector3 getGridCoords(float mapX, float mapY){
-        float x = mapX/gridCellW;
-        float y = mapY/gridCellH;
+        float x = (float)(int)(mapX/gridCellW);
+        float y = (float)(int)(mapY/gridCellH);
         return new Vector3(x, y, 0);
     }
 
