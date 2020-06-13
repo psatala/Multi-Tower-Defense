@@ -77,3 +77,32 @@ grid:
 00000000000000000000
 00000000000000000000
 00000000000000000000
+
+
+test_map1:
+cost: 1
+reward: 2
+width: 3.1
+height: 4.2
+damage: 5
+range: 6.3
+reload: 7.4
+hp: 8
+speed: 9.5
+fullTexture: xxx
+representativeTexture: maps/map0.png
+grid:
+0001000000
+0101000001
+0101000000
+0101111110
+0100000000
+
+test_map2:
+representativeTexture: maps/map0.png
+grid:
+0000100000
+0000100000
+0000100000
+0000100000
+0000100000

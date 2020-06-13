@@ -89,6 +89,20 @@ public class InfoActor extends Actor {
     }
 
     /**
+     * Public constructor without gdx running
+     * @param w width of the entire window
+     * @param h height of the entire window
+     * @param playerId ID of the player
+     */
+    public InfoActor(float w, float h, int playerId) {
+        coins = Config.startingCoins;
+        setBounds(0, h-topBarHeight, w, topBarHeight);
+        this.playerId = playerId;
+        infoGroup = new Group();
+        infoGroup.addActor(this);
+    }
+
+    /**
      * Overrides Actor's draw() method
      * @param batch
      * @param alpha

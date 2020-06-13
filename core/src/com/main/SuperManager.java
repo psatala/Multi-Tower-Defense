@@ -18,9 +18,9 @@ import static java.lang.Math.max;
  * @author Piotr Libera
  */
 public class SuperManager{
-    private Vector<Unit> units;
-    private Vector<Tower> towers;
-    private Vector<Missile> missiles;
+    protected Vector<Unit> units;
+    protected Vector<Tower> towers;
+    protected Vector<Missile> missiles;
     private MapActor map;
 
     private final GameResponse gameResponse;
@@ -247,7 +247,7 @@ public class SuperManager{
      * a shot at the given moment, it fires towards the target.
      * @param shooter Shooting entity
      */
-    private void findTargetAndShoot(Entity shooter) {
+    protected void findTargetAndShoot(Entity shooter) {
         float bestDistance = 1e9f;
         Entity bestTarget = null;
         for(Tower tower : towers) {

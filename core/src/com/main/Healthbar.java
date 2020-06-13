@@ -13,9 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
  */
 public class Healthbar extends Actor {
     private final float height = 5;
-    private Pixmap greenPartPixmap;
     private Texture greenPart;
-    private Pixmap redPartPixmap;
     private Texture redPart;
     private float hp;
     private float maxHP;
@@ -37,13 +35,13 @@ public class Healthbar extends Actor {
     }
 
     /**
-     * Creates the healtbar texture, consisting of two rectangles: green and red<br>
-     *     The width of the green rectangle is proportional to the current HP,
-     *     and the total width of both rectangles is proportional to maxHP.
+     * Prepares two textures - red and green filled rectangles, which are later used to draw a healthbar
+     * (being stretched horizontally)
+     * @see Healthbar#draw(Batch, float)
      */
     private void createTexture() {
-        greenPartPixmap = new Pixmap((int)height, (int)height, Pixmap.Format.RGBA8888);
-        redPartPixmap = new Pixmap((int)height, (int)height, Pixmap.Format.RGBA8888);
+        Pixmap greenPartPixmap = new Pixmap((int) height, (int) height, Pixmap.Format.RGBA8888);
+        Pixmap redPartPixmap = new Pixmap((int) height, (int) height, Pixmap.Format.RGBA8888);
         greenPartPixmap.setColor(Color.GREEN);
         greenPartPixmap.fillRectangle(0, 0, (int)height, (int)height);
         greenPart = new Texture(greenPartPixmap);
@@ -69,7 +67,9 @@ public class Healthbar extends Actor {
     }
 
     /**
-     * Overrides Actor's draw() method
+     * Draws the healtbar texture, consisting of two rectangles: green and red<br>
+     *      The width of the green rectangle is proportional to the current HP,
+     *      and the total width of both rectangles is proportional to maxHP.<br>
      * @param batch
      * @param alpha
      */
